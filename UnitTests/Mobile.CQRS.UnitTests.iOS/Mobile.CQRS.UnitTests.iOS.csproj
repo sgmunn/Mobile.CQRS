@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>10.0.0</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{D51E3F48-C3BB-4507-A763-664817E70F4B}</ProjectGuid>
+    <ProjectTypeGuids>{6BC8ED88-2882-458C-8E55-DFD12B67127B};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <OutputType>Library</OutputType>
+    <RootNamespace>Mobile.CQRS.UnitTests</RootNamespace>
+    <IPhoneResourcePrefix>Resources</IPhoneResourcePrefix>
+    <AssemblyName>Mobile.CQRS.UnitTests.iOS</AssemblyName>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug</OutputPath>
+    <DefineConstants>DEBUG;</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <ConsolePause>false</ConsolePause>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>none</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release</OutputPath>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <ConsolePause>false</ConsolePause>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Core" />
+    <Reference Include="monotouch" />
+    <Reference Include="System.Json" />
+    <Reference Include="MonoTouch.NUnitLite" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Resources\" />
+    <Folder Include="Data\" />
+    <Folder Include="Repositories\" />
+    <Folder Include="Runtime\" />
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <ItemGroup>
+    <Compile Include="Bootstrap.cs" />
+    <Compile Include="TestAggregateRoot.cs" />
+    <Compile Include="Data\GivenADictionaryRepository.cs" />
+    <Compile Include="Data\GivenADictionaryRepositoryWithItems.cs" />
+    <Compile Include="Data\GivenAUnitOfWorkRepository.cs" />
+    <Compile Include="Data\GivenAUowRepositoryWithItems.cs" />
+    <Compile Include="Data\GivenAnEmptyDictionaryRepository.cs" />
+    <Compile Include="Data\GivenAnEmptyUowRepository.cs" />
+    <Compile Include="Repositories\GivenASnapshotSourcedAggregateRepository.cs" />
+    <Compile Include="Repositories\GivenAnEventSourcedAggregateRepository.cs" />
+    <Compile Include="Repositories\GivenAnInMemoryEventStore.cs" />
+    <Compile Include="Repositories\GivenAnInMemoryEventStoreRepository.cs" />
+    <Compile Include="Repositories\GivenAnInMemorySnapshotRepository.cs" />
+    <Compile Include="Repositories\MockAggregateManifestRepository.cs" />
+    <Compile Include="Repositories\MockBus.cs" />
+    <Compile Include="Repositories\TestSerializedEvent.cs" />
+    <Compile Include="Repositories\EventSourcing\GivenAExistingAggregateWithUncommittedEvents.cs" />
+    <Compile Include="Repositories\EventSourcing\GivenANewAggregateWithUncommittedEvents.cs" />
+    <Compile Include="Repositories\EventSourcing\GivenAnAggregateWith1000StoredEvents.cs" />
+    <Compile Include="Repositories\EventSourcing\GivenAnAggregateWith1000UncommittedEvents.cs" />
+    <Compile Include="Repositories\EventSourcing\GivenAnAggregateWithNoUncommittedEvents.cs" />
+    <Compile Include="Repositories\EventSourcing\GivenAnAggregateWithUncommittedEvents.cs" />
+    <Compile Include="Repositories\EventSourcing\GivenAnEmptyRepository.cs" />
+    <Compile Include="Repositories\SnapshotSourced\GivenAExistingAggregateWithUncommittedEvents.cs" />
+    <Compile Include="Repositories\SnapshotSourced\GivenANewAggregateWithUncommittedEvents.cs" />
+    <Compile Include="Repositories\SnapshotSourced\GivenAnAggregateWith1000UncommittedEvents.cs" />
+    <Compile Include="Repositories\SnapshotSourced\GivenAnAggregateWithNoUncommittedEvents.cs" />
+    <Compile Include="Repositories\SnapshotSourced\GivenAnAggregateWithUncommittedEvents.cs" />
+    <Compile Include="Repositories\SnapshotSourced\GivenAnEmptyRepository.cs" />
+    <Compile Include="Runtime\GivenAnObjectToExecuteAMethodOn.cs" />
+    <Compile Include="Runtime\MethodExecutionPerformance.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Mobile.CQRS\Mobile.CQRS.iOS.csproj">
+      <Project>{1B81BE9B-B662-4626-A811-39C479980EFF}</Project>
+      <Name>Mobile.CQRS.iOS</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ProjectExtensions>
+    <MonoDevelop>
+      <Properties>
+        <Policies>
+          <DotNetNamingPolicy DirectoryNamespaceAssociation="PrefixedHierarchical" ResourceNamePolicy="FileFormatDefault" />
+        </Policies>
+      </Properties>
+    </MonoDevelop>
+  </ProjectExtensions>
+</Project>

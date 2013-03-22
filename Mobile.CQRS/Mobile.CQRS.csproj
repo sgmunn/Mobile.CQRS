@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>10.0.0</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{B291A58C-3338-4958-8A2A-3DDCA2FFFE00}</ProjectGuid>
+    <ProjectTypeGuids>{786C830F-07A1-408B-BD7F-6EE04809D6DB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <OutputType>Library</OutputType>
+    <RootNamespace>Mobile.CQRS</RootNamespace>
+    <AssemblyName>Mobile.CQRS</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkProfile>Profile1</TargetFrameworkProfile>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug</OutputPath>
+    <DefineConstants>DEBUG;</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <ConsolePause>false</ConsolePause>
+    <NoStdLib>true</NoStdLib>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>none</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release</OutputPath>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <ConsolePause>false</ConsolePause>
+    <NoStdLib>true</NoStdLib>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Reactive.Core">
+      <HintPath>..\etc\rx\System.Reactive.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Reactive.Debugger">
+      <HintPath>..\etc\rx\System.Reactive.Debugger.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Reactive.Experimental">
+      <HintPath>..\etc\rx\System.Reactive.Experimental.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Reactive.Interfaces">
+      <HintPath>..\etc\rx\System.Reactive.Interfaces.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Reactive.Linq">
+      <HintPath>..\etc\rx\System.Reactive.Linq.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Reactive.PlatformServices">
+      <HintPath>..\etc\rx\System.Reactive.PlatformServices.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Runtime\IResolver.cs" />
+    <Compile Include="Runtime\MethodExecutor.cs" />
+    <Compile Include="Runtime\ReflectionExtensions.cs" />
+    <Compile Include="Data\DataChangeEvent.cs" />
+    <Compile Include="Data\DataChangeEvent_T.cs" />
+    <Compile Include="Data\DataChangeKind.cs" />
+    <Compile Include="Data\DictionaryRepository_T.cs" />
+    <Compile Include="Data\IConnectedRepository.cs" />
+    <Compile Include="Data\IDataChangeEvent.cs" />
+    <Compile Include="Data\IdDictionaryRepository_T.cs" />
+    <Compile Include="Data\IdLock.cs" />
+    <Compile Include="Data\IId.cs" />
+    <Compile Include="Data\IObservableRepository.cs" />
+    <Compile Include="Data\IRepository_T.cs" />
+    <Compile Include="Data\IRepository_TData_TKey.cs" />
+    <Compile Include="Data\IRepositoryUnitOfWork_T.cs" />
+    <Compile Include="Data\IUnitOfWork.cs" />
+    <Compile Include="Data\IUnitOfWorkScope.cs" />
+    <Compile Include="Data\SaveResult.cs" />
+    <Compile Include="Data\SyncRepository_T.cs" />
+    <Compile Include="Data\UnitOfWorkRepository_T.cs" />
+    <Compile Include="Reactive\AnonymousDisposable.cs" />
+    <Compile Include="Reactive\AnonymousObservable_T.cs" />
+    <Compile Include="Reactive\AnonymousObserver_T.cs" />
+    <Compile Include="Reactive\CompositeDisposable.cs" />
+    <Compile Include="Reactive\Disposable.cs" />
+    <Compile Include="Reactive\EmptyActions.cs" />
+    <Compile Include="Reactive\ImmediateScheduler.cs" />
+    <Compile Include="Reactive\IScheduler.cs" />
+    <Compile Include="Reactive\NullDisposable.cs" />
+    <Compile Include="Reactive\Observable.cs" />
+    <Compile Include="Reactive\ObservableExtensions.cs" />
+    <Compile Include="Reactive\Observer.cs" />
+    <Compile Include="Reactive\ScheduledObserver.cs" />
+    <Compile Include="Reactive\Subject_T.cs" />
+    <Compile Include="Reactive\Unit.cs" />
+    <Compile Include="Domain\AggregateRoot.cs" />
+    <Compile Include="Domain\AggregateRoot_TState.cs" />
+    <Compile Include="Domain\CommandExecutor_T.cs" />
+    <Compile Include="Domain\ConcurrencyException.cs" />
+    <Compile Include="Domain\DefaultEventSerializer.cs" />
+    <Compile Include="Domain\DefaultScope.cs" />
+    <Compile Include="Domain\DomainCommandExecutor_T.cs" />
+    <Compile Include="Domain\DomainContext.cs" />
+    <Compile Include="Domain\EventExtensions.cs" />
+    <Compile Include="Domain\EventSourcedAggregateRepository_T.cs" />
+    <Compile Include="Domain\IAggregateCommand.cs" />
+    <Compile Include="Domain\IAggregateEvent.cs" />
+    <Compile Include="Domain\IAggregateManifestItem.cs" />
+    <Compile Include="Domain\IAggregateManifestRepository.cs" />
+    <Compile Include="Domain\IAggregateRepository_T.cs" />
+    <Compile Include="Domain\IAggregateRoot.cs" />
+    <Compile Include="Domain\ICommandExecutor_T.cs" />
+    <Compile Include="Domain\IDomainContext.cs" />
+    <Compile Include="Domain\IEventSerializer.cs" />
+    <Compile Include="Domain\IEventSourced.cs" />
+    <Compile Include="Domain\IEventStoreRepository.cs" />
+    <Compile Include="Domain\InMemoryEventStoreRepository_T.cs" />
+    <Compile Include="Domain\InMemorySnapshotRepository_T.cs" />
+    <Compile Include="Domain\IReadModelBuilder.cs" />
+    <Compile Include="Domain\IReadModelBuilder_T.cs" />
+    <Compile Include="Domain\ISerializedAggregateEvent.cs" />
+    <Compile Include="Domain\ISnapshot.cs" />
+    <Compile Include="Domain\ISnapshotRepository.cs" />
+    <Compile Include="Domain\ISnapshotSupport.cs" />
+    <Compile Include="Domain\MyClass.cs" />
+    <Compile Include="Domain\NotificationEventBusExtensions.cs" />
+    <Compile Include="Domain\NullAggregateManifestRepository.cs" />
+    <Compile Include="Domain\ObservableNotificationEventBus.cs" />
+    <Compile Include="Domain\ReadModelBuilder.cs" />
+    <Compile Include="Domain\ReadModelBuildingEventBus_T.cs" />
+    <Compile Include="Domain\SnapshotAggregateRepository_T.cs" />
+    <Compile Include="Domain\UnitOfWorkEventBus.cs" />
+    <Compile Include="ICommand.cs" />
+    <Compile Include="INotification.cs" />
+    <Compile Include="INotificationEvent.cs" />
+    <Compile Include="INotificationEventBus.cs" />
+    <Compile Include="NotificationEvent.cs" />
+    <Compile Include="WeakEventWrapper.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Runtime\" />
+    <Folder Include="Data\" />
+    <Folder Include="Reactive\" />
+    <Folder Include="Domain\" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Domain\Mobile.CQRS.csproj" />
+  </ItemGroup>
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
+  <ProjectExtensions>
+    <MonoDevelop>
+      <Properties>
+        <Policies>
+          <DotNetNamingPolicy DirectoryNamespaceAssociation="PrefixedHierarchical" ResourceNamePolicy="FileFormatDefault" />
+        </Policies>
+      </Properties>
+    </MonoDevelop>
+  </ProjectExtensions>
+</Project>
