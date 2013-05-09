@@ -125,9 +125,6 @@
     <Compile Include="Reactive\ScheduledObserver.cs" />
     <Compile Include="Reactive\Subject_T.cs" />
     <Compile Include="Reactive\Unit.cs" />
-    <Compile Include="Runtime\IResolver.cs" />
-    <Compile Include="Runtime\MethodExecutor.cs" />
-    <Compile Include="Runtime\ReflectionExtensions.cs" />
     <Compile Include="Data\SQLite\SQLite.cs" />
     <Compile Include="Data\SQLite\SqlRepository_T.cs" />
     <Compile Include="Data\SQLite\SqlUnitOfWorkScope.cs" />
@@ -137,5 +134,6 @@
     <Compile Include="Domain\SQLite\EventStoreRepository.cs" />
     <Compile Include="Domain\SQLite\SerializedAggregateEvent.cs" />
     <Compile Include="Domain\SQLite\SqlSnapshotRepository.cs" />
+    <Compile Include="MethodExecutor.cs" />
   </ItemGroup>
 </Project>
