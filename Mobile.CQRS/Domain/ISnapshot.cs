@@ -21,11 +21,9 @@
 namespace Mobile.CQRS.Domain
 {
     using System;
-    using Mobile.CQRS.Data;
 
-    public interface ISnapshot : IId
+    public interface ISnapshot : IUniqueId
     {
         int Version { get; }
     }
 }
-

@@ -22,6 +22,9 @@ namespace Mobile.CQRS.Data
 {
     using System;
 
+    /// <summary>
+    /// A unit of work that contains nested units of work. All units are commited together or undone together.
+    /// </summary>
     public interface IUnitOfWorkScope : IUnitOfWork
     {
         void Add(IUnitOfWork uow);

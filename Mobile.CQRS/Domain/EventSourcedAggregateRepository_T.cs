@@ -25,7 +25,7 @@ namespace Mobile.CQRS.Domain
     using System.Linq;
     using Mobile.CQRS.Data;
     
-    // todo: pass in a repository of state and handle snaspshots as well as event sourced aggregates
+    // TODO: pass in a repository of state and handle snaspshots as well as event sourced aggregates
     public class EventSourcedAggregateRepository<T> : IAggregateRepository<T> where T : IAggregateRoot, new()
     {
         private readonly IEventStoreRepository repository;
@@ -34,9 +34,9 @@ namespace Mobile.CQRS.Domain
 
         private readonly IAggregateManifestRepository manifest;
         
-        private readonly INotificationEventBus eventBus;
+        private readonly IModelNotificationBus eventBus;
   
-        public EventSourcedAggregateRepository(IEventSerializer serializer, IEventStoreRepository repository, IAggregateManifestRepository manifest, INotificationEventBus eventBus)
+        public EventSourcedAggregateRepository(IEventSerializer serializer, IEventStoreRepository repository, IAggregateManifestRepository manifest, IModelNotificationBus eventBus)
         {
             if (serializer == null)
             {
@@ -107,7 +107,7 @@ namespace Mobile.CQRS.Domain
             var lastEvent = allEvents.LastOrDefault();
             if ((lastEvent == null && expectedVersion != 0) || (lastEvent != null && lastEvent.Version != expectedVersion))
             {
-                throw new ConcurrencyException();
+                throw new ConcurrencyException(instance.Identity, expectedVersion, lastEvent.Version);
             }
 
             this.manifest.UpdateManifest(instance.Identity, expectedVersion, instance.UncommittedEvents.Last().Version);
@@ -151,10 +151,9 @@ namespace Mobile.CQRS.Domain
             {
                 foreach (var evt in instance.UncommittedEvents.ToList())
                 {
-                    this.eventBus.Publish(evt.AsDomainEvent(typeof(T)));
+                    this.eventBus.Publish(Notifications.CreateNotification(typeof(T), evt));
                 }
             }
         }
     }
 }
-

@@ -27,4 +27,3 @@ namespace Mobile.CQRS.Domain
     {
     }
 }
-

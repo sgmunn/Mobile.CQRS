@@ -21,9 +21,8 @@
 namespace Mobile.CQRS.Domain
 {
     using System;
-    using Mobile.CQRS.Data;
 
-    public interface ISerializedAggregateEvent : IId
+    public interface ISerializedAggregateEvent : IUniqueId
     {
         Guid AggregateId { get; set; }
 
@@ -32,4 +31,3 @@ namespace Mobile.CQRS.Domain
         string EventData { get; set; }
     }
 }
-

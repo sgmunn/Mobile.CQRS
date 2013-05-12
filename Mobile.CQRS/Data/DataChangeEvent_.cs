@@ -1,5 +1,5 @@
 //  --------------------------------------------------------------------------------------------------------------------
-//  <copyright file="EventExtensions.cs" company="sgmunn">
+//  <copyright file="DataChangeEvent.cs" company="sgmunn">
 //    (c) sgmunn 2012  
 //
 //    Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
@@ -18,21 +18,38 @@
 //  </copyright>
 //  --------------------------------------------------------------------------------------------------------------------
 
-namespace Mobile.CQRS.Domain
+namespace Mobile.CQRS.Data
 {
     using System;
-    using Mobile.CQRS.Data;
-    
-    public static class EventExtensions
-    {
-        public static INotificationEvent AsDomainEvent(this IDataChangeEvent dataChange)
-        {
-            return new NotificationEvent(dataChange.DataType, dataChange.DataId, dataChange);
-        }
-        
-        public static INotificationEvent AsDomainEvent(this IAggregateEvent aggregateEvent, Type aggregateType)
-        {
-            return new NotificationEvent(aggregateType, aggregateEvent.AggregateId, aggregateEvent);
-        }
-    }
+
+//    public class DataChangeEvent : IDataChangeEvent
+//    {
+//        public DataChangeEvent(Type dataType, Guid id, object data, DataChangeKind change)
+//        {
+//            this.Data = data;
+//            this.DataId = id;
+//            this.Change = change;
+//            this.DataType = dataType;
+//        }
+//        
+//        public DataChangeEvent(Type dataType, Guid id, DataChangeKind change)
+//        {
+//            this.DataId = id;
+//            this.Change = change;
+//            this.DataType = dataType;
+//        }
+//        
+//        public Guid DataId { get; set; }
+//        
+//        public Type DataType { get; set; }
+//        
+//        public object Data { get; private set; }
+//        
+//        public DataChangeKind Change { get; private set; }
+//        
+//        public override string ToString()
+//        {
+//            return string.Format("[DataChange: Type = {0}, Id={1}, Change={2}, Data={3}]", DataType, DataId, Change, Data);
+//        }
+//    }
 }

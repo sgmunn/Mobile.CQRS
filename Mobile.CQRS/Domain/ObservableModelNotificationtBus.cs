@@ -1,5 +1,5 @@
 // --------------------------------------------------------------------------------------------------------------------
-// <copyright file="ObservableNotificationEventBus.cs" company="sgmunn">
+// <copyright file="ObservableModelNotificationtBus.cs" company="sgmunn">
 //   (c) sgmunn 2012  
 //
 //   Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
@@ -23,24 +23,23 @@ namespace Mobile.CQRS.Domain
     using System;
     using Mobile.CQRS.Reactive;
 
-    public sealed class ObservableNotificationEventBus : INotificationEventBus
+    public sealed class ObservableModelNotificationtBus : IModelNotificationBus
     {
-        private readonly Subject<INotificationEvent> eventPublisher;
+        private readonly Subject<IModelNotification> eventPublisher;
 
-        public ObservableNotificationEventBus()
+        public ObservableModelNotificationtBus()
         {
-            this.eventPublisher = new Subject<INotificationEvent>();
+            this.eventPublisher = new Subject<IModelNotification>();
         }
 
-        public void Publish(INotificationEvent evt)
+        public void Publish(IModelNotification evt)
         {
             this.eventPublisher.OnNext(evt);
         }
 
-        public IDisposable Subscribe(IObserver<INotificationEvent> observer)
+        public IDisposable Subscribe(IObserver<IModelNotification> observer)
         {
             return this.eventPublisher.Subscribe(observer);
         }
     }
 }
-

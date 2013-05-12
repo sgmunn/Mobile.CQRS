@@ -1,5 +1,5 @@
 //  --------------------------------------------------------------------------------------------------------------------
-//  <copyright file="INotificationEvent.cs" company="sgmunn">
+//  <copyright file="INotification.cs" company="sgmunn">
 //    (c) sgmunn 2012  
 //
 //    Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
@@ -23,23 +23,9 @@ namespace Mobile.CQRS
     using System;
 
     /// <summary>
-    /// Represents a notification of something that relates to an indentifiable resource
+    /// An event or notification that something has happened
     /// </summary>
-    public interface INotificationEvent
-    {
-        /// <summary>
-        /// Gets the identity of the resource for which the notification is for.
-        /// </summary>
-        Guid Identity { get; }
-
-        /// <summary>
-        /// Gets the type of the resource for which the notification is for.
-        /// </summary>
-        Type Type { get; }
-
-        /// <summary>
-        /// Gets the event that raised the notification
-        /// </summary>
-        INotification Event { get; }
-    }
+//    public interface INotification
+//    {
+//    }
 }

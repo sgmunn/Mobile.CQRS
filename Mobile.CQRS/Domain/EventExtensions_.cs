@@ -1,5 +1,5 @@
 //  --------------------------------------------------------------------------------------------------------------------
-//  <copyright file="INotification.cs" company="sgmunn">
+//  <copyright file="EventExtensions.cs" company="sgmunn">
 //    (c) sgmunn 2012  
 //
 //    Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
@@ -18,14 +18,21 @@
 //  </copyright>
 //  --------------------------------------------------------------------------------------------------------------------
 
-namespace Mobile.CQRS
+namespace Mobile.CQRS.Domain
 {
     using System;
-
-    /// <summary>
-    /// An event or notification that something has happened
-    /// </summary>
-    public interface INotification
+    using Mobile.CQRS.Data;
+    
+    public static class EventExtensions
     {
+//        public static INotificationEvent AsDomainEvent(this IDataChangeEvent dataChange)
+//        {
+//            return new NotificationEvent(dataChange.DataType, dataChange.DataId, dataChange);
+//        }
+//        
+//        public static INotificationEvent AsDomainEvent(this IAggregateEvent aggregateEvent, Type aggregateType)
+//        {
+//            return new NotificationEvent(aggregateType, aggregateEvent.AggregateId, aggregateEvent);
+//        }
     }
 }

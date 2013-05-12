@@ -1,5 +1,5 @@
 //  --------------------------------------------------------------------------------------------------------------------
-//  <copyright file="DataChangeEvent.cs" company="sgmunn">
+//  <copyright file=".cs" company="sgmunn">
 //    (c) sgmunn 2012  
 //
 //    Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
@@ -18,38 +18,23 @@
 //  </copyright>
 //  --------------------------------------------------------------------------------------------------------------------
 
-namespace Mobile.CQRS.Data
+namespace Mobile.CQRS.Domain
 {
     using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using Mobile.CQRS.Data;
 
-    public class DataChangeEvent : IDataChangeEvent
-    {
-        public DataChangeEvent(Type dataType, Guid id, object data, DataChangeKind change)
-        {
-            this.Data = data;
-            this.DataId = id;
-            this.Change = change;
-            this.DataType = dataType;
-        }
-        
-        public DataChangeEvent(Type dataType, Guid id, DataChangeKind change)
-        {
-            this.DataId = id;
-            this.Change = change;
-            this.DataType = dataType;
-        }
-        
-        public Guid DataId { get; set; }
-        
-        public Type DataType { get; set; }
-        
-        public object Data { get; private set; }
-        
-        public DataChangeKind Change { get; private set; }
-        
-        public override string ToString()
-        {
-            return string.Format("[DataChange: Type = {0}, Id={1}, Change={2}, Data={3}]", DataType, DataId, Change, Data);
-        }
-    }
+//    public class NullAggregateManifestRepository : IAggregateManifestRepository
+//    {
+//        public static NullAggregateManifestRepository Instance = new NullAggregateManifestRepository();
+//
+//        private NullAggregateManifestRepository()
+//        {
+//        }
+//
+//        public void UpdateManifest(Guid aggregateId, int currentVersion, int newVersion)
+//        {
+//        }
+//    }
 }

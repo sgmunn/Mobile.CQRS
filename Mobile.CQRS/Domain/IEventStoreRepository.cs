@@ -29,4 +29,3 @@ namespace Mobile.CQRS.Domain
         IList<ISerializedAggregateEvent> GetAllAggregateEvents(Guid rootId);
     }
 }
-

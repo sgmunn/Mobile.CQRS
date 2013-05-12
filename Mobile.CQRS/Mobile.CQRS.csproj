@@ -55,19 +55,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Data\DataChangeEvent.cs" />
-    <Compile Include="Data\DataChangeEvent_T.cs" />
-    <Compile Include="Data\DataChangeKind.cs" />
-    <Compile Include="Data\DictionaryRepository_T.cs" />
-    <Compile Include="Data\IConnectedRepository.cs" />
-    <Compile Include="Data\IDataChangeEvent.cs" />
     <Compile Include="Data\IdDictionaryRepository_T.cs" />
     <Compile Include="Data\IdLock.cs" />
-    <Compile Include="Data\IId.cs" />
     <Compile Include="Data\IObservableRepository.cs" />
     <Compile Include="Data\IRepository_T.cs" />
     <Compile Include="Data\IRepository_TData_TKey.cs" />
-    <Compile Include="Data\IRepositoryUnitOfWork_T.cs" />
     <Compile Include="Data\IUnitOfWork.cs" />
     <Compile Include="Data\IUnitOfWorkScope.cs" />
     <Compile Include="Data\SaveResult.cs" />
@@ -88,15 +80,10 @@
     <Compile Include="Reactive\ScheduledObserver.cs" />
     <Compile Include="Reactive\Subject_T.cs" />
     <Compile Include="Reactive\Unit.cs" />
-    <Compile Include="Domain\AggregateRoot.cs" />
-    <Compile Include="Domain\AggregateRoot_TState.cs" />
     <Compile Include="Domain\CommandExecutor_T.cs" />
     <Compile Include="Domain\ConcurrencyException.cs" />
     <Compile Include="Domain\DefaultEventSerializer.cs" />
-    <Compile Include="Domain\DefaultScope.cs" />
     <Compile Include="Domain\DomainCommandExecutor_T.cs" />
-    <Compile Include="Domain\DomainContext.cs" />
-    <Compile Include="Domain\EventExtensions.cs" />
     <Compile Include="Domain\EventSourcedAggregateRepository_T.cs" />
     <Compile Include="Domain\IAggregateCommand.cs" />
     <Compile Include="Domain\IAggregateEvent.cs" />
@@ -117,17 +104,30 @@
     <Compile Include="Domain\ISnapshot.cs" />
     <Compile Include="Domain\ISnapshotRepository.cs" />
     <Compile Include="Domain\ISnapshotSupport.cs" />
-    <Compile Include="Domain\NotificationEventBusExtensions.cs" />
-    <Compile Include="Domain\NullAggregateManifestRepository.cs" />
-    <Compile Include="Domain\ObservableNotificationEventBus.cs" />
     <Compile Include="Domain\ReadModelBuilder.cs" />
     <Compile Include="Domain\ReadModelBuildingEventBus_T.cs" />
     <Compile Include="Domain\SnapshotAggregateRepository_T.cs" />
     <Compile Include="Domain\UnitOfWorkEventBus.cs" />
-    <Compile Include="INotification.cs" />
-    <Compile Include="INotificationEvent.cs" />
-    <Compile Include="INotificationEventBus.cs" />
-    <Compile Include="NotificationEvent.cs" />
+    <Compile Include="Data\IUniqueId.cs" />
+    <Compile Include="Data\DataChangeEvent_.cs" />
+    <Compile Include="Data\DataChangeEvent_T_.cs" />
+    <Compile Include="Data\ModelChangeKind.cs" />
+    <Compile Include="INotification_.cs" />
+    <Compile Include="INotificationEvent_.cs" />
+    <Compile Include="INotificationEventBus_.cs" />
+    <Compile Include="NotificationEvent_.cs" />
+    <Compile Include="Data\AbstractDictionaryRepository_T.cs" />
+    <Compile Include="Data\IRepositoryConnection.cs" />
+    <Compile Include="Data\IUnitOfWorkRepository_T.cs" />
+    <Compile Include="Data\IDataChangeEvent_.cs" />
+    <Compile Include="Domain\AbstractAggregateRoot_TState.cs" />
+    <Compile Include="Domain\AbstractAggregateRoot.cs" />
+    <Compile Include="Domain\InMemoryUnitOfWorkScope.cs" />
+    <Compile Include="Domain\AbstractDomainContext.cs" />
+    <Compile Include="Domain\EventExtensions_.cs" />
+    <Compile Include="Domain\ModelNotificationBusExtensions.cs" />
+    <Compile Include="Domain\NullAggregateManifestRepository_.cs" />
+    <Compile Include="Domain\ObservableModelNotificationtBus.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Runtime\" />

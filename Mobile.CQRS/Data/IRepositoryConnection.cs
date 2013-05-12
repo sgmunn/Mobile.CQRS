@@ -1,5 +1,5 @@
 //  --------------------------------------------------------------------------------------------------------------------
-//  <copyright file="AggregateRoot_TState.cs" company="sgmunn">
+//  <copyright file="IRepositoryConnection.cs" company="sgmunn">
 //    (c) sgmunn 2012  
 //
 //    Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
@@ -18,27 +18,16 @@
 //  </copyright>
 //  --------------------------------------------------------------------------------------------------------------------
 //
-namespace Mobile.CQRS.Domain
+
+namespace Mobile.CQRS.Data
 {
     using System;
 
-    public abstract class AggregateRoot<TState> : AggregateRoot, ISnapshotSupport where TState : class, ISnapshot, new()
+    /// <summary>
+    /// Represents a connection to a repository's underlying store
+    /// </summary>
+    public interface IRepositoryConnection
     {
-        public AggregateRoot()
-        {
-            this.InternalState = new TState();
-        }
-
-        protected TState InternalState { get; private set; }
-
-        public virtual void LoadFromSnapshot(ISnapshot snapshot)
-        {
-            this.InternalState = snapshot as TState;
-            this.Version = snapshot.Version;
-            this.Identity = snapshot.Identity;
-        }
-
-        public abstract ISnapshot GetSnapshot();
+        object Connection { get; }
     }
 }
-

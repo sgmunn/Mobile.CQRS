@@ -21,9 +21,8 @@
 namespace Mobile.CQRS.Domain
 {
     using System;
-    using Mobile.CQRS.Data;
 
-    public interface IAggregateEvent : IId, INotification
+    public interface IAggregateEvent : IEvent
     {
         Guid AggregateId { get; set; }
 
@@ -32,4 +31,3 @@ namespace Mobile.CQRS.Domain
         DateTime Timestamp { get; set; }
     }
 }
-

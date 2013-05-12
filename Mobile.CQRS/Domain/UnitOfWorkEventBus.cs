@@ -23,25 +23,28 @@ namespace Mobile.CQRS.Domain
     using System;
     using System.Collections.Generic;
     using Mobile.CQRS.Data;
-    
-    public class UnitOfWorkEventBus : INotificationEventBus, IUnitOfWork
-    {
-        private readonly INotificationEventBus bus;
 
-        private readonly List<INotificationEvent> events;
+    /// <summary>
+    /// An event bus that performs all publishing in a single unit of work
+    /// </summary>
+    public class UnitOfWorkEventBus : IModelNotificationBus, IUnitOfWork
+    {
+        private readonly IModelNotificationBus bus;
+
+        private readonly List<IModelNotification> events;
         
-        public UnitOfWorkEventBus(INotificationEventBus bus)
+        public UnitOfWorkEventBus(IModelNotificationBus bus)
         {
-            this.events = new List<INotificationEvent>();
+            this.events = new List<IModelNotification>();
             this.bus = bus;
         }
         
-        public void Publish(INotificationEvent evt)
+        public void Publish(IModelNotification evt)
         {
             this.events.Add(evt);
         }
 
-        public IDisposable Subscribe(IObserver<INotificationEvent> subscriber)
+        public IDisposable Subscribe(IObserver<IModelNotification> subscriber)
         {
             throw new NotSupportedException();
         }
@@ -55,7 +58,7 @@ namespace Mobile.CQRS.Domain
         {
             if (this.bus != null)
             {
-                // todo: maybe deduplicate events, use a dictionary of id / type etc
+                // TODO: maybe deduplicate events, use a dictionary of id / type etc
                 foreach (var evt in this.events)
                 {
                     this.bus.Publish(evt);

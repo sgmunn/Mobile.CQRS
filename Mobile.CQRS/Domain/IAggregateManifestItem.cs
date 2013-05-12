@@ -21,9 +21,8 @@
 namespace Mobile.CQRS.Domain
 {
     using System;
-    using Mobile.CQRS.Data;
 
-    public interface IAggregateManifestItem : IId
+    public interface IAggregateManifestItem : IUniqueId
     {
         int Version { get; set; }
     }

@@ -15,7 +15,7 @@ namespace Mobile.CQRS.Core.UnitTests.Data
         }
     }
 
-    public class IdTest : IId
+    public class IdTest : IUniqueId
     {
         public IdTest()
         {

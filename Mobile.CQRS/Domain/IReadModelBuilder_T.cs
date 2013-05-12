@@ -28,4 +28,3 @@ namespace Mobile.CQRS.Domain
         IRepository<T> Repository { get; }
     }
 }
-

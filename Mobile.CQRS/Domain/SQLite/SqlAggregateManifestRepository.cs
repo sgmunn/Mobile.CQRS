@@ -54,7 +54,7 @@ namespace Mobile.CQRS.Domain.SQLite
             if (!updated)
             {
                 Console.WriteLine("AggregateManifest FAILED");
-                throw new ConcurrencyException();
+                throw new ConcurrencyException(aggregateId, newVersion, currentVersion);
             }
         }
 

@@ -35,18 +35,18 @@ namespace Mobile.CQRS.Domain
     {
         private readonly ISnapshotRepository repository;
         
-        private readonly INotificationEventBus eventBus;
+        private readonly IModelNotificationBus eventBus;
 
         private readonly IAggregateManifestRepository manifest;
 
-        private readonly Subject<IDataChangeEvent> changes;
+        private readonly Subject<IModelNotification> changes;
   
-        public SnapshotAggregateRepository(ISnapshotRepository repository, IAggregateManifestRepository manifest, INotificationEventBus eventBus)
+        public SnapshotAggregateRepository(ISnapshotRepository repository, IAggregateManifestRepository manifest, IModelNotificationBus eventBus)
         {
             this.repository = repository;
             this.eventBus = eventBus;
             this.manifest = manifest;
-            this.changes = new Subject<IDataChangeEvent>();
+            this.changes = new Subject<IModelNotification>();
         }
 
         public T New()
@@ -88,7 +88,7 @@ namespace Mobile.CQRS.Domain
 
             if ((current == null && expectedVersion != 0) || (current != null && current.Version != expectedVersion))
             {
-                throw new ConcurrencyException();
+                throw new ConcurrencyException(instance.Identity, expectedVersion, current.Version);
             }
    
             var snapshot = ((ISnapshotSupport)instance).GetSnapshot() as ISnapshot;
@@ -97,14 +97,14 @@ namespace Mobile.CQRS.Domain
 
             var saveResult = this.repository.Save(snapshot);
 
-            IDataChangeEvent modelChange = null; 
+            IModelNotification modelChange = null; 
             switch (saveResult)
             {
                 case SaveResult.Added:
-                    modelChange = new DataChangeEvent(snapshot.GetType(), snapshot.Identity, snapshot, DataChangeKind.Added);
+                    modelChange = Data.Notifications.CreateModelNotification(instance.Identity, instance, ModelChangeKind.Added);
                     break;
                 case SaveResult.Updated:
-                    modelChange = new DataChangeEvent(snapshot.GetType(), snapshot.Identity, snapshot, DataChangeKind.Changed);
+                    modelChange = Data.Notifications.CreateModelNotification(instance.Identity, instance, ModelChangeKind.Changed);
                     break;
             }
 
@@ -118,6 +118,7 @@ namespace Mobile.CQRS.Domain
 
         public void Delete(T instance)
         {
+            // TODO: should snapshot repo publish deletes ?
             this.repository.DeleteId(instance.Identity);
         }
 
@@ -131,7 +132,7 @@ namespace Mobile.CQRS.Domain
             this.repository.Dispose();
         }
 
-        public IObservable<IDataChangeEvent> Changes
+        public IObservable<IModelNotification> Changes
         {
             get
             {
@@ -145,10 +146,10 @@ namespace Mobile.CQRS.Domain
             {
                 foreach (var evt in events.ToList())
                 {
-                    this.eventBus.Publish(evt.AsDomainEvent(typeof(T)));
+                    var modelChange = Notifications.CreateNotification(typeof(T), evt);
+                    this.eventBus.Publish(modelChange);
                 }
             }
         }
     }
 }
-

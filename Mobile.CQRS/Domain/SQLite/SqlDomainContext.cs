@@ -25,7 +25,7 @@ namespace Mobile.CQRS.Domain.SQLite
     using Mobile.CQRS.Data;
     using Mobile.CQRS.Data.SQLite;
 
-    public class SqlDomainContext : DomainContext
+    public class SqlDomainContext : AbstractDomainContext
     {
         public SqlDomainContext(SQLiteConnection connection, IAggregateManifestRepository manifest, IEventStoreRepository eventStore) : 
             base(manifest, eventStore)

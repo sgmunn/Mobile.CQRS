@@ -22,10 +22,9 @@ namespace Mobile.CQRS.Domain
 {
     using System;
     using System.Collections.Generic;
-    using Mobile.CQRS.Data;
 
     public interface IReadModelBuilder
     {
-        IEnumerable<IDataChangeEvent> Handle(INotificationEvent evt);
+        IEnumerable<IModelNotification> Handle(IModelNotification evt);
     }
 }

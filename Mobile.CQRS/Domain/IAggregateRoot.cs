@@ -22,9 +22,8 @@ namespace Mobile.CQRS.Domain
 {
     using System;
     using System.Collections.Generic;
-    using Mobile.CQRS.Data;
 
-    public interface IAggregateRoot : IId
+    public interface IAggregateRoot : IUniqueId
     {
         int Version { get; }
 
@@ -33,4 +32,3 @@ namespace Mobile.CQRS.Domain
         void Commit();
     }
 }
-

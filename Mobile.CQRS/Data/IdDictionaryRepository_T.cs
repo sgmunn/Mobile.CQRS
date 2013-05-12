@@ -22,8 +22,8 @@ namespace Mobile.CQRS.Data
 {
     using System;
 
-    public class IdDictionaryRepository<T> : DictionaryRepository<T> 
-        where T : IId, new() 
+    public class IdDictionaryRepository<T> : AbstractDictionaryRepository<T> 
+        where T : IUniqueId, new() 
     {
         protected override T InternalNew()
         {

@@ -22,6 +22,9 @@ namespace Mobile.CQRS.Data
 {
     using System;
 
+    /// <summary>
+    /// The result of a save operation on a repository
+    /// </summary>
     public enum SaveResult
     {
         None,

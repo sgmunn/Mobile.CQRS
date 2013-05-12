@@ -1,5 +1,5 @@
 //  --------------------------------------------------------------------------------------------------------------------
-//  <copyright file="IDataChangeEvent.cs" company="sgmunn">
+//  <copyright file="AggregateRoot_TState.cs" company="sgmunn">
 //    (c) sgmunn 2012  
 //
 //    Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
@@ -18,18 +18,27 @@
 //  </copyright>
 //  --------------------------------------------------------------------------------------------------------------------
 
-namespace Mobile.CQRS.Data
+namespace Mobile.CQRS.Domain
 {
     using System;
 
-    public interface IDataChangeEvent : INotification
+    public abstract class AbstractAggregateRoot<TState> : AbstractAggregateRoot, ISnapshotSupport 
+        where TState : class, ISnapshot, new()
     {
-        Guid DataId { get; set; }
+        protected AbstractAggregateRoot()
+        {
+            this.InternalState = new TState();
+        }
 
-        Type DataType { get; set; }
+        protected TState InternalState { get; private set; }
 
-        object Data { get; }
+        public virtual void LoadFromSnapshot(ISnapshot snapshot)
+        {
+            this.InternalState = snapshot as TState;
+            this.Version = snapshot.Version;
+            this.Identity = snapshot.Identity;
+        }
 
-        DataChangeKind Change { get; }
+        public abstract ISnapshot GetSnapshot();
     }
 }

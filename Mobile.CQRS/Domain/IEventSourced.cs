@@ -28,4 +28,3 @@ namespace Mobile.CQRS.Domain
         void LoadFromEvents(IList<IAggregateEvent> events);
     }
 }
-

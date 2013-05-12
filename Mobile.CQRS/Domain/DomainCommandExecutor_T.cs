@@ -25,7 +25,8 @@ namespace Mobile.CQRS.Domain
     using System.Linq;
     using Mobile.CQRS.Data;
 
-    public class DomainCommandExecutor<T> : ICommandExecutor<T> where T : class, IAggregateRoot, new()
+    public class DomainCommandExecutor<T> : ICommandExecutor<T> 
+        where T : class, IAggregateRoot, new()
     {
         private readonly IDomainContext context;
         
@@ -39,7 +40,7 @@ namespace Mobile.CQRS.Domain
             this.Execute(new[] { command }, 0);
         }
         
-        public void Execute(IEnumerable<IAggregateCommand> commands)
+        public void Execute(IList<IAggregateCommand> commands)
         {
             this.Execute(commands, 0);
         }
@@ -49,31 +50,34 @@ namespace Mobile.CQRS.Domain
             this.Execute(new[] { command }, expectedVersion);
         }
 
-        public void Execute(IEnumerable<IAggregateCommand> commands, int expectedVersion)
+        public void Execute(IList<IAggregateCommand> commands, int expectedVersion)
         {
+            // create a unit of work to capture events
             var bus = new UnitOfWorkEventBus(this.context.EventBus);
             using (bus)
             {
                 var scope = this.context.BeginUnitOfWork();
                 using (scope)
                 {
+                    // create a unit of work repo to wrap the real aggregate repository
                     var uow = new UnitOfWorkRepository<T>(this.context.GetAggregateRepository<T>(bus));
                     // uow will be owned by the scope, so we don't need to dispose explicitly
                     scope.Add(uow);
                 
+                    // execute the commands
                     var cmd = new CommandExecutor<T>(uow);
-
                     foreach (var command in commands.ToList())
                     {
-                        cmd.Execute(command, 0);
+                        cmd.Execute(command, expectedVersion);
                     }
                 
+                    // commit the changes made to the aggregate repo - eventstore and snapshots
                     scope.Commit();
                 }
 
+                // now publish the events that we captured from the aggregate
                 bus.Commit();
             }
         }
     }
 }
-

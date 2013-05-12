@@ -1,5 +1,5 @@
 //  --------------------------------------------------------------------------------------------------------------------
-//  <copyright file="DataChangeKind.cs" company="sgmunn">
+//  <copyright file="IUniqueId.cs" company="sgmunn">
 //    (c) sgmunn 2012  
 //
 //    Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
@@ -18,14 +18,15 @@
 //  </copyright>
 //  --------------------------------------------------------------------------------------------------------------------
 
-namespace Mobile.CQRS.Data
+namespace Mobile.CQRS
 {
     using System;
 
-    public enum DataChangeKind 
+    /// <summary>
+    /// Represents something that can be uniquely identified
+    /// </summary>
+    public interface IUniqueId
     {
-        Added,
-        Changed,
-        Deleted
+        Guid Identity { get; set; }
     }
 }

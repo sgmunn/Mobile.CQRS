@@ -22,6 +22,9 @@ namespace Mobile.CQRS.Data
 {
     using System;
 
+    /// <summary>
+    /// A repository that stores T that is keyed by Guid, the default repository type
+    /// </summary>
     public interface IRepository<T> : IRepository<T, Guid>
     {
     }

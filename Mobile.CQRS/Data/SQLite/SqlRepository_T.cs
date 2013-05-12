@@ -25,23 +25,20 @@ namespace Mobile.CQRS.Data.SQLite
     using System.Linq;
     using Mobile.CQRS.Reactive;
 
-    // todo: using SyncScheduler to ensure that only one thread accesses the connection as per gist but..
-    // I'm using this to block the current thread so not really async.  more sqlite threading investigation
-
-    public class SqlRepository<T> : IRepository<T>, IConnectedRepository, IObservableRepository 
-        where T: IId, new()
+    public class SqlRepository<T> : IRepository<T>, IRepositoryConnection, IObservableRepository 
+        where T: IUniqueId, new()
     {
         private readonly SQLiteConnection connection;
 
-        private readonly Subject<IDataChangeEvent> changes;
+        private readonly Subject<IModelNotification> changes;
         
         public SqlRepository(SQLiteConnection connection)
         {
             this.connection = connection;
-            this.changes = new Subject<IDataChangeEvent>();
+            this.changes = new Subject<IModelNotification>();
         }
 
-        object IConnectedRepository.Connection
+        object IRepositoryConnection.Connection
         {
             get
             {
@@ -49,7 +46,7 @@ namespace Mobile.CQRS.Data.SQLite
             }
         }
 
-        public IObservable<IDataChangeEvent> Changes
+        public IObservable<IModelNotification> Changes
         {
             get
             {
@@ -78,7 +75,6 @@ namespace Mobile.CQRS.Data.SQLite
         {
             try
             {
-                //return SynchronousTask.GetSync(() => this.Connection.Get<T>(id));
                 lock (this.Connection)
                 {
                     return this.Connection.Get<T>(id);
@@ -92,7 +88,6 @@ namespace Mobile.CQRS.Data.SQLite
 
         public virtual IList<T> GetAll()
         {
-            //return SynchronousTask.GetSync(() => this.Connection.Table<T>().AsEnumerable());
             lock (this.Connection)
             {
                 return this.Connection.Table<T>().ToList();
@@ -103,15 +98,6 @@ namespace Mobile.CQRS.Data.SQLite
         {
             var result = SaveResult.Updated;
 
-//            SynchronousTask.DoSync(() => {
-//                //Console.WriteLine(string.Format("SqlRepo - Save {0} {1}", instance.GetType(),instance.Identity));
-//
-//                if (this.Connection.Update(instance) == 0)
-//                {
-//                    this.Connection.Insert(instance);
-//                    result = SaveResult.Added;
-//                }
-//            });
             lock (this.Connection)
             {
                 if (this.Connection.Update(instance) == 0)
@@ -121,14 +107,14 @@ namespace Mobile.CQRS.Data.SQLite
                 }
             }
 
-            IDataChangeEvent modelChange = null;
+            IModelNotification modelChange = null;
             switch (result)
             {
                 case SaveResult.Added: 
-                    modelChange = new DataChangeEvent<T>(instance.Identity, instance, DataChangeKind.Added);
+                    modelChange = Notifications.CreateModelNotification(instance.Identity, instance, ModelChangeKind.Added);
                     break;
                 case SaveResult.Updated:
-                    modelChange = new DataChangeEvent<T>(instance.Identity, instance, DataChangeKind.Changed);
+                    modelChange = Notifications.CreateModelNotification(instance.Identity, instance, ModelChangeKind.Changed);
                     break;
             }
 
@@ -139,35 +125,17 @@ namespace Mobile.CQRS.Data.SQLite
 
         public virtual void Delete(T instance)
         {
-            //SynchronousTask.DoSync(() => this.Connection.Delete(instance));
             lock (this.Connection)
             {
                 this.Connection.Delete(instance);  
             }
 
-            var modelChange = new DataChangeEvent<T>(instance.Identity, DataChangeKind.Deleted);
+            var modelChange = Notifications.CreateModelNotification(instance.Identity, null, ModelChangeKind.Deleted);
             this.changes.OnNext(modelChange);
         }
 
         public virtual void DeleteId(Guid id)
         {
-//            SynchronousTask.DoSync(() => {
-//                Console.WriteLine(string.Format("SqlRepo - Delete {0} {1}", typeof(T), id));
-//                var map = this.Connection.GetMapping(typeof(T));
-//                var pk = map.PK;
-//
-//                if (pk == null) 
-//                {
-//                    throw new NotSupportedException ("Cannot delete " + map.TableName + ": it has no PK");
-//                }
-//
-//                var q = string.Format ("delete from \"{0}\" where \"{1}\" = ?", map.TableName, pk.Name);
-//                this.Connection.Execute (q, id);
-//
-//                var modelChange = new DataChangeEvent<T>(id, DataChangeKind.Deleted);
-//                this.changes.OnNext(modelChange);
-//            });
-
             lock (this.Connection)
             {
                 var map = this.Connection.GetMapping(typeof(T));
@@ -182,7 +150,7 @@ namespace Mobile.CQRS.Data.SQLite
                 this.Connection.Execute (q, id);
             }
 
-            var modelChange = new DataChangeEvent<T>(id, DataChangeKind.Deleted);
+            var modelChange = Notifications.CreateModelNotification(id, null, ModelChangeKind.Deleted);
             this.changes.OnNext(modelChange);
         }
     }    

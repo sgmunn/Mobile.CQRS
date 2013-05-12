@@ -17,13 +17,15 @@
 //    IN THE SOFTWARE.
 //  </copyright>
 //  --------------------------------------------------------------------------------------------------------------------
-//
 
 namespace Mobile.CQRS.Data
 {
     using System;
     using System.Collections.Generic;
 
+    /// <summary>
+    /// A Repository that gets objects of TData that are keyed by TKey
+    /// </summary>
     public interface IRepository<TData, TKey> : IDisposable
     {
         TData New();
@@ -39,4 +41,3 @@ namespace Mobile.CQRS.Data
         void DeleteId(TKey id);
     }
 }
-

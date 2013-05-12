@@ -25,20 +25,20 @@ namespace Mobile.CQRS.Domain
     using Mobile.CQRS.Data;
 
     // todo: change from T to pass in the registerd builders
-    public class ReadModelBuildingEventBus<T> : INotificationEventBus 
+    public class ReadModelBuildingEventBus<T> : IModelNotificationBus 
         where T : IAggregateRoot, new()
     {
         private readonly IDomainContext context;
 
-        private readonly INotificationEventBus bus;
+        private readonly IModelNotificationBus bus;
         
-        public ReadModelBuildingEventBus(IDomainContext context, INotificationEventBus bus)
+        public ReadModelBuildingEventBus(IDomainContext context, IModelNotificationBus bus)
         {
             this.context = context;
             this.bus = bus;
         }
         
-        public void Publish(INotificationEvent evt)
+        public void Publish(IModelNotification evt)
         {
             if (this.bus != null)
             {
@@ -47,7 +47,7 @@ namespace Mobile.CQRS.Domain
 
             var builders = this.context.GetReadModelBuilders<T>(this.bus);
 
-            var updatedReadModels = new List<IDataChangeEvent>();
+            var updatedReadModels = new List<IModelNotification>();
 
             // todo: this coud be done async, but because we should only have one thread to the db at any one time it's not really worth it.
             // just don't take too long in any one builder and don't make assumptions on the order of builders being executed.
@@ -60,15 +60,14 @@ namespace Mobile.CQRS.Domain
             {
                 foreach (var readModel in updatedReadModels)
                 {
-                    this.bus.Publish(new NotificationEvent(readModel.DataType, readModel.DataId, readModel));
+                    this.bus.Publish(readModel);
                 }
             }
         }
 
-        public IDisposable Subscribe(IObserver<INotificationEvent> subscriber)
+        public IDisposable Subscribe(IObserver<IModelNotification> subscriber)
         {
             throw new NotSupportedException();
         }
     }
 }
-

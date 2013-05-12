@@ -1,5 +1,5 @@
 //  --------------------------------------------------------------------------------------------------------------------
-//  <copyright file="IConnectedRepository.cs" company="sgmunn">
+//  <copyright file="INotificationEvent.cs" company="sgmunn">
 //    (c) sgmunn 2012  
 //
 //    Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
@@ -17,14 +17,30 @@
 //    IN THE SOFTWARE.
 //  </copyright>
 //  --------------------------------------------------------------------------------------------------------------------
-//
 
-namespace Mobile.CQRS.Data
+namespace Mobile.CQRS
 {
     using System;
 
-    public interface IConnectedRepository
-    {
-        object Connection { get; }
-    }
+    /// <summary>
+    /// Represents a notification of something that relates to an indentifiable resource
+    /// </summary>
+    // this is now IModelNotification
+//    public interface INotificationEvent
+//    {
+//        /// <summary>
+//        /// Gets the identity of the resource for which the notification is for.
+//        /// </summary>
+//        Guid Identity { get; }
+//
+//        /// <summary>
+//        /// Gets the type of the resource for which the notification is for.
+//        /// </summary>
+//        Type Type { get; }
+//
+//        /// <summary>
+//        /// Gets the event that raised the notification
+//        /// </summary>
+//        INotification Event { get; }
+//    }
 }

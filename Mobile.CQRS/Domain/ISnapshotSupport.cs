@@ -29,4 +29,3 @@ namespace Mobile.CQRS.Domain
         ISnapshot GetSnapshot();
     }
 }
-

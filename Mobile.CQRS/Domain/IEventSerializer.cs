@@ -29,4 +29,3 @@ namespace Mobile.CQRS.Domain
         object DeserializeFromString(string data);
     }
 }
-

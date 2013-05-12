@@ -53,7 +53,7 @@ namespace iPhoneTest
             
             // make the window visible
             window.MakeKeyAndVisible();
-            
+
             return true;
         }
     }

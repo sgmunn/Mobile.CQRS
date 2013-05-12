@@ -24,11 +24,11 @@ namespace Mobile.CQRS.Domain
     using System.Collections.Generic;
     using System.Linq;
 
-    public abstract class AggregateRoot : IAggregateRoot
+    public abstract class AbstractAggregateRoot : IAggregateRoot
     {
         private readonly List<IAggregateEvent> uncommittedEvents;
 
-        public AggregateRoot()
+        protected AbstractAggregateRoot()
         {
             this.uncommittedEvents = new List<IAggregateEvent>();
         }
@@ -92,7 +92,7 @@ namespace Mobile.CQRS.Domain
             this.uncommittedEvents.Add(evt);
         }
 
-        private void ApplyEvent(IAggregateEvent evt)
+        private void ApplyEvent(object evt)
         {
             if (!MethodExecutor.ExecuteMethod(this, evt))
             {
@@ -101,4 +101,3 @@ namespace Mobile.CQRS.Domain
         }
     }
 }
-

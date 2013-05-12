@@ -24,6 +24,17 @@ namespace Mobile.CQRS.Domain
 
     public class ConcurrencyException : Exception
     {
+        public ConcurrencyException(Guid aggregateId, int expectedVersion, int actualVersion)
+        {
+            this.AggregateId = aggregateId;
+            this.ExpectedVersion = expectedVersion;
+            this.ActualVersion = actualVersion;
+        }
+
+        public int ExpectedVersion { get; private set; }
+
+        public int ActualVersion { get; private set; }
+
+        public Guid AggregateId { get; private set; }
     }
 }
-

@@ -25,11 +25,12 @@ namespace Mobile.CQRS.Data
     using System.Linq;
     using Mobile.CQRS.Data;
 
-    public class UnitOfWorkRepository<T> : IRepositoryUnitOfWork<T> where T : IId
+    public class UnitOfWorkRepository<T> : IUnitOfWorkRepository<T> 
+        where T : IUniqueId
     {
         private readonly IRepository<T> repository;
 
-        private readonly Dictionary<Guid, IId> savedItems;
+        private readonly Dictionary<Guid, IUniqueId> savedItems;
         
         private readonly List<Guid> deletedItemKeys;
 
@@ -37,7 +38,7 @@ namespace Mobile.CQRS.Data
         {
             this.repository = repository;
 
-            this.savedItems = new Dictionary<Guid, IId>();
+            this.savedItems = new Dictionary<Guid, IUniqueId>();
             this.deletedItemKeys = new List<Guid>();
         }
 

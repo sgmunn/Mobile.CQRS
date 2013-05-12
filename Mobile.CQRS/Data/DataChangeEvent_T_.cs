@@ -1,5 +1,5 @@
 //  --------------------------------------------------------------------------------------------------------------------
-//  <copyright file="IId.cs" company="sgmunn">
+//  <copyright file="DataChangeEvent_T.cs" company="sgmunn">
 //    (c) sgmunn 2012  
 //
 //    Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
@@ -22,11 +22,16 @@ namespace Mobile.CQRS.Data
 {
     using System;
 
-    /// <summary>
-    /// Defines the unique identify of a data model
-    /// </summary>
-    public interface IId
-    {
-        Guid Identity { get; set; }
-    }
+//    public class DataChangeEvent<T> : DataChangeEvent
+//    {
+//        public DataChangeEvent(Guid id, object dataModel, DataChangeKind change)
+//            : base(typeof(T), id, dataModel, change)
+//        {
+//        }
+//
+//        public DataChangeEvent(Guid id, DataChangeKind change)
+//            : base(typeof(T), id, change)
+//        {
+//        }
+//    }
 }

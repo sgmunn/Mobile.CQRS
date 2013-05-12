@@ -28,14 +28,14 @@ namespace Mobile.CQRS.Domain
     {
         private readonly IRepository<T> repository;
 
-        private readonly List<IDataChangeEvent> updatedReadModels;
+        private readonly List<IModelNotification> updatedReadModels;
 
-        private readonly IObservable<IDataChangeEvent> changes;
+        private readonly IObservable<IModelNotification> changes;
 
         protected ReadModelBuilder(IRepository<T> repository)
         {
             this.repository = repository;
-            this.updatedReadModels = new List<IDataChangeEvent>();
+            this.updatedReadModels = new List<IModelNotification>();
 
             var observableRepo = repository as IObservableRepository;
             this.changes = observableRepo != null ? observableRepo.Changes : null;
@@ -49,7 +49,7 @@ namespace Mobile.CQRS.Domain
             }
         }
 
-        public IEnumerable<IDataChangeEvent> Handle(INotificationEvent evt)
+        public IEnumerable<IModelNotification> Handle(IModelNotification evt)
         {
             this.updatedReadModels.Clear();
 
@@ -61,7 +61,7 @@ namespace Mobile.CQRS.Domain
             return this.updatedReadModels;
         }
 
-        public IObservable<IDataChangeEvent> Changes
+        public IObservable<IModelNotification> Changes
         {
             get
             {
@@ -69,6 +69,7 @@ namespace Mobile.CQRS.Domain
             }
         }
 
+        // TODO: read model builder
 //        protected void NotifyReadModelChange(IDataModel readModel, bool deleted)
 //        {
 //            this.updatedReadModels.Add(new DataModelChange(readModel, deleted));

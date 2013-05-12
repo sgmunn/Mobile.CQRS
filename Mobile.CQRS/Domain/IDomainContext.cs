@@ -28,7 +28,7 @@ namespace Mobile.CQRS.Domain
     {
         IEventStoreRepository EventStore { get; }
         
-        INotificationEventBus EventBus { get; }
+        IModelNotificationBus EventBus { get; }
 
         IEventSerializer EventSerializer { get; }
         
@@ -36,9 +36,8 @@ namespace Mobile.CQRS.Domain
 
         ICommandExecutor<T> NewCommandExecutor<T>() where T : class, IAggregateRoot, new();
         
-        IAggregateRepository<T> GetAggregateRepository<T>(INotificationEventBus bus) where T : IAggregateRoot, new();
+        IAggregateRepository<T> GetAggregateRepository<T>(IModelNotificationBus bus) where T : IAggregateRoot, new();
 
-        IList<IReadModelBuilder> GetReadModelBuilders<T>(INotificationEventBus bus) where T : IAggregateRoot, new();
+        IList<IReadModelBuilder> GetReadModelBuilders<T>(IModelNotificationBus bus) where T : IAggregateRoot, new();
     }
 }
-

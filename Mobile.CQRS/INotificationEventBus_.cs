@@ -22,9 +22,9 @@ namespace Mobile.CQRS
 {
     using System;
 
-    public interface INotificationEventBus : IObservable<INotificationEvent> 
-    {
-        void Publish(INotificationEvent evt);
-    }
+//    public interface INotificationEventBus : IObservable<INotificationEvent> 
+//    {
+//        void Publish(INotificationEvent evt);
+//    }
 }
 

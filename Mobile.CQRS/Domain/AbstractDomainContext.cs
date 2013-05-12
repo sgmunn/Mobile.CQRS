@@ -26,22 +26,22 @@ namespace Mobile.CQRS.Domain
     using Mobile.CQRS.Data;
     using Mobile.CQRS.Reactive;
     
-    public abstract class DomainContext : IDomainContext
+    public abstract class AbstractDomainContext : IDomainContext
     {
         private readonly Dictionary<Type, List<Func<IDomainContext, IReadModelBuilder>>> registeredBuilders;
 
         private readonly Dictionary<Type, Func<IDomainContext, ISnapshotRepository>> registeredSnapshotRepositories;
 
-        public DomainContext()
+        protected AbstractDomainContext()
         {
-            this.EventBus = new ObservableNotificationEventBus();
+            this.EventBus = new ObservableModelNotificationtBus();
             this.registeredBuilders = new Dictionary<Type, List<Func<IDomainContext, IReadModelBuilder>>>();
             this.registeredSnapshotRepositories = new Dictionary<Type, Func<IDomainContext, ISnapshotRepository>>();
         }
 
-        public DomainContext(IAggregateManifestRepository manifest, IEventStoreRepository eventStore)
+        protected AbstractDomainContext(IAggregateManifestRepository manifest, IEventStoreRepository eventStore)
         {
-            this.EventBus = new ObservableNotificationEventBus();
+            this.EventBus = new ObservableModelNotificationtBus();
             this.Manifest = manifest;
             this.EventStore = eventStore;
             
@@ -49,7 +49,7 @@ namespace Mobile.CQRS.Domain
             this.registeredSnapshotRepositories = new Dictionary<Type, Func<IDomainContext, ISnapshotRepository>>();
         }
 
-        public DomainContext(IAggregateManifestRepository manifest, IEventStoreRepository eventStore, INotificationEventBus eventBus)
+        protected AbstractDomainContext(IAggregateManifestRepository manifest, IEventStoreRepository eventStore, IModelNotificationBus eventBus)
         {
             this.Manifest = manifest;
             this.EventBus = eventBus;
@@ -63,13 +63,13 @@ namespace Mobile.CQRS.Domain
 
         public IEventStoreRepository EventStore { get; protected set; }
 
-        public INotificationEventBus EventBus { get; protected set; }
+        public IModelNotificationBus EventBus { get; protected set; }
 
         public IEventSerializer EventSerializer { get; protected set; }
 
         public virtual IUnitOfWorkScope BeginUnitOfWork()
         {
-            return new DefaultScope();
+            return new InMemoryUnitOfWorkScope();
         }
 
         public ICommandExecutor<T> NewCommandExecutor<T>() where T : class, IAggregateRoot, new()
@@ -77,7 +77,8 @@ namespace Mobile.CQRS.Domain
             return new DomainCommandExecutor<T>(this);
         }
 
-        public virtual IAggregateRepository<T> GetAggregateRepository<T>(INotificationEventBus bus) where T : IAggregateRoot, new()
+        public virtual IAggregateRepository<T> GetAggregateRepository<T>(IModelNotificationBus bus) 
+            where T : IAggregateRoot, new()
         {
             if (typeof(T).GetInterfaces().Contains(typeof(IEventSourced)))
             {
@@ -88,13 +89,14 @@ namespace Mobile.CQRS.Domain
 
             if (repo as IObservableRepository != null)
             {
-                ((IObservableRepository)repo).Changes.Subscribe(evt => bus.Publish(evt.AsDomainEvent()));
+                ((IObservableRepository)repo).Changes.Subscribe(evt => bus.Publish(evt));
             }
 
             return repo;
         }
 
-        public IList<IReadModelBuilder> GetReadModelBuilders<T>(INotificationEventBus bus) where T : IAggregateRoot, new()
+        public IList<IReadModelBuilder> GetReadModelBuilders<T>(IModelNotificationBus bus) 
+            where T : IAggregateRoot, new()
         {
             var result = new List<IReadModelBuilder>();
 
@@ -106,7 +108,9 @@ namespace Mobile.CQRS.Domain
 
                     if (repo as IObservableRepository != null)
                     {
-                        ((IObservableRepository)repo).Changes.Subscribe(evt => bus.Publish(evt.AsDomainEvent()));
+                        ((IObservableRepository)repo).Changes.Subscribe(evt => {
+                            bus.Publish(evt);
+                        });
                     }
 
                     result.Add(repo);

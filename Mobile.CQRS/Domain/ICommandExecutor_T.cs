@@ -23,11 +23,12 @@ namespace Mobile.CQRS.Domain
     using System;
     using System.Collections.Generic;
 
-    public interface ICommandExecutor<T> where T : IAggregateRoot, new()
+    public interface ICommandExecutor<T> 
+        where T : IAggregateRoot, new()
     {
         void Execute(IAggregateCommand command);
-        void Execute(IEnumerable<IAggregateCommand> commands);
+        void Execute(IList<IAggregateCommand> commands);
         void Execute(IAggregateCommand command, int expectedVersion);
-        void Execute(IEnumerable<IAggregateCommand> commands, int expectedVersion);
+        void Execute(IList<IAggregateCommand> commands, int expectedVersion);
     }
 }

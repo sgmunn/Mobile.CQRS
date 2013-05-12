@@ -1,5 +1,5 @@
 // --------------------------------------------------------------------------------------------------------------------
-// <copyright file="DictionaryRepository_T.cs" company="sgmunn">
+// <copyright file="AbstractDictionaryRepository_T.cs" company="sgmunn">
 //   (c) sgmunn 2012  
 //
 //   Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
@@ -24,11 +24,11 @@ namespace Mobile.CQRS.Data
     using System.Collections.Generic;
     using System.Linq;
 
-    public abstract class DictionaryRepository<T> : IRepository<T>
+    public abstract class AbstractDictionaryRepository<T> : IRepository<T>
     {
         private readonly Dictionary<Guid, T> storage;
 
-        protected DictionaryRepository()
+        protected AbstractDictionaryRepository()
         {
             this.storage = new Dictionary<Guid, T>();
         }

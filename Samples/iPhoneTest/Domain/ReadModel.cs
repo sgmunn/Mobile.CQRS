@@ -21,11 +21,12 @@
 namespace Sample.Domain
 {
     using System;
+    using Mobile.CQRS;
     using Mobile.CQRS.Data;
     using Mobile.CQRS.Data.SQLite;
     using Mobile.CQRS.Domain;
 
-    public class TestReadModel : IId
+    public class TestReadModel : IUniqueId
     {
         [PrimaryKey]
         public Guid Identity { get; set;}
@@ -48,7 +49,7 @@ namespace Sample.Domain
         }
     }
 
-    public class TransactionDataContract : IId
+    public class TransactionDataContract : IUniqueId
     {
         public TransactionDataContract()
         {

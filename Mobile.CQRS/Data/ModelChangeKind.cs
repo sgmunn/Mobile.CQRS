@@ -1,5 +1,5 @@
 //  --------------------------------------------------------------------------------------------------------------------
-//  <copyright file="NotificationEvent.cs" company="sgmunn">
+//  <copyright file="ModelChangeKind.cs" company="sgmunn">
 //    (c) sgmunn 2012  
 //
 //    Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
@@ -18,28 +18,17 @@
 //  </copyright>
 //  --------------------------------------------------------------------------------------------------------------------
 
-namespace Mobile.CQRS
+namespace Mobile.CQRS.Data
 {
     using System;
 
-    public sealed class NotificationEvent : INotificationEvent
+    /// <summary>
+    /// Represents a change to a model
+    /// </summary>
+    public enum ModelChangeKind 
     {
-        public NotificationEvent(Type type, Guid id, INotification evt )
-        {
-            this.Identity = id;
-            this.Type = type;
-            this.Event = evt;
-        }
-
-        public Guid Identity { get; private set; }
-        
-        public Type Type { get; private set; }
-        
-        public INotification Event { get; private set; }
-
-        public override string ToString()
-        {
-            return string.Format("[NotificationEvent: Id={0}, Type={1}, Event={2}]", Identity, Type, Event);
-        }
+        Added,
+        Changed,
+        Deleted
     }
 }

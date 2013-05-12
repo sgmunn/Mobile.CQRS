@@ -1,5 +1,5 @@
 //  --------------------------------------------------------------------------------------------------------------------
-//  <copyright file="DataChangeEvent_T.cs" company="sgmunn">
+//  <copyright file="IDataChangeEvent.cs" company="sgmunn">
 //    (c) sgmunn 2012  
 //
 //    Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
@@ -22,16 +22,14 @@ namespace Mobile.CQRS.Data
 {
     using System;
 
-    public class DataChangeEvent<T> : DataChangeEvent
-    {
-        public DataChangeEvent(Guid id, object dataModel, DataChangeKind change)
-            : base(typeof(T), id, dataModel, change)
-        {
-        }
-
-        public DataChangeEvent(Guid id, DataChangeKind change)
-            : base(typeof(T), id, change)
-        {
-        }
-    }
+//    public interface IDataChangeEvent : INotification
+//    {
+//        Guid DataId { get; set; }
+//
+//        Type DataType { get; set; }
+//
+//        object Data { get; }
+//
+//        DataChangeKind Change { get; }
+//    }
 }

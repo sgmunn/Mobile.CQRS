@@ -25,7 +25,7 @@ namespace Mobile.CQRS.Domain
     using System.Collections.Generic;
     using System.Linq;
     
-    public class InMemorySnapshotRepository<T> : DictionaryRepository<T>, ISnapshotRepository
+    public class InMemorySnapshotRepository<T> : AbstractDictionaryRepository<T>, ISnapshotRepository
         where T : class, ISnapshot, new() 
     {
         public InMemorySnapshotRepository()
@@ -83,4 +83,3 @@ namespace Mobile.CQRS.Domain
         }
     }
 }
-

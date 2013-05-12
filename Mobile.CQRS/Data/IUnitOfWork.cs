@@ -22,6 +22,9 @@ namespace Mobile.CQRS.Data
 {
     using System;
 
+    /// <summary>
+    /// Represents a unit of work that is commited on Commit and undone on Dispose
+    /// </summary>
     public interface IUnitOfWork : IDisposable
     {
         void Commit();

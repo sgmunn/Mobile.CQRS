@@ -1,5 +1,5 @@
 // --------------------------------------------------------------------------------------------------------------------
-// <copyright file="DefaultScope.cs" company="sgmunn">
+// <copyright file="IUnitOfWorkRepository_T.cs" company="sgmunn">
 //   (c) sgmunn 2012  
 //
 //   Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
@@ -18,41 +18,14 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace Mobile.CQRS.Domain
+namespace Mobile.CQRS.Data
 {
     using System;
-    using System.Collections.Generic;
-    using Mobile.CQRS.Data;
 
-    public class DefaultScope : IUnitOfWorkScope
+    /// <summary>
+    /// A repository that performs all saves and deletes in one unit of work
+    /// </summary>
+    public interface IUnitOfWorkRepository<T> : IRepository<T>, IUnitOfWork
     {
-        private readonly List<IUnitOfWork> scopedWork;
- 
-        public DefaultScope()
-        {
-            this.scopedWork = new List<IUnitOfWork>();
-        }
-
-        public void Add(IUnitOfWork uow)
-        {
-            this.scopedWork.Add(uow);
-        }
-
-        public void Commit()
-        {
-            foreach (var uow in this.scopedWork)
-            {
-                uow.Commit();
-            }
-        }
-
-        public void Dispose()
-        {
-            foreach (var uow in this.scopedWork)
-            {
-                uow.Dispose();
-            }
-        }
     }
 }
-

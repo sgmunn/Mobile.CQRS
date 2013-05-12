@@ -25,7 +25,7 @@ namespace Mobile.CQRS.Domain
     using System.Linq;
     using Mobile.CQRS.Data;
     
-    public class InMemoryEventStoreRepository<T> : DictionaryRepository<ISerializedAggregateEvent>, IEventStoreRepository 
+    public class InMemoryEventStoreRepository<T> : AbstractDictionaryRepository<ISerializedAggregateEvent>, IEventStoreRepository 
         where T : ISerializedAggregateEvent, new() 
     {
         protected override ISerializedAggregateEvent InternalNew()
@@ -59,4 +59,3 @@ namespace Mobile.CQRS.Domain
         }
     }
 }
-
