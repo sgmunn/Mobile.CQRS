@@ -38,6 +38,6 @@ namespace Mobile.CQRS.Domain
         
         IAggregateRepository<T> GetAggregateRepository<T>(IModelNotificationBus bus) where T : IAggregateRoot, new();
 
-        IList<IReadModelBuilder> GetReadModelBuilders<T>(IModelNotificationBus bus) where T : IAggregateRoot, new();
+        IList<IReadModelBuilder> GetReadModelBuilders<T>() where T : IAggregateRoot, new();
     }
 }

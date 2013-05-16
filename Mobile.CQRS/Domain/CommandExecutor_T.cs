@@ -33,9 +33,9 @@ namespace Mobile.CQRS.Domain
 
         private readonly Dictionary<Guid, int> versions;
 
-        public CommandExecutor(IRepository<T> repository)
+        public CommandExecutor(IRepository<T> aggregateRepository)
         {
-            this.repository = repository;
+            this.repository = aggregateRepository;
             this.versions = new Dictionary<Guid, int>();
         }
 

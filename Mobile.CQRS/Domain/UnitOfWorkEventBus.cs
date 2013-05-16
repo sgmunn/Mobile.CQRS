@@ -35,35 +35,52 @@ namespace Mobile.CQRS.Domain
         
         public UnitOfWorkEventBus(IModelNotificationBus bus)
         {
+            if (bus == null)
+                throw new ArgumentNullException("bus");
+
             this.events = new List<IModelNotification>();
             this.bus = bus;
         }
         
-        public void Publish(IModelNotification evt)
+        protected IModelNotificationBus Bus
         {
-            this.events.Add(evt);
+            get
+            {
+                return this.bus;
+            }
         }
 
-        public IDisposable Subscribe(IObserver<IModelNotification> subscriber)
+        protected List<IModelNotification> Events
+        {
+            get
+            {
+                return this.events;
+            }
+        }
+
+        public virtual void Publish(IModelNotification evt)
+        {
+            this.Events.Add(evt);
+        }
+
+        public virtual IDisposable Subscribe(IObserver<IModelNotification> subscriber)
         {
             throw new NotSupportedException();
         }
 
-        public void Dispose()
+        public virtual void Dispose()
         {
-            this.events.Clear();
+            this.Events.Clear();
         }
 
-        public void Commit()
+        public virtual void Commit()
         {
-            if (this.bus != null)
+            foreach (var evt in this.Events)
             {
-                // TODO: maybe deduplicate events, use a dictionary of id / type etc
-                foreach (var evt in this.events)
-                {
-                    this.bus.Publish(evt);
-                }
+                this.bus.Publish(evt);
             }
+
+            this.Events.Clear();
         }
     }
 }

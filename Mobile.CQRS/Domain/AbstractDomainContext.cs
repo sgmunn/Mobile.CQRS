@@ -82,20 +82,13 @@ namespace Mobile.CQRS.Domain
         {
             if (typeof(T).GetInterfaces().Contains(typeof(IEventSourced)))
             {
-                return new EventSourcedAggregateRepository<T>(this.EventSerializer, this.EventStore, this.Manifest, new ReadModelBuildingEventBus<T>(this, bus));
+                return new EventSourcedAggregateRepository<T>(this.EventSerializer, this.EventStore, this.Manifest, bus);
             }
 
-            var repo = new SnapshotAggregateRepository<T>(this.GetSnapshotRepository(typeof(T)), this.Manifest, new ReadModelBuildingEventBus<T>(this, bus));
-
-            if (repo as IObservableRepository != null)
-            {
-                ((IObservableRepository)repo).Changes.Subscribe(evt => bus.Publish(evt));
-            }
-
-            return repo;
+            return new SnapshotAggregateRepository<T>(this.GetSnapshotRepository(typeof(T)), this.Manifest, bus);
         }
 
-        public IList<IReadModelBuilder> GetReadModelBuilders<T>(IModelNotificationBus bus) 
+        public IList<IReadModelBuilder> GetReadModelBuilders<T>() 
             where T : IAggregateRoot, new()
         {
             var result = new List<IReadModelBuilder>();
@@ -104,16 +97,7 @@ namespace Mobile.CQRS.Domain
             {
                 foreach (var factory in this.registeredBuilders[typeof(T)])
                 {
-                    var repo = factory(this);
-
-                    if (repo as IObservableRepository != null)
-                    {
-                        ((IObservableRepository)repo).Changes.Subscribe(evt => {
-                            bus.Publish(evt);
-                        });
-                    }
-
-                    result.Add(repo);
+                    result.Add(factory(this));
                 }
             }
 

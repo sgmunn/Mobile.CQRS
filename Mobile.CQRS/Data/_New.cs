@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.CompilerServices;
 
 namespace Mobile.CQRS
 {
@@ -163,7 +164,17 @@ namespace Mobile.CQRS.Data
     /// </summary>
     public interface IProjection<TProjection>
     {
-        TProjection Build(TProjection initialState, IList<IEvent> events);
+        // only works for 1 to 1 projections.
+        // what about where we build a list of objects based on events from a single aggregate (1 to m)?
+        // there is information in each event that could identify the read model, but only the projection knows
+        // this.
+        // in which case we really need to pass in the repo, rather than have it external to the projection
+        // unless we have explicit support for managing lists.
+        // kind of a bit of an abstraction for perhaps not that much benefit..
+
+
+
+        IList<TProjection> Build(TProjection initialState, IList<IEvent> events);
     }
 
     /// <summary>
@@ -171,7 +182,7 @@ namespace Mobile.CQRS.Data
     /// </summary>
     public abstract class ProjectionBuilder<TProjection> : IProjection<TProjection>
     {
-        public TProjection Build(TProjection initialState, IList<IEvent> events)
+        public IList<TProjection> Build(TProjection initialState, IList<IEvent> events)
         {
             this.State = initialState;
 
@@ -180,7 +191,7 @@ namespace Mobile.CQRS.Data
                 this.HandleEvent(evt);
             }
 
-            return this.State;
+            return null;//this.State;
         }
 
         protected TProjection State { get; set; }
@@ -214,7 +225,7 @@ namespace Mobile.CQRS.Data
 
                 if (currentState != null)
                 {
-                    repository.Save(currentState);
+                    // repository.Save(currentState);
                     // TODO: projection - return new DataChangeEvent<TProjection>(id, currentState, initialState == null ? DataChangeKind.Added : DataChangeKind.Changed);
                 }
                 else
@@ -230,6 +241,25 @@ namespace Mobile.CQRS.Data
             return null;
         }
     }
+
+    public interface ISpecification<T>
+    {
+        bool IsSatisfiedBy(T sut);
+    }
+
+//    public class EligibleForDiscountSpecification : ISpecification<Customer>
+//    {
+//        private readonly Product _product;
+//        public EligibleForDiscountSpecification(Product product)
+//        {
+//            _product = product;
+//        }
+//
+//        public bool IsSatisfiedBy(Customer customer)
+//        {
+//            return (_product.Price < 100 && customer.CreditRating >= _product.MinimumCreditRating);
+//        }
+//    }
 
     /// <summary>
     /// Represents a query that returns instances of TState.

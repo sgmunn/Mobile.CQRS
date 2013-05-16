@@ -23,22 +23,24 @@ namespace Mobile.CQRS.Domain
     using System;
     using System.Collections.Generic;
     using Mobile.CQRS.Data;
+    using Mobile.CQRS.Reactive;
 
-    public abstract class ReadModelBuilder<T> : IReadModelBuilder<T>, IObservableRepository
+    public abstract class ReadModelBuilder<T> : IReadModelBuilder<T>
+        where T : IUniqueId
     {
         private readonly IRepository<T> repository;
 
         private readonly List<IModelNotification> updatedReadModels;
 
-        private readonly IObservable<IModelNotification> changes;
-
         protected ReadModelBuilder(IRepository<T> repository)
         {
-            this.repository = repository;
+            var observableRepo = new ObservableRepository<T>(repository);
+            this.repository = observableRepo;
             this.updatedReadModels = new List<IModelNotification>();
 
-            var observableRepo = repository as IObservableRepository;
-            this.changes = observableRepo != null ? observableRepo.Changes : null;
+            observableRepo.Changes.Subscribe(evt => {
+                this.updatedReadModels.Add(evt);
+            });
         }
 
         public IRepository<T> Repository
@@ -53,32 +55,9 @@ namespace Mobile.CQRS.Domain
         {
             this.updatedReadModels.Clear();
 
-            // now, for each domain event, call a method that takes the event and call it
-            // todo: should we check for not handling the event or not.  read model builders probably don't need to 
-            // handle *everthing*
             MethodExecutor.ExecuteMethod(this, evt.Event);
 
             return this.updatedReadModels;
         }
-
-        public IObservable<IModelNotification> Changes
-        {
-            get
-            {
-                return this.changes;
-            }
-        }
-
-        // TODO: read model builder
-//        protected void NotifyReadModelChange(IDataModel readModel, bool deleted)
-//        {
-//            this.updatedReadModels.Add(new DataModelChange(readModel, deleted));
-//        }
-//
-//        protected void NotifyReadModelChange(Guid id, bool deleted)
-//        {
-//            this.updatedReadModels.Add(new DataModelChange(id, deleted));
-//        }
     }
 }
-

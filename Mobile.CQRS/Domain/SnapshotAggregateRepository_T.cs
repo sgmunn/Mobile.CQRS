@@ -30,7 +30,7 @@ namespace Mobile.CQRS.Domain
     // at the moment this will not handle internal state with complicated objects
     // an alternative is for the aggregate to return a snapshot that is serialized -- ie different to its internal state
 
-    public class SnapshotAggregateRepository<T> : IAggregateRepository<T>, IObservableRepository 
+    public class SnapshotAggregateRepository<T> : IAggregateRepository<T>
         where T : IAggregateRoot, new()
     {
         private readonly ISnapshotRepository repository;
@@ -38,15 +38,12 @@ namespace Mobile.CQRS.Domain
         private readonly IModelNotificationBus eventBus;
 
         private readonly IAggregateManifestRepository manifest;
-
-        private readonly Subject<IModelNotification> changes;
   
         public SnapshotAggregateRepository(ISnapshotRepository repository, IAggregateManifestRepository manifest, IModelNotificationBus eventBus)
         {
             this.repository = repository;
             this.eventBus = eventBus;
             this.manifest = manifest;
-            this.changes = new Subject<IModelNotification>();
         }
 
         public T New()
@@ -108,9 +105,7 @@ namespace Mobile.CQRS.Domain
                     break;
             }
 
-            this.changes.OnNext(modelChange);
-
-            this.PublishEvents(instance.UncommittedEvents);
+            this.PublishEvents(instance.UncommittedEvents, modelChange);
             instance.Commit();
 
             return expectedVersion == 0 ? SaveResult.Added : SaveResult.Updated;
@@ -132,15 +127,7 @@ namespace Mobile.CQRS.Domain
             this.repository.Dispose();
         }
 
-        public IObservable<IModelNotification> Changes
-        {
-            get
-            {
-                return this.changes;
-            }
-        }
-
-        private void PublishEvents(IEnumerable<IAggregateEvent> events)
+        private void PublishEvents(IEnumerable<IAggregateEvent> events, IModelNotification modelNotification)
         {
             if (this.eventBus != null)
             {
@@ -149,7 +136,9 @@ namespace Mobile.CQRS.Domain
                     var modelChange = Notifications.CreateNotification(typeof(T), evt);
                     this.eventBus.Publish(modelChange);
                 }
-            }
+
+                this.eventBus.Publish(modelNotification);
+           }
         }
     }
 }

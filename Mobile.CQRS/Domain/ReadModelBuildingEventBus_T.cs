@@ -22,52 +22,47 @@ namespace Mobile.CQRS.Domain
 {
     using System;
     using System.Collections.Generic;
-    using Mobile.CQRS.Data;
 
-    // todo: change from T to pass in the registerd builders
-    public class ReadModelBuildingEventBus<T> : IModelNotificationBus 
+    public class ReadModelBuildingEventBus<T> : UnitOfWorkEventBus 
         where T : IAggregateRoot, new()
     {
-        private readonly IDomainContext context;
+        private readonly IList<IReadModelBuilder> builders;
 
-        private readonly IModelNotificationBus bus;
-        
-        public ReadModelBuildingEventBus(IDomainContext context, IModelNotificationBus bus)
+        public ReadModelBuildingEventBus(IList<IReadModelBuilder> builders, IModelNotificationBus bus)
+            : base(bus)
         {
-            this.context = context;
-            this.bus = bus;
+            if (builders == null)
+                throw new ArgumentNullException("builders");
+
+            this.builders = builders;
         }
-        
-        public void Publish(IModelNotification evt)
-        {
-            if (this.bus != null)
-            {
-                this.bus.Publish(evt);
-            }
 
-            var builders = this.context.GetReadModelBuilders<T>(this.bus);
+        public override void Commit()
+        {
+            this.Events.AddRange(this.BuildReadModels());
+            base.Commit();
+        }
+
+        protected virtual IList<IModelNotification> BuildReadModels()
+        {
+            var result = new List<IModelNotification>();
 
             var updatedReadModels = new List<IModelNotification>();
 
-            // todo: this coud be done async, but because we should only have one thread to the db at any one time it's not really worth it.
-            // just don't take too long in any one builder and don't make assumptions on the order of builders being executed.
-            foreach (var builder in builders)
+            foreach (var evt in this.Events)
             {
-                updatedReadModels.AddRange(builder.Handle(evt));
-            }
-
-            if (this.bus != null)
-            {
-                foreach (var readModel in updatedReadModels)
+                foreach (var builder in this.builders)
                 {
-                    this.bus.Publish(readModel);
+                    updatedReadModels.AddRange(builder.Handle(evt));
                 }
             }
-        }
 
-        public IDisposable Subscribe(IObserver<IModelNotification> subscriber)
-        {
-            throw new NotSupportedException();
+            foreach (var readModel in updatedReadModels)
+            {
+                result.Add(readModel);
+            }
+
+            return result;
         }
     }
 }
