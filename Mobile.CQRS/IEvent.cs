@@ -1,6 +1,6 @@
 // --------------------------------------------------------------------------------------------------------------------
-// <copyright file="SerializedAggregateEvent.cs" company="sgmunn">
-//   (c) sgmunn 2012  
+// <copyright file="IEvent.cs" company="sgmunn">
+//   (c) sgmunn 2013  
 //
 //   Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
 //   documentation files (the "Software"), to deal in the Software without restriction, including without limitation 
@@ -9,7 +9,7 @@
 //
 //   The above copyright notice and this permission notice shall be included in all copies or substantial portions of 
 //   the Software.
-// 
+//
 //   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO 
 //   THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
 //   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
@@ -18,26 +18,14 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace Mobile.CQRS.Domain.SQLite
+namespace Mobile.CQRS
 {
     using System;
-    using Mobile.CQRS.Data.SQLite;
 
-    public class SerializedAggregateEvent : ISerializedAggregateEvent
+    /// <summary>
+    /// Represents an abstract event that has occured.
+    /// </summary>
+    public interface IEvent : IUniqueId
     {
-        [PrimaryKey]
-        public Guid Identity { get; set; }
-
-        [Indexed]
-        public Guid AggregateId { get; set; }
-  
-        public int Version { get; set; }
-  
-        public string EventData { get; set; }
-
-        public override string ToString()
-        {
-            return string.Format("{0} - {1}", this.AggregateId.ToString().Substring(0, 8), this.Version);
-        }
     }
 }

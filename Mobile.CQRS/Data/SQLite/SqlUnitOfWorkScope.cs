@@ -22,17 +22,25 @@ namespace Mobile.CQRS.Data.SQLite
 {
     using System;
     using System.Collections.Generic;
-    
+    using System.Threading;
+
     public class SqlUnitOfWorkScope : IUnitOfWorkScope
     {
         private readonly SQLiteConnection connection;
         
         private readonly List<IUnitOfWork> scopedWork;
 
+        private bool inTransaction;
+
+        private bool committed;
+
+        private bool disposed;
+
         public SqlUnitOfWorkScope(SQLiteConnection connection)
         {
             this.connection = connection;
             this.scopedWork = new List<IUnitOfWork>();
+            this.BeginTransaction();
         }
 
         public void Add(IUnitOfWork uow)
@@ -42,34 +50,92 @@ namespace Mobile.CQRS.Data.SQLite
 
         public void Commit()
         {
-            lock(this.connection)
+            if (this.committed)
             {
-                this.connection.BeginTransaction();
-                try
-                {
-                    foreach (var uow in this.scopedWork)
-                    {
-                        uow.Commit();
-                    }
+                return;
+            }
 
-                    this.connection.Commit();
-                }
-                catch (Exception ex)
+            try
+            {
+                this.committed = true;
+
+                foreach (var uow in this.scopedWork)
                 {
-                    Console.WriteLine("SqlUnitOfWork Exception \n{0}", ex);
-                    this.connection.Rollback();
-                    throw;
+                    uow.Commit();
                 }
+
+                this.EndTransaction();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("SqlUnitOfWork Exception \n{0}", ex);
+                throw;
             }
         }
 
         public void Dispose()
         {
-            foreach (var uow in this.scopedWork)
+            if (this.disposed)
             {
-                uow.Dispose();
+                throw new ObjectDisposedException("SqlUnitOfWorkScope");
+            }
+
+            if (!this.committed)
+            {
+                this.disposed = true;
+                this.DisposeScopedWork();
+            }
+        }
+        
+        private void DisposeScopedWork()
+        {
+            try
+            {
+                foreach (var uow in this.scopedWork)
+                {
+                    uow.Dispose();
+                }
+            }
+            finally
+            {
+                this.Rollback();
+            }
+        }
+
+        private void BeginTransaction()
+        {
+            if (!this.connection.IsInTransaction)
+            {
+                Monitor.Enter(this.connection);
+                this.connection.BeginTransaction();
+                this.inTransaction = true;
+            }
+        }
+
+        private void EndTransaction()
+        {
+            if (this.inTransaction)
+            {
+                this.connection.Commit();
+                this.inTransaction = false;
+                Monitor.Exit(this.connection);
+            }
+        }
+
+        private void Rollback()
+        {
+            if (this.inTransaction)
+            {
+                try
+                {
+                    this.connection.Rollback();
+                    this.inTransaction = false;
+                }
+                finally
+                {
+                    Monitor.Exit(this.connection);
+                }
             }
         }
     }
 }
-

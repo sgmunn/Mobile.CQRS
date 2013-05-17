@@ -24,7 +24,6 @@ namespace Mobile.CQRS.Domain
     using System.Collections.Generic;
     using System.Linq;
     using Mobile.CQRS.Data;
-    using Mobile.CQRS.Reactive;
 
     public class DomainCommandExecutor<T> : ICommandExecutor<T> 
         where T : class, IAggregateRoot, new()
@@ -53,9 +52,6 @@ namespace Mobile.CQRS.Domain
  
         public void Execute(IList<IAggregateCommand> commands, int expectedVersion)
         {
-            // TODO: ideally what we want is to have the read models built after the commands have been execute
-            // committing the aggregate repo is what will trigger the read models to be built
-
             // create a unit of work eventbus to capture events
             var busBuffer = new UnitOfWorkEventBus(this.context.EventBus);
             using (busBuffer)

@@ -32,7 +32,8 @@ namespace Sample.Domain
 
         public static string SampleDatabasePath()
         {
-            return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), "EventSample.db");
+            var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), "EventSample.db");
+            return path;
         }
 
         public static EventSourcedDB Main
@@ -45,8 +46,8 @@ namespace Sample.Domain
 
         protected EventSourcedDB() : base(SampleDatabasePath())
         {
-            this.CreateTable<AggregateManifest>();
-            this.CreateTable<SerializedAggregateEvent>();
+            this.CreateTable<AggregateManifestContract>();
+            this.CreateTable<AggregateEventContract>();
             this.CreateTable<TransactionDataContract>();
         }
     }
@@ -70,7 +71,7 @@ namespace Sample.Domain
 
         protected SnapshotSourcedDB() : base(SampleDatabasePath())
         {
-            this.CreateTable<AggregateManifest>();
+            this.CreateTable<AggregateManifestContract>();
             this.CreateTable<TestSnapshot>();
             this.CreateTable<TransactionDataContract>();
         }

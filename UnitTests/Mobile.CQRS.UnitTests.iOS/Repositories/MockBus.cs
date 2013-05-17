@@ -4,21 +4,21 @@ using System.Collections.Generic;
 
 namespace Mobile.CQRS.Domain.UnitTests.Repositories
 {
-    public class MockBus : IModelNotificationBus
+    public class MockBus : IDomainNotificationBus
     {
         public MockBus()
         {
-            this.PublishedEvents = new List<IModelNotification>();
+            this.PublishedEvents = new List<IDomainNotification>();
         }
 
-        public List<IModelNotification> PublishedEvents { get; private set; }
+        public List<IDomainNotification> PublishedEvents { get; private set; }
 
-        public void Publish(IModelNotification evt)
+        public void Publish(IDomainNotification evt)
         {
             this.PublishedEvents.Add(evt);
         }   
 
-        public IDisposable Subscribe(IObserver<IModelNotification> observer)
+        public IDisposable Subscribe(IObserver<IDomainNotification> observer)
         {
             return null;
         }       

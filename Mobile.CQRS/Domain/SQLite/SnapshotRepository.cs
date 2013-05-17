@@ -1,5 +1,5 @@
 // --------------------------------------------------------------------------------------------------------------------
-// <copyright file="InMemoryEventStoreRepository_T.cs" company="sgmunn">
+// <copyright file="SnapshotRepository.cs" company="sgmunn">
 //   (c) sgmunn 2012  
 //
 //   Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
@@ -18,44 +18,57 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace Mobile.CQRS.Domain
+namespace Mobile.CQRS.Domain.SQLite
 {
     using System;
     using System.Collections.Generic;
     using System.Linq;
     using Mobile.CQRS.Data;
-    
-    public class InMemoryEventStoreRepository<T> : DictionaryRepositoryBase<IAggregateEventContract>, IEventStoreRepository 
-        where T : IAggregateEventContract, new() 
+    using Mobile.CQRS.Data.SQLite;
+
+    public class SnapshotRepository<T> : ISnapshotRepository 
+        where T : class, ISnapshot, new() 
     {
-        protected override IAggregateEventContract InternalNew()
+        private readonly SqlRepository<T> repository;
+
+        public SnapshotRepository(SQLiteConnection connection)
         {
-            return new T(); 
+            this.repository = new SqlRepository<T>(connection);
         }
 
-        protected override SaveResult InternalSave(IAggregateEventContract evt)
+        public ISnapshot New()
         {
-            if (this.Storage.ContainsKey(evt.Identity))
-            {
-                this.Storage[evt.Identity] = evt;
-                return SaveResult.Updated;
-            }
-
-            this.Storage[evt.Identity] = evt;
-            return SaveResult.Added;
+            return new T();
         }
 
-        protected override void InternalDelete(IAggregateEventContract evt)
+        public ISnapshot GetById(Guid id)
         {
-            if (this.Storage.ContainsKey(evt.Identity))
-            {
-                this.Storage.Remove(evt.Identity);
-            }
+            return ((T)this.repository.GetById(id));
         }
 
-        public IList<IAggregateEventContract> GetAllAggregateEvents(Guid rootId)
+        public IList<ISnapshot> GetAll()
         {
-            return this.GetAll().Where(x => x.AggregateId == rootId).OrderBy(x => x.Version).ToList();
+            return this.repository.GetAll().Cast<ISnapshot>().ToList();
+        }
+
+        public SaveResult Save(ISnapshot instance)
+        {
+            return this.repository.Save((T)instance);
+        }
+
+        public void Delete(ISnapshot instance)
+        {
+            this.repository.Delete((T)instance);
+        }
+
+        public void DeleteId(Guid id)
+        {
+            this.repository.DeleteId(id);
+        }
+
+        public void Dispose()
+        {
+            this.repository.Dispose();
         }
     }
 }

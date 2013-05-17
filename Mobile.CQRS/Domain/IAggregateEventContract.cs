@@ -1,5 +1,5 @@
 // --------------------------------------------------------------------------------------------------------------------
-// <copyright file="InMemoryEventStoreRepository_T.cs" company="sgmunn">
+// <copyright file="IAggregateEventContract.cs" company="sgmunn">
 //   (c) sgmunn 2012  
 //
 //   Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
@@ -21,41 +21,13 @@
 namespace Mobile.CQRS.Domain
 {
     using System;
-    using System.Collections.Generic;
-    using System.Linq;
-    using Mobile.CQRS.Data;
-    
-    public class InMemoryEventStoreRepository<T> : DictionaryRepositoryBase<IAggregateEventContract>, IEventStoreRepository 
-        where T : IAggregateEventContract, new() 
+
+    public interface IAggregateEventContract : IUniqueId
     {
-        protected override IAggregateEventContract InternalNew()
-        {
-            return new T(); 
-        }
+        Guid AggregateId { get; set; }
 
-        protected override SaveResult InternalSave(IAggregateEventContract evt)
-        {
-            if (this.Storage.ContainsKey(evt.Identity))
-            {
-                this.Storage[evt.Identity] = evt;
-                return SaveResult.Updated;
-            }
+        int Version { get; set; }
 
-            this.Storage[evt.Identity] = evt;
-            return SaveResult.Added;
-        }
-
-        protected override void InternalDelete(IAggregateEventContract evt)
-        {
-            if (this.Storage.ContainsKey(evt.Identity))
-            {
-                this.Storage.Remove(evt.Identity);
-            }
-        }
-
-        public IList<IAggregateEventContract> GetAllAggregateEvents(Guid rootId)
-        {
-            return this.GetAll().Where(x => x.AggregateId == rootId).OrderBy(x => x.Version).ToList();
-        }
+        string EventData { get; set; }
     }
 }

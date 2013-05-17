@@ -25,5 +25,7 @@ namespace Mobile.CQRS.Domain
     public interface IAggregateManifestItem : IUniqueId
     {
         int Version { get; set; }
+
+        int SyncedVersion { get; set; }
     }
 }

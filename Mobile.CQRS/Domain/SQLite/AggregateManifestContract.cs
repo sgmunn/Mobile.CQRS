@@ -1,5 +1,5 @@
 //  --------------------------------------------------------------------------------------------------------------------
-//  <copyright file=".cs" company="sgmunn">
+//  <copyright file="AggregateManifest.cs" company="sgmunn">
 //    (c) sgmunn 2012  
 //
 //    Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
@@ -18,23 +18,23 @@
 //  </copyright>
 //  --------------------------------------------------------------------------------------------------------------------
 
-namespace Mobile.CQRS.Domain
+namespace Mobile.CQRS.Domain.SQLite
 {
     using System;
-    using System.Collections.Generic;
-    using System.Linq;
-    using Mobile.CQRS.Data;
+    using Mobile.CQRS.Data.SQLite;
 
-//    public class NullAggregateManifestRepository : IAggregateManifestRepository
-//    {
-//        public static NullAggregateManifestRepository Instance = new NullAggregateManifestRepository();
-//
-//        private NullAggregateManifestRepository()
-//        {
-//        }
-//
-//        public void UpdateManifest(Guid aggregateId, int currentVersion, int newVersion)
-//        {
-//        }
-//    }
+    public class AggregateManifestContract : IAggregateManifestItem
+    {
+        [PrimaryKey]
+        public Guid Identity { get; set; }
+
+        public int Version { get; set; }
+
+        public int SyncedVersion { get; set; }
+
+        public override string ToString()
+        {
+            return string.Format("[{0}] {1}", Identity.ToString().Substring(0, 8), Version);
+        }
+    }
 }

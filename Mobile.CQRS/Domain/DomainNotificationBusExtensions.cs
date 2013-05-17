@@ -1,5 +1,5 @@
 //  --------------------------------------------------------------------------------------------------------------------
-//  <copyright file="ModelNotificationBusExtensions.cs" company="sgmunn">
+//  <copyright file="DomainNotificationBusExtensions.cs" company="sgmunn">
 //    (c) sgmunn 2012  
 //
 //    Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
@@ -23,12 +23,12 @@ namespace Mobile.CQRS.Domain
     using System;
     using Mobile.CQRS.Reactive;
 
-    public static class ModelNotificationBusExtensions
+    public static class DomainNotificationBusExtensions
     {
         /// <summary>
         /// Returns IDataModelEvents that are for the specified identity type.  These could be events or read model changes
         /// </summary>            
-        public static IObservable<IModelNotification> ForType<T>(this IObservable<IModelNotification> source)
+        public static IObservable<IDomainNotification> ForType<T>(this IObservable<IDomainNotification> source)
         {
             return source.Where(x => typeof(T).IsAssignableFrom(x.Topic.ModelType));
         }
@@ -36,18 +36,18 @@ namespace Mobile.CQRS.Domain
         /// <summary>
         /// Returns data model changes for the given identity, events or read models
         /// </summary>            
-        public static IObservable<IModelNotification> DataChangesForType<T>(this IObservable<IModelNotification> source)
+        public static IObservable<IDomainNotification> DataChangesForType<T>(this IObservable<IDomainNotification> source)
         {
             return source.ForType<T>()
-                .Where(x => typeof(IModelNotification).IsAssignableFrom(x.Event.GetType()))
+                .Where(x => typeof(IDomainNotification).IsAssignableFrom(x.Event.GetType()))
                     .Select(x => x.Event)
-                    .Cast<IModelNotification>();
+                    .Cast<IDomainNotification>();
         }
 
         /// <summary>
         /// Returns events for the given identity type
         /// </summary>            
-        public static IObservable<IAggregateEvent> EventsForType<T>(this IObservable<IModelNotification> source) 
+        public static IObservable<IAggregateEvent> EventsForType<T>(this IObservable<IDomainNotification> source) 
             where T : IAggregateRoot
         {
             return source.ForType<T>()

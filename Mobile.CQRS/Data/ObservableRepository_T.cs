@@ -30,12 +30,12 @@ namespace Mobile.CQRS.Data
     {
         private readonly IRepository<T> repository;
         
-        private readonly Subject<IModelNotification> changes;
+        private readonly Subject<IDomainNotification> changes;
 
         public ObservableRepository(IRepository<T> repository)
         {
             this.repository = repository;
-            this.changes = new Subject<IModelNotification>();
+            this.changes = new Subject<IDomainNotification>();
         }
 
         protected IRepository<T> Repository
@@ -46,7 +46,7 @@ namespace Mobile.CQRS.Data
             }
         }
         
-        public IObservable<IModelNotification> Changes
+        public IObservable<IDomainNotification> Changes
         {
             get
             {
@@ -78,14 +78,14 @@ namespace Mobile.CQRS.Data
         {
             var saveResult = this.Repository.Save(instance);
             
-            IModelNotification modelChange = null; 
+            IDomainNotification modelChange = null; 
             switch (saveResult)
             {
                 case SaveResult.Added:
-                    modelChange = Notifications.CreateModelNotification(instance.Identity, instance, ModelChangeKind.Added);
+                    modelChange = NotificationExtensions.CreateModelNotification(instance.Identity, instance, ModelChangeKind.Added);
                     break;
                 case SaveResult.Updated:
-                    modelChange = Notifications.CreateModelNotification(instance.Identity, instance, ModelChangeKind.Changed);
+                    modelChange = NotificationExtensions.CreateModelNotification(instance.Identity, instance, ModelChangeKind.Changed);
                     break;
             }
 
@@ -100,11 +100,17 @@ namespace Mobile.CQRS.Data
         public virtual void Delete(T instance)
         {
             this.Repository.Delete(instance);
+            
+            var modelChange = NotificationExtensions.CreateModelNotification(instance.Identity, null, ModelChangeKind.Deleted);
+            this.changes.OnNext(modelChange);
         }
 
         public virtual void DeleteId(Guid id)
         {
             this.Repository.DeleteId(id);
+            
+            var modelChange = NotificationExtensions.CreateModelNotification(id, null, ModelChangeKind.Deleted);
+            this.changes.OnNext(modelChange);
         }
     }
 }

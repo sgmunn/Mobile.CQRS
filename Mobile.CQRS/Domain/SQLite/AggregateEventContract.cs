@@ -1,5 +1,5 @@
 // --------------------------------------------------------------------------------------------------------------------
-// <copyright file="ISerializedAggregateEvent.cs" company="sgmunn">
+// <copyright file="SerializedAggregateEvent.cs" company="sgmunn">
 //   (c) sgmunn 2012  
 //
 //   Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
@@ -18,16 +18,27 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace Mobile.CQRS.Domain
+namespace Mobile.CQRS.Domain.SQLite
 {
     using System;
+    using Mobile.CQRS.Data.SQLite;
 
-    public interface ISerializedAggregateEvent : IUniqueId
+    // TODO: if we use this with existing applications (my minions) then we have the wrong table name
+    public class AggregateEventContract : IAggregateEventContract
     {
-        Guid AggregateId { get; set; }
+        [PrimaryKey]
+        public Guid Identity { get; set; }
 
-        int Version { get; set; }
+        [Indexed]
+        public Guid AggregateId { get; set; }
+  
+        public int Version { get; set; }
+  
+        public string EventData { get; set; }
 
-        string EventData { get; set; }
+        public override string ToString()
+        {
+            return string.Format("{0} - {1}", this.AggregateId.ToString().Substring(0, 8), this.Version);
+        }
     }
 }

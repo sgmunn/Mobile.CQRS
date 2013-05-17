@@ -1,5 +1,5 @@
 // --------------------------------------------------------------------------------------------------------------------
-// <copyright file="SqlSnapshotRepository.cs" company="sgmunn">
+// <copyright file="ObservableDomainNotificationBus.cs" company="sgmunn">
 //   (c) sgmunn 2012  
 //
 //   Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
@@ -18,61 +18,28 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace Mobile.CQRS.Domain.SQLite
+namespace Mobile.CQRS.Domain
 {
     using System;
-    using System.Collections.Generic;
-    using System.Linq;
-    using Mobile.CQRS.Data;
-    using Mobile.CQRS.Data.SQLite;
+    using Mobile.CQRS.Reactive;
 
-    public class SqlSnapshotRepository<T> : ISnapshotRepository 
-        where T : class, ISnapshot, new() 
+    public sealed class ObservableDomainNotificationBus : IDomainNotificationBus
     {
-        //private readonly SyncRepository<T> repository;
-        private readonly SqlRepository<T> repository;
+        private readonly Subject<IDomainNotification> eventPublisher;
 
-        public SqlSnapshotRepository(SQLiteConnection connection)
+        public ObservableDomainNotificationBus()
         {
-            //var repo = new SqlRepository<T>(connection);
-            //this.repository = new SyncRepository<T>(repo);
-            this.repository = new SqlRepository<T>(connection);
+            this.eventPublisher = new Subject<IDomainNotification>();
         }
 
-        public ISnapshot New()
+        public void Publish(IDomainNotification evt)
         {
-            return new T();
+            this.eventPublisher.OnNext(evt);
         }
 
-        public ISnapshot GetById(Guid id)
+        public IDisposable Subscribe(IObserver<IDomainNotification> observer)
         {
-            return ((T)this.repository.GetById(id));
-        }
-
-        public IList<ISnapshot> GetAll()
-        {
-            return this.repository.GetAll().Cast<ISnapshot>().ToList();
-        }
-
-        public SaveResult Save(ISnapshot instance)
-        {
-            return this.repository.Save((T)instance);
-        }
-
-        public void Delete(ISnapshot instance)
-        {
-            this.repository.Delete((T)instance);
-        }
-
-        public void DeleteId(Guid id)
-        {
-            this.repository.DeleteId(id);
-        }
-
-        public void Dispose()
-        {
-            this.repository.Dispose();
+            return this.eventPublisher.Subscribe(observer);
         }
     }
 }
-

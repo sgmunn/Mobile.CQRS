@@ -26,7 +26,7 @@ namespace Mobile.CQRS.Domain
     using Mobile.CQRS.Data;
     using Mobile.CQRS.Reactive;
      
-    // todo: snapshot repository needs a way to serialize complex data members so that we can still use sqlite
+    // TODO: snapshot repository needs a way to serialize complex data members so that we can still use sqlite
     // at the moment this will not handle internal state with complicated objects
     // an alternative is for the aggregate to return a snapshot that is serialized -- ie different to its internal state
 
@@ -35,11 +35,11 @@ namespace Mobile.CQRS.Domain
     {
         private readonly ISnapshotRepository repository;
         
-        private readonly IModelNotificationBus eventBus;
+        private readonly IDomainNotificationBus eventBus;
 
         private readonly IAggregateManifestRepository manifest;
   
-        public SnapshotAggregateRepository(ISnapshotRepository repository, IAggregateManifestRepository manifest, IModelNotificationBus eventBus)
+        public SnapshotAggregateRepository(ISnapshotRepository repository, IAggregateManifestRepository manifest, IDomainNotificationBus eventBus)
         {
             this.repository = repository;
             this.eventBus = eventBus;
@@ -94,14 +94,14 @@ namespace Mobile.CQRS.Domain
 
             var saveResult = this.repository.Save(snapshot);
 
-            IModelNotification modelChange = null; 
+            IDomainNotification modelChange = null; 
             switch (saveResult)
             {
                 case SaveResult.Added:
-                    modelChange = Data.Notifications.CreateModelNotification(instance.Identity, instance, ModelChangeKind.Added);
+                    modelChange = Data.NotificationExtensions.CreateModelNotification(instance.Identity, instance, ModelChangeKind.Added);
                     break;
                 case SaveResult.Updated:
-                    modelChange = Data.Notifications.CreateModelNotification(instance.Identity, instance, ModelChangeKind.Changed);
+                    modelChange = Data.NotificationExtensions.CreateModelNotification(instance.Identity, instance, ModelChangeKind.Changed);
                     break;
             }
 
@@ -127,13 +127,13 @@ namespace Mobile.CQRS.Domain
             this.repository.Dispose();
         }
 
-        private void PublishEvents(IEnumerable<IAggregateEvent> events, IModelNotification modelNotification)
+        private void PublishEvents(IEnumerable<IAggregateEvent> events, IDomainNotification modelNotification)
         {
             if (this.eventBus != null)
             {
                 foreach (var evt in events.ToList())
                 {
-                    var modelChange = Notifications.CreateNotification(typeof(T), evt);
+                    var modelChange = NotificationExtensions.CreateNotification(typeof(T), evt);
                     this.eventBus.Publish(modelChange);
                 }
 

@@ -4,7 +4,7 @@ using System.Json;
 
 namespace Mobile.CQRS.Domain.UnitTests
 {
-    public class TestAggregateRoot : AbstractAggregateRoot<TestSnapshot>, IEventSourced
+    public class TestAggregateRoot : AggregateRootBase<TestSnapshot>, IEventSourced
     {
         public TestAggregateRoot()
         {

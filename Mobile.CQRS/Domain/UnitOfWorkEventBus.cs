@@ -27,22 +27,22 @@ namespace Mobile.CQRS.Domain
     /// <summary>
     /// An event bus that performs all publishing in a single unit of work
     /// </summary>
-    public class UnitOfWorkEventBus : IModelNotificationBus, IUnitOfWork
+    public class UnitOfWorkEventBus : IDomainNotificationBus, IUnitOfWork
     {
-        private readonly IModelNotificationBus bus;
+        private readonly IDomainNotificationBus bus;
 
-        private readonly List<IModelNotification> events;
+        private readonly List<IDomainNotification> events;
         
-        public UnitOfWorkEventBus(IModelNotificationBus bus)
+        public UnitOfWorkEventBus(IDomainNotificationBus bus)
         {
             if (bus == null)
                 throw new ArgumentNullException("bus");
 
-            this.events = new List<IModelNotification>();
+            this.events = new List<IDomainNotification>();
             this.bus = bus;
         }
         
-        protected IModelNotificationBus Bus
+        protected IDomainNotificationBus Bus
         {
             get
             {
@@ -50,7 +50,7 @@ namespace Mobile.CQRS.Domain
             }
         }
 
-        protected List<IModelNotification> Events
+        protected List<IDomainNotification> Events
         {
             get
             {
@@ -58,12 +58,12 @@ namespace Mobile.CQRS.Domain
             }
         }
 
-        public virtual void Publish(IModelNotification evt)
+        public virtual void Publish(IDomainNotification evt)
         {
             this.Events.Add(evt);
         }
 
-        public virtual IDisposable Subscribe(IObserver<IModelNotification> subscriber)
+        public virtual IDisposable Subscribe(IObserver<IDomainNotification> subscriber)
         {
             throw new NotSupportedException();
         }

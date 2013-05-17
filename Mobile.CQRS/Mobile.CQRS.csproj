@@ -100,7 +100,6 @@
     <Compile Include="Domain\InMemorySnapshotRepository_T.cs" />
     <Compile Include="Domain\IReadModelBuilder.cs" />
     <Compile Include="Domain\IReadModelBuilder_T.cs" />
-    <Compile Include="Domain\ISerializedAggregateEvent.cs" />
     <Compile Include="Domain\ISnapshot.cs" />
     <Compile Include="Domain\ISnapshotRepository.cs" />
     <Compile Include="Domain\ISnapshotSupport.cs" />
@@ -116,18 +115,19 @@
     <Compile Include="INotificationEvent_.cs" />
     <Compile Include="INotificationEventBus_.cs" />
     <Compile Include="NotificationEvent_.cs" />
-    <Compile Include="Data\AbstractDictionaryRepository_T.cs" />
     <Compile Include="Data\IRepositoryConnection.cs" />
     <Compile Include="Data\IUnitOfWorkRepository_T.cs" />
     <Compile Include="Data\IDataChangeEvent_.cs" />
-    <Compile Include="Domain\AbstractAggregateRoot_TState.cs" />
-    <Compile Include="Domain\AbstractAggregateRoot.cs" />
     <Compile Include="Domain\InMemoryUnitOfWorkScope.cs" />
-    <Compile Include="Domain\AbstractDomainContext.cs" />
     <Compile Include="Domain\EventExtensions_.cs" />
-    <Compile Include="Domain\ModelNotificationBusExtensions.cs" />
     <Compile Include="Domain\NullAggregateManifestRepository_.cs" />
-    <Compile Include="Domain\ObservableModelNotificationtBus.cs" />
+    <Compile Include="Domain\DomainContextBase.cs" />
+    <Compile Include="Domain\AggregateRootBase.cs" />
+    <Compile Include="Domain\AggregateRootBase_TState.cs" />
+    <Compile Include="Domain\IAggregateEventContract.cs" />
+    <Compile Include="Data\DictionaryRepositoryBase_T.cs" />
+    <Compile Include="Domain\DomainNotificationBusExtensions.cs" />
+    <Compile Include="Domain\ObservableDomainNotificationtBus.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Runtime\" />

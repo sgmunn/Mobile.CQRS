@@ -28,7 +28,7 @@ namespace Mobile.CQRS.Domain
     {
         private readonly IList<IReadModelBuilder> builders;
 
-        public ReadModelBuildingEventBus(IList<IReadModelBuilder> builders, IModelNotificationBus bus)
+        public ReadModelBuildingEventBus(IList<IReadModelBuilder> builders, IDomainNotificationBus bus)
             : base(bus)
         {
             if (builders == null)
@@ -43,11 +43,11 @@ namespace Mobile.CQRS.Domain
             base.Commit();
         }
 
-        protected virtual IList<IModelNotification> BuildReadModels()
+        protected virtual IList<IDomainNotification> BuildReadModels()
         {
-            var result = new List<IModelNotification>();
+            var result = new List<IDomainNotification>();
 
-            var updatedReadModels = new List<IModelNotification>();
+            var updatedReadModels = new List<IDomainNotification>();
 
             foreach (var evt in this.Events)
             {

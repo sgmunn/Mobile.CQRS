@@ -24,7 +24,6 @@ namespace Mobile.CQRS.Data
 
     public interface IObservableRepository
     {
-        IObservable<IModelNotification> Changes { get; }
+        IObservable<IDomainNotification> Changes { get; }
     }
 }
-

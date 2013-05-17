@@ -30,13 +30,13 @@ namespace Mobile.CQRS.Domain
     {
         private readonly IRepository<T> repository;
 
-        private readonly List<IModelNotification> updatedReadModels;
+        private readonly List<IDomainNotification> updatedReadModels;
 
         protected ReadModelBuilder(IRepository<T> repository)
         {
             var observableRepo = new ObservableRepository<T>(repository);
             this.repository = observableRepo;
-            this.updatedReadModels = new List<IModelNotification>();
+            this.updatedReadModels = new List<IDomainNotification>();
 
             observableRepo.Changes.Subscribe(evt => {
                 this.updatedReadModels.Add(evt);
@@ -51,7 +51,7 @@ namespace Mobile.CQRS.Domain
             }
         }
 
-        public IEnumerable<IModelNotification> Handle(IModelNotification evt)
+        public IEnumerable<IDomainNotification> Handle(IDomainNotification evt)
         {
             this.updatedReadModels.Clear();
 

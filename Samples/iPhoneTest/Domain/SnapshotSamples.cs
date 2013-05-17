@@ -32,13 +32,13 @@ namespace Sample.Domain
 
         public static IDomainContext GetDomainContext()
         {
-            var manifest = new SqlAggregateManifestRepository(SnapshotSourcedDB.Main);
+            var manifest = new AggregateManifestRepository(SnapshotSourcedDB.Main);
 
             var context = new TestDomainContext(SnapshotSourcedDB.Main, manifest, null);
  //           context.EventBus.Subscribe((x) => Console.WriteLine("domain bus event {0}", x));
 
             // registrations
-            context.RegisterSnapshot<SnapshotTestRoot>(c => new SqlSnapshotRepository<TestSnapshot>(SnapshotSourcedDB.Main));
+            context.RegisterSnapshot<SnapshotTestRoot>(c => new SnapshotRepository<TestSnapshot>(SnapshotSourcedDB.Main));
 
             context.RegisterBuilder<SnapshotTestRoot>((c) => 
                  new TransactionReadModelBuilder(new SqlRepository<TransactionDataContract>(SnapshotSourcedDB.Main)));

@@ -34,9 +34,9 @@ namespace Mobile.CQRS.Domain
 
         private readonly IAggregateManifestRepository manifest;
         
-        private readonly IModelNotificationBus eventBus;
+        private readonly IDomainNotificationBus eventBus;
   
-        public EventSourcedAggregateRepository(IEventSerializer serializer, IEventStoreRepository repository, IAggregateManifestRepository manifest, IModelNotificationBus eventBus)
+        public EventSourcedAggregateRepository(IEventSerializer serializer, IEventStoreRepository repository, IAggregateManifestRepository manifest, IDomainNotificationBus eventBus)
         {
             if (serializer == null)
             {
@@ -151,7 +151,7 @@ namespace Mobile.CQRS.Domain
             {
                 foreach (var evt in instance.UncommittedEvents.ToList())
                 {
-                    this.eventBus.Publish(Notifications.CreateNotification(typeof(T), evt));
+                    this.eventBus.Publish(NotificationExtensions.CreateNotification(typeof(T), evt));
                 }
             }
         }

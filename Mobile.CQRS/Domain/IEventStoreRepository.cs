@@ -24,8 +24,8 @@ namespace Mobile.CQRS.Domain
     using System.Collections.Generic;
     using Mobile.CQRS.Data;
 
-    public interface IEventStoreRepository : IRepository<ISerializedAggregateEvent>
+    public interface IEventStoreRepository : IRepository<IAggregateEventContract>
     {
-        IList<ISerializedAggregateEvent> GetAllAggregateEvents(Guid rootId);
+        IList<IAggregateEventContract> GetAllAggregateEvents(Guid rootId);
     }
 }

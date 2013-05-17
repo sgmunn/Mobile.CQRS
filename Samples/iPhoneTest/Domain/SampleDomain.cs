@@ -43,7 +43,7 @@ namespace Sample.Domain
 //        }
 //    }
 
-    public class EventSourcedRoot : AbstractAggregateRoot, IEventSourced
+    public class EventSourcedRoot : AggregateRootBase, IEventSourced
     {
         ////private string name;
         private decimal balance;
@@ -116,7 +116,7 @@ namespace Sample.Domain
         }
     }
     
-    public class SnapshotTestRoot : AbstractAggregateRoot<TestSnapshot>
+    public class SnapshotTestRoot : AggregateRootBase<TestSnapshot>
     {
         public void Execute(TestCommand1 command)
         {

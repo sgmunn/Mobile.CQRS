@@ -1,6 +1,6 @@
 // --------------------------------------------------------------------------------------------------------------------
-// <copyright file="InMemoryEventStoreRepository_T.cs" company="sgmunn">
-//   (c) sgmunn 2012  
+// <copyright file="ModelChangeEvent.cs" company="sgmunn">
+//   (c) sgmunn 2013  
 //
 //   Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
 //   documentation files (the "Software"), to deal in the Software without restriction, including without limitation 
@@ -9,7 +9,7 @@
 //
 //   The above copyright notice and this permission notice shall be included in all copies or substantial portions of 
 //   the Software.
-// 
+//
 //   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO 
 //   THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
 //   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
@@ -18,44 +18,28 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace Mobile.CQRS.Domain
+namespace Mobile.CQRS.Data
 {
     using System;
-    using System.Collections.Generic;
-    using System.Linq;
-    using Mobile.CQRS.Data;
-    
-    public class InMemoryEventStoreRepository<T> : DictionaryRepositoryBase<IAggregateEventContract>, IEventStoreRepository 
-        where T : IAggregateEventContract, new() 
+
+    public sealed class ModelChangeEvent : IModelChangeEvent
     {
-        protected override IAggregateEventContract InternalNew()
+        public ModelChangeEvent(object model, ModelChangeKind change)
         {
-            return new T(); 
+            this.Identity = Guid.NewGuid();
+            this.Model = model;
+            this.Change = change;
         }
 
-        protected override SaveResult InternalSave(IAggregateEventContract evt)
-        {
-            if (this.Storage.ContainsKey(evt.Identity))
-            {
-                this.Storage[evt.Identity] = evt;
-                return SaveResult.Updated;
-            }
+        public Guid Identity { get; set; }
 
-            this.Storage[evt.Identity] = evt;
-            return SaveResult.Added;
-        }
+        public object Model { get; private set; }
 
-        protected override void InternalDelete(IAggregateEventContract evt)
-        {
-            if (this.Storage.ContainsKey(evt.Identity))
-            {
-                this.Storage.Remove(evt.Identity);
-            }
-        }
+        public ModelChangeKind Change { get; private set; }
 
-        public IList<IAggregateEventContract> GetAllAggregateEvents(Guid rootId)
+        public override string ToString()
         {
-            return this.GetAll().Where(x => x.AggregateId == rootId).OrderBy(x => x.Version).ToList();
+            return string.Format("[ModelChange: Change={0}, Data={1}]", this.Change, this.Model);
         }
     }
 }

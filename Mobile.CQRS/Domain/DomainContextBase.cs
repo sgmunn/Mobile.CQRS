@@ -1,5 +1,5 @@
 // --------------------------------------------------------------------------------------------------------------------
-// <copyright file="DomainContext.cs" company="sgmunn">
+// <copyright file="DomainContextBase.cs" company="sgmunn">
 //   (c) sgmunn 2012  
 //
 //   Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
@@ -24,24 +24,23 @@ namespace Mobile.CQRS.Domain
     using System.Collections.Generic;
     using System.Linq;
     using Mobile.CQRS.Data;
-    using Mobile.CQRS.Reactive;
     
-    public abstract class AbstractDomainContext : IDomainContext
+    public abstract class DomainContextBase : IDomainContext
     {
         private readonly Dictionary<Type, List<Func<IDomainContext, IReadModelBuilder>>> registeredBuilders;
 
         private readonly Dictionary<Type, Func<IDomainContext, ISnapshotRepository>> registeredSnapshotRepositories;
 
-        protected AbstractDomainContext()
+        protected DomainContextBase()
         {
-            this.EventBus = new ObservableModelNotificationtBus();
+            this.EventBus = new ObservableDomainNotificationBus();
             this.registeredBuilders = new Dictionary<Type, List<Func<IDomainContext, IReadModelBuilder>>>();
             this.registeredSnapshotRepositories = new Dictionary<Type, Func<IDomainContext, ISnapshotRepository>>();
         }
 
-        protected AbstractDomainContext(IAggregateManifestRepository manifest, IEventStoreRepository eventStore)
+        protected DomainContextBase(IAggregateManifestRepository manifest, IEventStoreRepository eventStore)
         {
-            this.EventBus = new ObservableModelNotificationtBus();
+            this.EventBus = new ObservableDomainNotificationBus();
             this.Manifest = manifest;
             this.EventStore = eventStore;
             
@@ -49,7 +48,7 @@ namespace Mobile.CQRS.Domain
             this.registeredSnapshotRepositories = new Dictionary<Type, Func<IDomainContext, ISnapshotRepository>>();
         }
 
-        protected AbstractDomainContext(IAggregateManifestRepository manifest, IEventStoreRepository eventStore, IModelNotificationBus eventBus)
+        protected DomainContextBase(IAggregateManifestRepository manifest, IEventStoreRepository eventStore, IDomainNotificationBus eventBus)
         {
             this.Manifest = manifest;
             this.EventBus = eventBus;
@@ -63,7 +62,7 @@ namespace Mobile.CQRS.Domain
 
         public IEventStoreRepository EventStore { get; protected set; }
 
-        public IModelNotificationBus EventBus { get; protected set; }
+        public IDomainNotificationBus EventBus { get; protected set; }
 
         public IEventSerializer EventSerializer { get; protected set; }
 
@@ -77,7 +76,7 @@ namespace Mobile.CQRS.Domain
             return new DomainCommandExecutor<T>(this);
         }
 
-        public virtual IAggregateRepository<T> GetAggregateRepository<T>(IModelNotificationBus bus) 
+        public virtual IAggregateRepository<T> GetAggregateRepository<T>(IDomainNotificationBus bus) 
             where T : IAggregateRoot, new()
         {
             if (typeof(T).GetInterfaces().Contains(typeof(IEventSourced)))
@@ -130,4 +129,3 @@ namespace Mobile.CQRS.Domain
         }
     }
 }
-

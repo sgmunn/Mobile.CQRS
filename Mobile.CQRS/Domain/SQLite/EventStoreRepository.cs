@@ -26,48 +26,44 @@ namespace Mobile.CQRS.Domain.SQLite
     using Mobile.CQRS.Data.SQLite;
     using Mobile.CQRS.Data;
     
-    public class EventStoreRepository : SqlRepository<SerializedAggregateEvent>, IEventStoreRepository
+    public class EventStoreRepository : SqlRepository<AggregateEventContract>, IEventStoreRepository
     {
         public EventStoreRepository(SQLiteConnection connection) : base(connection)
         {
         }
 
-        ISerializedAggregateEvent IRepository<ISerializedAggregateEvent, Guid>.New()
+        IAggregateEventContract IRepository<IAggregateEventContract, Guid>.New()
         {
-            return (ISerializedAggregateEvent)base.New();
+            return base.New();
         }
 
-        ISerializedAggregateEvent IRepository<ISerializedAggregateEvent, Guid>.GetById(Guid id)
+        IAggregateEventContract IRepository<IAggregateEventContract, Guid>.GetById(Guid id)
         {
-            return (ISerializedAggregateEvent)base.GetById(id);
+            return base.GetById(id);
         }
 
-        IList<ISerializedAggregateEvent> IRepository<ISerializedAggregateEvent, Guid>.GetAll()
+        IList<IAggregateEventContract> IRepository<IAggregateEventContract, Guid>.GetAll()
         {
-            return (IList<ISerializedAggregateEvent>)base.GetAll();
+            return (IList<IAggregateEventContract>)base.GetAll();
         }
 
-        public SaveResult Save(ISerializedAggregateEvent instance)
+        public SaveResult Save(IAggregateEventContract instance)
         {
-            return base.Save((SerializedAggregateEvent)instance);
+            return base.Save((AggregateEventContract)instance);
         }
 
-        public void Delete(ISerializedAggregateEvent instance)
+        public void Delete(IAggregateEventContract instance)
         {
-            base.Delete((SerializedAggregateEvent)instance);
+            base.Delete((AggregateEventContract)instance);
         }
 
-        public IList<ISerializedAggregateEvent> GetAllAggregateEvents(Guid rootId)
+        public IList<IAggregateEventContract> GetAllAggregateEvents(Guid rootId)
         {
-            //var result = SynchronousTask.GetSync(() =>
-            //    this.Connection.Table<SerializedAggregateEvent>().Where(x => x.AggregateId == rootId).OrderBy(x => x.Version).AsEnumerable());
-
             lock (this.Connection)
             {
-                var result = this.Connection.Table<SerializedAggregateEvent>().Where(x => x.AggregateId == rootId).OrderBy(x => x.Version).AsEnumerable();
-                return result.Cast<ISerializedAggregateEvent>().ToList();
+                var result = this.Connection.Table<AggregateEventContract>().Where(x => x.AggregateId == rootId).OrderBy(x => x.Version).AsEnumerable();
+                return result.Cast<IAggregateEventContract>().ToList();
             }
         }
     }
 }
-

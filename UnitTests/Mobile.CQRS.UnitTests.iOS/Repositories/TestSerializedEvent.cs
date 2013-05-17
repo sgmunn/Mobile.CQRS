@@ -4,7 +4,7 @@ using NUnit.Framework;
 
 namespace Mobile.CQRS.Domain.UnitTests.Repositories
 {
-    public class TestSerializedEvent : ISerializedAggregateEvent
+    public class TestSerializedEvent : IAggregateEventContract
     {
         public TestSerializedEvent()
         {

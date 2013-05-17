@@ -35,7 +35,7 @@ namespace Sample.Domain
         {
             KnownTypes.RegisterEvents(Assembly.GetExecutingAssembly());
 
-            var manifest = new SqlAggregateManifestRepository(EventSourcedDB.Main);
+            var manifest = new AggregateManifestRepository(EventSourcedDB.Main);
 
             var eventStore = new EventStoreRepository(EventSourcedDB.Main);
 

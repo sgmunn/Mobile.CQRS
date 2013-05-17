@@ -23,19 +23,15 @@ namespace Mobile.CQRS.Data.SQLite
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using Mobile.CQRS.Reactive;
 
-    public class SqlRepository<T> : IRepository<T>, IRepositoryConnection, IObservableRepository 
+    public class SqlRepository<T> : IRepository<T>, IRepositoryConnection 
         where T: IUniqueId, new()
     {
         private readonly SQLiteConnection connection;
-
-        private readonly Subject<IModelNotification> changes;
         
         public SqlRepository(SQLiteConnection connection)
         {
             this.connection = connection;
-            this.changes = new Subject<IModelNotification>();
         }
 
         object IRepositoryConnection.Connection
@@ -43,14 +39,6 @@ namespace Mobile.CQRS.Data.SQLite
             get
             {
                 return this.Connection;
-            }
-        }
-
-        public IObservable<IModelNotification> Changes
-        {
-            get
-            {
-                return this.changes;
             }
         }
 
@@ -107,19 +95,6 @@ namespace Mobile.CQRS.Data.SQLite
                 }
             }
 
-            IModelNotification modelChange = null;
-            switch (result)
-            {
-                case SaveResult.Added: 
-                    modelChange = Notifications.CreateModelNotification(instance.Identity, instance, ModelChangeKind.Added);
-                    break;
-                case SaveResult.Updated:
-                    modelChange = Notifications.CreateModelNotification(instance.Identity, instance, ModelChangeKind.Changed);
-                    break;
-            }
-
-            this.changes.OnNext(modelChange);
-
             return result;
         }
 
@@ -129,9 +104,6 @@ namespace Mobile.CQRS.Data.SQLite
             {
                 this.Connection.Delete(instance);  
             }
-
-            var modelChange = Notifications.CreateModelNotification(instance.Identity, null, ModelChangeKind.Deleted);
-            this.changes.OnNext(modelChange);
         }
 
         public virtual void DeleteId(Guid id)
@@ -149,9 +121,6 @@ namespace Mobile.CQRS.Data.SQLite
                 var q = string.Format ("delete from \"{0}\" where \"{1}\" = ?", map.TableName, pk.Name);
                 this.Connection.Execute (q, id);
             }
-
-            var modelChange = Notifications.CreateModelNotification(id, null, ModelChangeKind.Deleted);
-            this.changes.OnNext(modelChange);
         }
     }    
 }

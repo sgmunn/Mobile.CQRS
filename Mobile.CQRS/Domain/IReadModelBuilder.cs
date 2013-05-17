@@ -25,6 +25,6 @@ namespace Mobile.CQRS.Domain
 
     public interface IReadModelBuilder
     {
-        IEnumerable<IModelNotification> Handle(IModelNotification evt);
+        IEnumerable<IDomainNotification> Handle(IDomainNotification evt);
     }
 }

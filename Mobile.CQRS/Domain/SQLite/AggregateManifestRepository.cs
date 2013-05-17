@@ -1,5 +1,5 @@
 //  --------------------------------------------------------------------------------------------------------------------
-//  <copyright file="SqlAggregateManifestRepository.cs" company="sgmunn">
+//  <copyright file="AggregateManifestRepository.cs" company="sgmunn">
 //    (c) sgmunn 2012  
 //
 //    Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
@@ -23,13 +23,14 @@ namespace Mobile.CQRS.Domain.SQLite
     using System;
     using Mobile.CQRS.Data.SQLite;
 
-    public class SqlAggregateManifestRepository : IAggregateManifestRepository
+    public class AggregateManifestRepository : IAggregateManifestRepository
     {
-        private const string UpdateSql = "update AggregateManifest set Version = ? where Identity = ? and Version = ?";
+        ////private const string UpdateSql = "update AggregateManifestContract set Version = ? where Identity = ? and Version = ?";
+        private const string UpdateSql = "update AggregateManifestContract set Version = {0} where Identity = '{1}' and Version = {2}";
 
         private readonly SQLiteConnection connection;
 
-        public SqlAggregateManifestRepository(SQLiteConnection connection)
+        public AggregateManifestRepository(SQLiteConnection connection)
         {
             this.connection = connection;
         }
@@ -40,7 +41,6 @@ namespace Mobile.CQRS.Domain.SQLite
 
             try
             {
-                //updated = SynchronousTask.GetSync(() => this.DoUpdate(aggregateId, currentVersion, newVersion));
                 lock (this.connection)
                 {
                     updated = this.DoUpdate(aggregateId, currentVersion, newVersion);
@@ -62,11 +62,12 @@ namespace Mobile.CQRS.Domain.SQLite
         {
             if (currentVersion == 0)
             {
-                this.connection.Insert(new AggregateManifest { Identity = aggregateId, Version = newVersion, });
+                this.connection.Insert(new AggregateManifestContract { Identity = aggregateId, Version = newVersion, });
             }
             else
             {
-                var rows = this.connection.Execute(UpdateSql, newVersion, aggregateId, currentVersion);
+                ////var rows = this.connection.Execute(UpdateSql, newVersion, aggregateId, currentVersion);
+                var rows = this.connection.Execute(string.Format(UpdateSql, newVersion, aggregateId, currentVersion));
                 return rows == 1;
             }
 
@@ -74,4 +75,3 @@ namespace Mobile.CQRS.Domain.SQLite
         }
     }
 }
-

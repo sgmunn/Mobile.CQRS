@@ -1,6 +1,6 @@
 // --------------------------------------------------------------------------------------------------------------------
-// <copyright file="InMemoryEventStoreRepository_T.cs" company="sgmunn">
-//   (c) sgmunn 2012  
+// <copyright file="DomainNotification.cs" company="sgmunn">
+//   (c) sgmunn 2013  
 //
 //   Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
 //   documentation files (the "Software"), to deal in the Software without restriction, including without limitation 
@@ -9,7 +9,7 @@
 //
 //   The above copyright notice and this permission notice shall be included in all copies or substantial portions of 
 //   the Software.
-// 
+//
 //   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO 
 //   THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
 //   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
@@ -18,44 +18,28 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace Mobile.CQRS.Domain
+namespace Mobile.CQRS
 {
     using System;
-    using System.Collections.Generic;
-    using System.Linq;
-    using Mobile.CQRS.Data;
     
-    public class InMemoryEventStoreRepository<T> : DictionaryRepositoryBase<IAggregateEventContract>, IEventStoreRepository 
-        where T : IAggregateEventContract, new() 
+    /// <summary>
+    /// Implements IDomainNotification
+    /// </summary>
+    public sealed class DomainNotification : IDomainNotification
     {
-        protected override IAggregateEventContract InternalNew()
+        public DomainNotification(IDomainTopic topic, IEvent evt )
         {
-            return new T(); 
+            this.Topic = topic;
+            this.Event = evt;
         }
 
-        protected override SaveResult InternalSave(IAggregateEventContract evt)
-        {
-            if (this.Storage.ContainsKey(evt.Identity))
-            {
-                this.Storage[evt.Identity] = evt;
-                return SaveResult.Updated;
-            }
+        public IDomainTopic Topic { get; private set; }
 
-            this.Storage[evt.Identity] = evt;
-            return SaveResult.Added;
-        }
+        public IEvent Event { get; private set; }
 
-        protected override void InternalDelete(IAggregateEventContract evt)
+        public override string ToString()
         {
-            if (this.Storage.ContainsKey(evt.Identity))
-            {
-                this.Storage.Remove(evt.Identity);
-            }
-        }
-
-        public IList<IAggregateEventContract> GetAllAggregateEvents(Guid rootId)
-        {
-            return this.GetAll().Where(x => x.AggregateId == rootId).OrderBy(x => x.Version).ToList();
+            return string.Format("[Notification: {0}, {1}]", this.Topic, this.Event);
         }
     }
 }
