@@ -25,61 +25,61 @@ namespace Mobile.CQRS.Domain
     using System.Collections.Generic;
     using System.Linq;
     
-    public class InMemorySnapshotRepository<T> : DictionaryRepositoryBase<T>, ISnapshotRepository
-        where T : class, ISnapshot, new() 
-    {
-        public InMemorySnapshotRepository()
-        {
-        }
-
-        protected override T InternalNew()
-        {
-            return new T(); 
-        }
-
-        protected override SaveResult InternalSave(T snapshot)
-        {
-            if (this.Storage.ContainsKey(snapshot.Identity))
-            {
-                this.Storage[snapshot.Identity] = snapshot;
-                return SaveResult.Updated;
-            }
-            
-            this.Storage[snapshot.Identity] = snapshot;
-            return SaveResult.Added;
-        }
-
-        protected override void InternalDelete(T snapshot)
-        {
-            if (this.Storage.ContainsKey(snapshot.Identity))
-            {
-                this.Storage.Remove(snapshot.Identity);
-            }
-        }
-
-        public new ISnapshot New()
-        {
-            return this.InternalNew();
-        }
-
-        public new ISnapshot GetById(Guid id)
-        {
-            return base.GetById(id);
-        }
-
-        public new IList<ISnapshot> GetAll()
-        {
-            return base.GetAll().Cast<ISnapshot>().ToList();
-        }
-
-        public SaveResult Save(ISnapshot snapshot)
-        {
-            return this.InternalSave((T)snapshot);
-        }
-
-        public void Delete(ISnapshot snapshot)
-        {
-            this.InternalDelete((T)snapshot);
-        }
-    }
+//    public class InMemorySnapshotRepository<T> : DictionaryRepositoryBase<T>, ISnapshotRepository
+//        where T : class, ISnapshot, new() 
+//    {
+//        public InMemorySnapshotRepository()
+//        {
+//        }
+//
+//        protected override T InternalNew()
+//        {
+//            return new T(); 
+//        }
+//
+//        protected override SaveResult InternalSave(T snapshot)
+//        {
+//            if (this.Storage.ContainsKey(snapshot.Identity))
+//            {
+//                this.Storage[snapshot.Identity] = snapshot;
+//                return SaveResult.Updated;
+//            }
+//            
+//            this.Storage[snapshot.Identity] = snapshot;
+//            return SaveResult.Added;
+//        }
+//
+//        protected override void InternalDelete(T snapshot)
+//        {
+//            if (this.Storage.ContainsKey(snapshot.Identity))
+//            {
+//                this.Storage.Remove(snapshot.Identity);
+//            }
+//        }
+//
+//        public new ISnapshot New()
+//        {
+//            return this.InternalNew();
+//        }
+//
+//        public new ISnapshot GetById(Guid id)
+//        {
+//            return base.GetById(id);
+//        }
+//
+//        public new IList<ISnapshot> GetAll()
+//        {
+//            return base.GetAll().Cast<ISnapshot>().ToList();
+//        }
+//
+//        public SaveResult Save(ISnapshot snapshot)
+//        {
+//            return this.InternalSave((T)snapshot);
+//        }
+//
+//        public void Delete(ISnapshot snapshot)
+//        {
+//            this.InternalDelete((T)snapshot);
+//        }
+//    }
 }

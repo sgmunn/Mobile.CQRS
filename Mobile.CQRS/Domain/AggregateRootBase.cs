@@ -24,7 +24,7 @@ namespace Mobile.CQRS.Domain
     using System.Collections.Generic;
     using System.Linq;
 
-    public abstract class AggregateRootBase : IAggregateRoot
+    public abstract class AggregateRootBase : IAggregateRoot, IEventSourced
     {
         private readonly List<IAggregateEvent> uncommittedEvents;
 
@@ -48,6 +48,11 @@ namespace Mobile.CQRS.Domain
         public void Commit()
         {
             this.uncommittedEvents.Clear();
+        }
+        
+        public void LoadFromEvents(IList<IAggregateEvent> events)
+        {
+            this.ApplyEvents(events);
         }
 
         protected void ApplyEvents(IList<IAggregateEvent> events)

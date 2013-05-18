@@ -39,7 +39,7 @@ namespace Mobile.CQRS.Domain
             this.registeredSnapshotRepositories = new Dictionary<Type, Func<IDomainContext, ISnapshotRepository>>();
         }
 
-        protected DomainContextBase(IAggregateManifestRepository manifest, IEventStoreRepository eventStore)
+        protected DomainContextBase(IAggregateManifestRepository manifest, IEventStore eventStore)
         {
             this.EventBus = new ObservableDomainNotificationBus();
             this.Manifest = manifest;
@@ -49,7 +49,7 @@ namespace Mobile.CQRS.Domain
             this.registeredSnapshotRepositories = new Dictionary<Type, Func<IDomainContext, ISnapshotRepository>>();
         }
 
-        protected DomainContextBase(IAggregateManifestRepository manifest, IEventStoreRepository eventStore, IDomainNotificationBus eventBus)
+        protected DomainContextBase(IAggregateManifestRepository manifest, IEventStore eventStore, IDomainNotificationBus eventBus)
         {
             this.Manifest = manifest;
             this.EventBus = eventBus;
@@ -61,7 +61,7 @@ namespace Mobile.CQRS.Domain
 
         public IAggregateManifestRepository Manifest { get; protected set; }
 
-        public IEventStoreRepository EventStore { get; protected set; }
+        public IEventStore EventStore { get; protected set; }
 
         public IDomainNotificationBus EventBus { get; protected set; }
 
@@ -82,19 +82,31 @@ namespace Mobile.CQRS.Domain
             return null;
         }
 
-        public virtual IAggregateRepository<T> GetAggregateRepository<T>(IDomainNotificationBus bus) 
-            where T : IAggregateRoot, new()
+        public virtual IAggregateRepository<T> GetAggregateRepository<T>(IDomainNotificationBus bus) where T : IAggregateRoot, new()
         {
-            if (typeof(T).GetInterfaces().Contains(typeof(IEventSourced)))
-            {
-                return new EventSourcedAggregateRepository<T>(this.EventSerializer, this.EventStore, this.Manifest, bus);
-            }
+            // so, do we prescribe serialization for all snapshots, or make the user pass in the one they want each time ??
 
-            return new SnapshotAggregateRepository<T>(this.GetSnapshotRepository(typeof(T)), this.Manifest, bus);
+            return new AggregateRepository<T>(this.Manifest, this.EventStore, null, this.EventBus);
+//            if (typeof(T).GetInterfaces().Contains(typeof(IEventSourced)))
+//            {
+//                return new EventSourcedAggregateRepository<T>(this.EventSerializer, this.EventStore, this.Manifest, bus);
+//            }
+//
+//            return new SnapshotAggregateRepository<T>(this.GetSnapshotRepository(typeof(T)), this.Manifest, bus);
         }
 
-        public IList<IReadModelBuilder> GetReadModelBuilders<T>() 
-            where T : IAggregateRoot, new()
+        public virtual ISnapshotRepository GetSnapshotRepository<T>()
+        {
+            var repo = this.GetSnapshotRepository(typeof(T));
+            if (repo != null)
+            {
+                return repo;
+            }
+
+            return null;
+        }
+
+        public IList<IReadModelBuilder> GetReadModelBuilders<T>() where T : IAggregateRoot, new()
         {
             var result = new List<IReadModelBuilder>();
 

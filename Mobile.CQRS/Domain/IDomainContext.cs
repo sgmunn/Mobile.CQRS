@@ -27,15 +27,19 @@ namespace Mobile.CQRS.Domain
 
     public interface IDomainContext
     {
-        IEventStoreRepository EventStore { get; }
+        IEventStore EventStore { get; }
         
         IDomainNotificationBus EventBus { get; }
 
         ISerializer<IAggregateEvent> EventSerializer { get; }
 
+        IAggregateManifestRepository Manifest { get; }
+
       //  ISerializer<T> GetSerializer<T>();
         
 //        ISerializer<ISnapshot> SnapshotSerializer { get; }
+
+        ISnapshotRepository GetSnapshotRepository<T>();
 
         IUnitOfWorkScope BeginUnitOfWork();
 

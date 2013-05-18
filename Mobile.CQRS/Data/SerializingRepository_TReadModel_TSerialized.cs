@@ -72,6 +72,11 @@ namespace Mobile.CQRS.Data
         public TReadModel GetById(Guid id)
         {
             var serialized = this.Repository.GetById(id);
+            if (serialized == null)
+            {
+                return default(TReadModel);
+            }
+
             return this.Serializer.DeserializeFromString(serialized.ObjectData);
         }
 

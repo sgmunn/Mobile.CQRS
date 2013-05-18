@@ -30,6 +30,11 @@ namespace Mobile.CQRS.Serialization
     {
         private readonly DataContractSerializer serializer;
 
+        public DataContractSerializer()
+        {
+            this.serializer = new DataContractSerializer(typeof(T));
+        }
+        
         public DataContractSerializer(IEnumerable<Type> knownTypes)
         {
             this.serializer = new DataContractSerializer(typeof(T), knownTypes);

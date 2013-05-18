@@ -1,5 +1,5 @@
 //  --------------------------------------------------------------------------------------------------------------------
-//  <copyright file="IAggregateManifestItem.cs" company="sgmunn">
+//  <copyright file="AggregateManifest.cs" company="sgmunn">
 //    (c) sgmunn 2012  
 //
 //    Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
@@ -18,14 +18,23 @@
 //  </copyright>
 //  --------------------------------------------------------------------------------------------------------------------
 
-namespace Mobile.CQRS.Domain
+namespace Mobile.CQRS.Domain.SQLite
 {
     using System;
+    using Mobile.CQRS.Data.SQLite;
 
-    public interface IAggregateManifestItem : IUniqueId
+    public sealed class AggregateManifest : IUniqueId
     {
-        int Version { get; set; }
+        [PrimaryKey]
+        public Guid Identity { get; set; }
 
-        int SyncedVersion { get; set; }
+        public int Version { get; set; }
+
+        public int SyncedVersion { get; set; }
+
+        public override string ToString()
+        {
+            return string.Format("[{0}] {1}", Identity.ToString().Substring(0, 8), Version);
+        }
     }
 }

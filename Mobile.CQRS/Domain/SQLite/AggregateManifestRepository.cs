@@ -25,8 +25,8 @@ namespace Mobile.CQRS.Domain.SQLite
 
     public class AggregateManifestRepository : IAggregateManifestRepository
     {
-        ////private const string UpdateSql = "update AggregateManifestContract set Version = ? where Identity = ? and Version = ?";
-        private const string UpdateSql = "update AggregateManifestContract set Version = {0} where Identity = '{1}' and Version = {2}";
+        ////private const string UpdateSql = "update AggregateManifest set Version = ? where Identity = ? and Version = ?";
+        private const string UpdateSql = "update AggregateManifest set Version = {0} where Identity = '{1}' and Version = {2}";
 
         private readonly SQLiteConnection connection;
 
@@ -62,7 +62,7 @@ namespace Mobile.CQRS.Domain.SQLite
         {
             if (currentVersion == 0)
             {
-                this.connection.Insert(new AggregateManifestContract { Identity = aggregateId, Version = newVersion, });
+                this.connection.Insert(new AggregateManifest { Identity = aggregateId, Version = newVersion, });
             }
             else
             {

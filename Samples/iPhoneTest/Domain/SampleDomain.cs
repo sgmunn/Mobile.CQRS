@@ -18,6 +18,7 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 using System.Reflection;
+using System.Runtime.Serialization;
 
 namespace Sample.Domain
 {
@@ -30,7 +31,7 @@ namespace Sample.Domain
 
     public class TestDomainContext : SqlDomainContext
     {
-        public TestDomainContext(SQLiteConnection connection, IAggregateManifestRepository manifest, IEventStoreRepository eventStore) 
+        public TestDomainContext(SQLiteConnection connection, IAggregateManifestRepository manifest, IEventStore eventStore) 
             : base(connection, manifest, eventStore)
         {
 //            this.EventSerializer = new DataContractSerializer<EventBase>(TypeHelpers.FindSerializableTypes(typeof(IAggregateEvent), Assembly.GetCallingAssembly()));
@@ -99,11 +100,6 @@ namespace Sample.Domain
             Console.WriteLine("Apply TestEvent2 {0}", domainEvent.Version);
         }
 
-        public void LoadFromEvents(IList<IAggregateEvent> events)
-        {
-            base.ApplyEvents(events);
-        }
-
         public void Apply(BalanceUpdatedEvent domainEvent)
         {
             Console.WriteLine("Apply BalanceUpdatedEvent {0}", domainEvent.Balance);
@@ -111,17 +107,23 @@ namespace Sample.Domain
         }
     }
 
+    [DataContract]
     public class TestSnapshot : ISnapshot
     {
+        [DataMember]
         [PrimaryKey]
         public Guid Identity { get; set; }
 
+        [DataMember]
         public int Version { get; set; }
 
+        [DataMember]
         public string Description { get; set; }
 
+        [DataMember]
         public string Name { get; set; }
 
+        [DataMember]
         public decimal Balance { get; set; }
 
         public override string ToString()

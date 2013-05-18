@@ -95,8 +95,6 @@
     <Compile Include="Domain\IDomainContext.cs" />
     <Compile Include="Domain\IEventSerializer.cs" />
     <Compile Include="Domain\IEventSourced.cs" />
-    <Compile Include="Domain\IEventStoreRepository.cs" />
-    <Compile Include="Domain\InMemoryEventStoreRepository_T.cs" />
     <Compile Include="Domain\InMemorySnapshotRepository_T.cs" />
     <Compile Include="Domain\IReadModelBuilder.cs" />
     <Compile Include="Domain\IReadModelBuilder_T.cs" />
@@ -128,6 +126,8 @@
     <Compile Include="Data\DictionaryRepositoryBase_T.cs" />
     <Compile Include="Domain\DomainNotificationBusExtensions.cs" />
     <Compile Include="Domain\ObservableDomainNotificationBus.cs" />
+    <Compile Include="Domain\IEventStore.cs" />
+    <Compile Include="Domain\InMemoryEventStore_T.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Runtime\" />

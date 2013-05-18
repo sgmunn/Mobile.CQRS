@@ -14,10 +14,12 @@ namespace Mobile.CQRS.Domain.UnitTests.Repositories
             base.SetUp();
             
             this.Bus = new MockBus();
-            this.Repository = new SnapshotAggregateRepository<TestAggregateRoot>(
-                this.SnapshotStore,
-                new MockAggregateManifestRepository(), 
-                this.Bus);
+
+            this.Repository = null;
+//            this.Repository = new SnapshotAggregateRepository<TestAggregateRoot>(
+//                this.SnapshotStore,
+//                new MockAggregateManifestRepository(), 
+//                this.Bus);
         }
     }
 }

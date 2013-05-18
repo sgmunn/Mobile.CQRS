@@ -1,6 +1,6 @@
 // --------------------------------------------------------------------------------------------------------------------
-// <copyright file="EventStoreRepository.cs" company="sgmunn">
-//   (c) sgmunn 2012  
+// <copyright file="SerializedSnapshotRepository_T.cs" company="sgmunn">
+//   (c) sgmunn 2013  
 //
 //   Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
 //   documentation files (the "Software"), to deal in the Software without restriction, including without limitation 
@@ -9,7 +9,7 @@
 //
 //   The above copyright notice and this permission notice shall be included in all copies or substantial portions of 
 //   the Software.
-// 
+//
 //   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO 
 //   THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
 //   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
@@ -23,47 +23,54 @@ namespace Mobile.CQRS.Domain.SQLite
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using Mobile.CQRS.Data.SQLite;
     using Mobile.CQRS.Data;
-    
-    public class EventStoreRepository : SqlRepository<AggregateEventContract>, IEventStoreRepository
+    using Mobile.CQRS.Data.SQLite;
+    using Mobile.CQRS.Serialization;
+
+    public class SerializedSnapshotRepository<T> : ISnapshotRepository 
+        where T : class, ISnapshot, new()
     {
-        public EventStoreRepository(SQLiteConnection connection) : base(connection)
+        private readonly SerializingRepository<T, AggregateSnapshot> repository;
+
+        public SerializedSnapshotRepository(SQLiteConnection connection, ISerializer<T> serializer) 
         {
+            var repo = new SqlRepository<AggregateSnapshot>(connection);
+            this.repository = new SerializingRepository<T, AggregateSnapshot>(repo, serializer);
         }
 
-        IAggregateEventContract IRepository<IAggregateEventContract, Guid>.New()
+        public ISnapshot New()
         {
-            return base.New();
+            return this.repository.New();
         }
 
-        IAggregateEventContract IRepository<IAggregateEventContract, Guid>.GetById(Guid id)
+        public ISnapshot GetById(Guid id)
         {
-            return base.GetById(id);
+            return this.repository.GetById(id);
         }
 
-        IList<IAggregateEventContract> IRepository<IAggregateEventContract, Guid>.GetAll()
+        public IList<ISnapshot> GetAll()
         {
-            return (IList<IAggregateEventContract>)base.GetAll();
+            return this.repository.GetAll().Cast<ISnapshot>().ToList();
         }
 
-        public SaveResult Save(IAggregateEventContract instance)
+        public SaveResult Save(ISnapshot instance)
         {
-            return base.Save((AggregateEventContract)instance);
+            return this.repository.Save((T)instance);
         }
 
-        public void Delete(IAggregateEventContract instance)
+        public void Delete(ISnapshot instance)
         {
-            base.Delete((AggregateEventContract)instance);
+            this.repository.Delete((T)instance);
         }
 
-        public IList<IAggregateEventContract> GetAllAggregateEvents(Guid rootId)
+        public void DeleteId(Guid id)
         {
-            lock (this.Connection)
-            {
-                var result = this.Connection.Table<AggregateEventContract>().Where(x => x.AggregateId == rootId).OrderBy(x => x.Version).AsEnumerable();
-                return result.Cast<IAggregateEventContract>().ToList();
-            }
+            this.repository.DeleteId(id);
+        }
+
+        public void Dispose()
+        {
+            this.repository.Dispose();
         }
     }
 }

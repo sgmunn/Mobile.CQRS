@@ -29,7 +29,7 @@ namespace Mobile.CQRS.Domain
         where T : class, IAggregateRoot, new()
     {
         private readonly IDomainContext context;
-        
+
         public DomainCommandExecutor(IDomainContext context)
         {
             this.context = context;
@@ -66,8 +66,10 @@ namespace Mobile.CQRS.Domain
                     // capture the aggregate's events and pipe them into the read model builder when it is committed
                     var aggregateEvents = new UnitOfWorkEventBus(readModelBuilderBus);
 
-                    // create a unit of work repo to wrap the real aggregate repository
-                    var repo = new UnitOfWorkRepository<T>(this.context.GetAggregateRepository<T>(aggregateEvents));
+                    var aggregateRepo = new AggregateRepository<T>(this.context.Manifest, this.context.EventStore, this.context.GetSnapshotRepository<T>(), aggregateEvents);
+
+                    // create a unit of work repo to wrap the real aggregate repository, also caches the aggregate for multiple command executions
+                    var repo = new UnitOfWorkRepository<T>(aggregateRepo);
 
                     // add them in this order,
                     // on commit of the scope, the repo will attempt to commit the aggregate's events and will then raise

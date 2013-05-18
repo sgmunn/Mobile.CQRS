@@ -1,5 +1,5 @@
 // --------------------------------------------------------------------------------------------------------------------
-// <copyright file="SerializedAggregateEvent.cs" company="sgmunn">
+// <copyright file="IEventStore.cs" company="sgmunn">
 //   (c) sgmunn 2012  
 //
 //   Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
@@ -18,27 +18,17 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace Mobile.CQRS.Domain.SQLite
+namespace Mobile.CQRS.Domain
 {
     using System;
-    using Mobile.CQRS.Data.SQLite;
+    using System.Collections.Generic;
+    using Mobile.CQRS.Data;
 
-    // TODO: if we use this with existing applications (my minions) then we have the wrong table name
-    public class AggregateEventContract : IAggregateEventContract
+    public interface IEventStore : IDisposable// : IRepository<IAggregateEvent>
     {
-        [PrimaryKey]
-        public Guid Identity { get; set; }
-
-        [Indexed]
-        public Guid AggregateId { get; set; }
-  
-        public int Version { get; set; }
-  
-        public string EventData { get; set; }
-
-        public override string ToString()
-        {
-            return string.Format("{0} - {1}", this.AggregateId.ToString().Substring(0, 8), this.Version);
-        }
+        IList<IAggregateEvent> GetAllEvents(Guid rootId);
+        IList<IAggregateEvent> GetEventsAfterVersion(Guid rootId, int version);
+        int GetCurrentVersion(Guid rootId);
+        void SaveEvents(Guid rootId, IList<IAggregateEvent> events);
     }
 }

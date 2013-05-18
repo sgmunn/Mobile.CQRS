@@ -1,50 +1,29 @@
-// --------------------------------------------------------------------------------------------------------------------
-// <copyright file=".cs" company="sgmunn">
-//   (c) sgmunn 2013  
-//
-//   Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
-//   documentation files (the "Software"), to deal in the Software without restriction, including without limitation 
-//   the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and 
-//   to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-//
-//   The above copyright notice and this permission notice shall be included in all copies or substantial portions of 
-//   the Software.
-//
-//   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO 
-//   THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
-//   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
-//   CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS 
-//   IN THE SOFTWARE.
-// </copyright>
-// --------------------------------------------------------------------------------------------------------------------
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 
-// TODO: serialization support for complex read models and snapshots
-// ok an snapshot needs to have id, version, data (just like event) and THEN it can have custom fields
-// likewise, a read model should have the same.
-// in fact it would seem that all 3 have the same properties.= a read model at present might cause issue, how many serializers
-// do we need - one for each readmodel
-// we really need an IOC container now
-
-// we can find the event base type and register it
-
 // TODO: type id on manifest
-
-
-
-// datacontract serializer by default
-
-
 
 // TODO: thread safe event bus - need to be able to publish to it from any thread - Subject needs to be thread safe
 // TODO: event sourcing and snapshot support in the same aggregate
 // TODO: verify the aggregate manifest and see if we can have an easier name
-// TODO: we want an ISnapshotContract like we have for events that serialises, this would be opt-in and the aggregate would have to serialize??
-// TODO: view model with support for loading changes while being editing
+// TODO: Mobile.Mvvm view model with support for loading changes while being editing
+
+/*
+ * Momento support
+ *    load snapshot
+ *    get events from version
+ *    apply events
+ *  if load from snapshot fails, then get all events
+ *    pass in a delegate that determines when to save a snapshot
+ * 
+ * 
+ * 
+ * 
+ */ 
+
 using System.Reflection;
 
 namespace Mobile.CQRS.Data

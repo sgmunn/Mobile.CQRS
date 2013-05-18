@@ -15,11 +15,6 @@ namespace Mobile.CQRS.Domain.UnitTests
 
         public int Value2 { get; private set; }
 
-        public void LoadFromEvents(IList<IAggregateEvent> events)
-        {
-            base.ApplyEvents(events);
-        }
-        
         public override ISnapshot GetSnapshot()
         {
             var snapshot = this.InternalState;

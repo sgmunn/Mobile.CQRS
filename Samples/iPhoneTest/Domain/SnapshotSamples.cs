@@ -17,6 +17,7 @@
 //    IN THE SOFTWARE.
 //  </copyright>
 //  --------------------------------------------------------------------------------------------------------------------
+using Mobile.CQRS.Serialization;
 
 namespace Sample.Domain
 {
@@ -38,7 +39,10 @@ namespace Sample.Domain
  //           context.EventBus.Subscribe((x) => Console.WriteLine("domain bus event {0}", x));
 
             // registrations
-            context.RegisterSnapshot<SnapshotTestRoot>(c => new SnapshotRepository<TestSnapshot>(SnapshotSourcedDB.Main));
+//            context.RegisterSnapshot<SnapshotTestRoot>(c => new SnapshotRepository<TestSnapshot>(SnapshotSourcedDB.Main));
+            context.RegisterSnapshot<SnapshotTestRoot>(c => new SerializedSnapshotRepository<TestSnapshot>(SnapshotSourcedDB.Main,
+                 new DataContractSerializer<TestSnapshot>()
+                                                                                                           ));
 
             context.RegisterBuilder<SnapshotTestRoot>((c) => 
                  new TransactionReadModelBuilder(new SqlRepository<TransactionDataContract>(SnapshotSourcedDB.Main)));
