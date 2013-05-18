@@ -34,12 +34,15 @@ namespace Mobile.CQRS.Data
         
         private readonly List<Guid> deletedItemKeys;
 
+        private readonly List<Guid> loadedItemKeys;
+
         public UnitOfWorkRepository(IRepository<T> repository)
         {
             this.repository = repository;
 
             this.savedItems = new Dictionary<Guid, IUniqueId>();
             this.deletedItemKeys = new List<Guid>();
+            this.loadedItemKeys = new List<Guid>();
         }
 
         protected IRepository<T> Repository
@@ -74,7 +77,14 @@ namespace Mobile.CQRS.Data
                 return (T)this.savedItems[id];
             }
 
-            return this.repository.GetById(id);
+            var item = this.repository.GetById(id);
+
+            if (item != null)
+            {
+                this.loadedItemKeys.Add(id);
+            }
+
+            return item;
         }
 
         public IList<T> GetAll()
@@ -93,8 +103,8 @@ namespace Mobile.CQRS.Data
             }
 
             this.savedItems[instance.Identity] = instance;
-            var realItem = this.Repository.GetById(instance.Identity);
-            if (realItem != null)
+
+            if (this.loadedItemKeys.Contains(instance.Identity))
             {
                 return SaveResult.Updated;
             }

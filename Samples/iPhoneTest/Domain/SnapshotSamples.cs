@@ -18,6 +18,7 @@
 //  </copyright>
 //  --------------------------------------------------------------------------------------------------------------------
 using Mobile.CQRS.Serialization;
+using System.Reflection;
 
 namespace Sample.Domain
 {
@@ -35,7 +36,13 @@ namespace Sample.Domain
         {
             var manifest = new AggregateManifestRepository(SnapshotSourcedDB.Main);
 
-            var context = new TestDomainContext(SnapshotSourcedDB.Main, manifest, null);
+            var eventSerializer = new DataContractSerializer<EventBase>(TypeHelpers.FindSerializableTypes(typeof(EventBase), Assembly.GetCallingAssembly()));
+
+            var eventStore = new EventStore(SnapshotSourcedDB.Main, eventSerializer);
+
+
+
+            var context = new TestDomainContext(SnapshotSourcedDB.Main, manifest, eventStore);
  //           context.EventBus.Subscribe((x) => Console.WriteLine("domain bus event {0}", x));
 
             // registrations

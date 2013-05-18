@@ -73,6 +73,7 @@ namespace Sample.Domain
         protected SnapshotSourcedDB() : base(SampleDatabasePath())
         {
             this.CreateTable<AggregateManifest>();
+            this.CreateTable<AggregateEvent>();
             this.CreateTable<AggregateSnapshot>();
             this.CreateTable<TestSnapshot>();
             this.CreateTable<TransactionDataContract>();

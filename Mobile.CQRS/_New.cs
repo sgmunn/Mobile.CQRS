@@ -5,24 +5,12 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 
 // TODO: type id on manifest
+// TODO: should uow repo cache gets ?
 
 // TODO: thread safe event bus - need to be able to publish to it from any thread - Subject needs to be thread safe
-// TODO: event sourcing and snapshot support in the same aggregate
 // TODO: verify the aggregate manifest and see if we can have an easier name
 // TODO: Mobile.Mvvm view model with support for loading changes while being editing
 
-/*
- * Momento support
- *    load snapshot
- *    get events from version
- *    apply events
- *  if load from snapshot fails, then get all events
- *    pass in a delegate that determines when to save a snapshot
- * 
- * 
- * 
- * 
- */ 
 
 using System.Reflection;
 

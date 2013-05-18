@@ -25,5 +25,6 @@ namespace Mobile.CQRS.Domain
 
     public interface ISnapshotRepository : IRepository<ISnapshot>
     {
+        bool ShouldSaveSnapshot(int lastVersion, int currentVersion);
     }
 }
