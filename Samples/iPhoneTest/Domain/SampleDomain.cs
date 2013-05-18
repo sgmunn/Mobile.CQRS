@@ -34,29 +34,8 @@ namespace Sample.Domain
         public TestDomainContext(SQLiteConnection connection, IAggregateManifestRepository manifest, IEventStore eventStore) 
             : base(connection, manifest, eventStore)
         {
-//            this.EventSerializer = new DataContractSerializer<EventBase>(TypeHelpers.FindSerializableTypes(typeof(IAggregateEvent), Assembly.GetCallingAssembly()));
-            this.EventSerializer = new DataContractSerializer<EventBase>(TypeHelpers.FindSerializableTypes(typeof(EventBase), Assembly.GetCallingAssembly()));
         }
-
-        
-//        public override ISerializer<T> GetSerializer<T>()
-//        {
-//            if (typeof(T) == typeof(IAggregateEvent))
-//            {
-//                return (ISerializer<T>)new DataContractSerializer<EventBase>(TypeHelpers.FindSerializableTypes(typeof(IAggregateEvent), Assembly.GetCallingAssembly()));
-//            }
-//
-//            return null;
-//        }
-
     }
-
-//    public class TestAggregateId : Identity
-//    {
-//        public TestAggregateId(Guid id) : base(id)
-//        {
-//        }
-//    }
 
     public class EventSourcedRoot : AggregateRootBase, IEventSourced
     {

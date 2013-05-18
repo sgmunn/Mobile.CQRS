@@ -23,7 +23,6 @@ namespace Mobile.CQRS.Domain
     using System;
     using System.Collections.Generic;
     using Mobile.CQRS.Data;
-    using Mobile.CQRS.Serialization;
 
     public interface IDomainContext
     {
@@ -31,21 +30,13 @@ namespace Mobile.CQRS.Domain
         
         IDomainNotificationBus EventBus { get; }
 
-        ISerializer<IAggregateEvent> EventSerializer { get; }
-
         IAggregateManifestRepository Manifest { get; }
 
-      //  ISerializer<T> GetSerializer<T>();
-        
-//        ISerializer<ISnapshot> SnapshotSerializer { get; }
-
-        ISnapshotRepository GetSnapshotRepository<T>();
+        ISnapshotRepository GetSnapshotRepository<T>() where T : IAggregateRoot;
 
         IUnitOfWorkScope BeginUnitOfWork();
 
         ICommandExecutor<T> NewCommandExecutor<T>() where T : class, IAggregateRoot, new();
-        
-        IAggregateRepository<T> GetAggregateRepository<T>(IDomainNotificationBus bus) where T : IAggregateRoot, new();
 
         IList<IReadModelBuilder> GetReadModelBuilders<T>() where T : IAggregateRoot, new();
     }

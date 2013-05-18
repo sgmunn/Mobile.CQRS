@@ -22,7 +22,6 @@ namespace Mobile.CQRS.Domain
 {
     using System;
     using System.Collections.Generic;
-    using System.Linq;
     using Mobile.CQRS.Data;
     using Mobile.CQRS.Serialization;
 
@@ -58,14 +57,12 @@ namespace Mobile.CQRS.Domain
             this.registeredBuilders = new Dictionary<Type, List<Func<IDomainContext, IReadModelBuilder>>>();
             this.registeredSnapshotRepositories = new Dictionary<Type, Func<IDomainContext, ISnapshotRepository>>();
         }
-
-        public IAggregateManifestRepository Manifest { get; protected set; }
-
+        
         public IEventStore EventStore { get; protected set; }
-
+        
         public IDomainNotificationBus EventBus { get; protected set; }
 
-        public ISerializer<IAggregateEvent> EventSerializer { get; protected set; }
+        public IAggregateManifestRepository Manifest { get; protected set; }
 
         public virtual IUnitOfWorkScope BeginUnitOfWork()
         {
@@ -77,30 +74,12 @@ namespace Mobile.CQRS.Domain
             return new DomainCommandExecutor<T>(this);
         }
 
-        public virtual ISerializer<T> GetSerializer<T>()
+        public ISnapshotRepository GetSnapshotRepository<T>() where T : IAggregateRoot
         {
-            return null;
-        }
-
-        public virtual IAggregateRepository<T> GetAggregateRepository<T>(IDomainNotificationBus bus) where T : IAggregateRoot, new()
-        {
-            // so, do we prescribe serialization for all snapshots, or make the user pass in the one they want each time ??
-
-            return new AggregateRepository<T>(this.Manifest, this.EventStore, null, this.EventBus);
-//            if (typeof(T).GetInterfaces().Contains(typeof(IEventSourced)))
-//            {
-//                return new EventSourcedAggregateRepository<T>(this.EventSerializer, this.EventStore, this.Manifest, bus);
-//            }
-//
-//            return new SnapshotAggregateRepository<T>(this.GetSnapshotRepository(typeof(T)), this.Manifest, bus);
-        }
-
-        public virtual ISnapshotRepository GetSnapshotRepository<T>()
-        {
-            var repo = this.GetSnapshotRepository(typeof(T));
-            if (repo != null)
+            var aggregateType = typeof(T);
+            if (this.registeredSnapshotRepositories.ContainsKey(aggregateType))
             {
-                return repo;
+                return this.registeredSnapshotRepositories[aggregateType](this);
             }
 
             return null;
@@ -134,16 +113,6 @@ namespace Mobile.CQRS.Domain
             }
 
             this.registeredBuilders [typeof(T)].Add(createBuilder);
-        }
-        
-        protected virtual ISnapshotRepository GetSnapshotRepository(Type aggregateType)
-        {
-            if (this.registeredSnapshotRepositories.ContainsKey(aggregateType))
-            {
-                return this.registeredSnapshotRepositories [aggregateType](this);
-            }
-
-            return null;
         }
     }
 }
