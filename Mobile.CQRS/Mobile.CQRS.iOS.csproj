@@ -39,6 +39,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Resources\" />
+    <Folder Include="Serialization\" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>
@@ -51,7 +52,6 @@
     </MonoDevelop>
   </ProjectExtensions>
   <ItemGroup>
-    <Compile Include="Data\IObservableRepository.cs" />
     <Compile Include="Data\IRepository_T.cs" />
     <Compile Include="Data\IRepository_TData_TKey.cs" />
     <Compile Include="Data\IUnitOfWork.cs" />
@@ -62,7 +62,6 @@
     <Compile Include="Data\UnitOfWorkRepository_T.cs" />
     <Compile Include="Domain\CommandExecutor_T.cs" />
     <Compile Include="Domain\ConcurrencyException.cs" />
-    <Compile Include="Domain\DefaultEventSerializer.cs" />
     <Compile Include="Domain\DomainCommandExecutor_T.cs" />
     <Compile Include="Domain\EventSourcedAggregateRepository_T.cs" />
     <Compile Include="Domain\IAggregateCommand.cs" />
@@ -73,7 +72,6 @@
     <Compile Include="Domain\IAggregateRoot.cs" />
     <Compile Include="Domain\ICommandExecutor_T.cs" />
     <Compile Include="Domain\IDomainContext.cs" />
-    <Compile Include="Domain\IEventSerializer.cs" />
     <Compile Include="Domain\IEventSourced.cs" />
     <Compile Include="Domain\IEventStoreRepository.cs" />
     <Compile Include="Domain\IReadModelBuilder.cs" />
@@ -116,7 +114,6 @@
     <Compile Include="Data\IRepositoryConnection.cs" />
     <Compile Include="Data\IUnitOfWorkRepository_T.cs" />
     <Compile Include="Domain\InMemoryUnitOfWorkScope.cs" />
-    <Compile Include="Data\ObservableRepository_T.cs" />
     <Compile Include="Domain\DomainContextBase.cs" />
     <Compile Include="Domain\AggregateRootBase.cs" />
     <Compile Include="Domain\AggregateRootBase_TState.cs" />
@@ -130,15 +127,21 @@
     <Compile Include="Domain\ObservableDomainNotificationBus.cs" />
     <Compile Include="IEvent.cs" />
     <Compile Include="_New.cs" />
-    <Compile Include="IDomainTopic.cs" />
-    <Compile Include="DomainTopic.cs" />
     <Compile Include="INotification.cs" />
-    <Compile Include="IDomainNotification.cs" />
-    <Compile Include="DomainNotification.cs" />
-    <Compile Include="IDomainNotificationBus.cs" />
     <Compile Include="Data\IModelChangeEvent.cs" />
     <Compile Include="Data\ModelChangeEvent.cs" />
-    <Compile Include="Data\NotificationExtensions.cs" />
     <Compile Include="Domain\NotificationExtensions.cs" />
+    <Compile Include="Serialization\ISerializer_T.cs" />
+    <Compile Include="Serialization\TypeHelpers.cs" />
+    <Compile Include="Serialization\DataContractSerializer_T.cs" />
+    <Compile Include="Domain\DomainNotification.cs" />
+    <Compile Include="Domain\DomainTopic.cs" />
+    <Compile Include="Domain\IDomainNotification.cs" />
+    <Compile Include="Domain\IDomainNotificationBus.cs" />
+    <Compile Include="Domain\IDomainTopic.cs" />
+    <Compile Include="Domain\IObservableRepository.cs" />
+    <Compile Include="Domain\ObservableRepository_T.cs" />
+    <Compile Include="Data\SerializingRepository_TReadModel_TSerialized.cs" />
+    <Compile Include="Data\ISerializedReadModel.cs" />
   </ItemGroup>
 </Project>

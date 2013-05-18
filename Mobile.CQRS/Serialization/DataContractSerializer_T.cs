@@ -1,5 +1,5 @@
 // --------------------------------------------------------------------------------------------------------------------
-// <copyright file=".cs" company="sgmunn">
+// <copyright file="DataContractSerializer_T.cs" company="sgmunn">
 //   (c) sgmunn 2012  
 //
 //   Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
@@ -18,44 +18,24 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace Mobile.CQRS.Domain
+namespace Mobile.CQRS.Serialization
 {
     using System;
     using System.Collections.Generic;
     using System.IO;
     using System.Runtime.Serialization;
-    using System.Reflection;
-    using System.Linq;
 
-    public static class KnownTypes
-    {
-        public static List<Type> EventTypes = new List<Type>();
-
-        public static void RegisterEvents(Assembly assembly)
-        {
-            Assembly.GetCallingAssembly();
-
-            var eventTypes = assembly.GetTypes().Where(t => typeof(IAggregateEvent).IsAssignableFrom(t)).ToList();
-            EventTypes.AddRange(eventTypes);
-        }
-    }
-
-    public class DefaultEventSerializer<T> : IEventSerializer
+    public class DataContractSerializer<T> : ISerializer<T>
         where T : class, new()
     {
         private readonly DataContractSerializer serializer;
 
-        static DefaultEventSerializer()
+        public DataContractSerializer(IEnumerable<Type> knownTypes)
         {
-            KnownTypes.RegisterEvents(Assembly.GetExecutingAssembly());
+            this.serializer = new DataContractSerializer(typeof(T), knownTypes);
         }
 
-        public DefaultEventSerializer()
-        {
-            this.serializer = new DataContractSerializer(typeof(T), KnownTypes.EventTypes);
-        }
-
-        public object DeserializeFromString(string value)
+        public T DeserializeFromString(string value)
         {
             using (var stream = new MemoryStream())
             {
@@ -66,7 +46,7 @@ namespace Mobile.CQRS.Domain
                     stream.Position = 0;
 
                     var result = this.serializer.ReadObject(stream);
-                    return result;
+                    return (T)result;
                 }
             }
         }

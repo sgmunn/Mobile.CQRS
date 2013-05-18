@@ -98,10 +98,10 @@ namespace Mobile.CQRS.Domain
             switch (saveResult)
             {
                 case SaveResult.Added:
-                    modelChange = Data.NotificationExtensions.CreateModelNotification(instance.Identity, instance, ModelChangeKind.Added);
+                    modelChange = NotificationExtensions.CreateModelNotification(instance.Identity, instance, ModelChangeKind.Added);
                     break;
                 case SaveResult.Updated:
-                    modelChange = Data.NotificationExtensions.CreateModelNotification(instance.Identity, instance, ModelChangeKind.Changed);
+                    modelChange = NotificationExtensions.CreateModelNotification(instance.Identity, instance, ModelChangeKind.Changed);
                     break;
             }
 

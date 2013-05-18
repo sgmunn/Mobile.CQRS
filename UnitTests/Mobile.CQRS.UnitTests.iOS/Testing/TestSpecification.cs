@@ -1,6 +1,6 @@
 // --------------------------------------------------------------------------------------------------------------------
-// <copyright file="IDomainContext.cs" company="sgmunn">
-//   (c) sgmunn 2012  
+// <copyright file="TestSpecification.cs" company="sgmunn">
+//   (c) sgmunn 2013  
 //
 //   Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
 //   documentation files (the "Software"), to deal in the Software without restriction, including without limitation 
@@ -9,7 +9,7 @@
 //
 //   The above copyright notice and this permission notice shall be included in all copies or substantial portions of 
 //   the Software.
-// 
+//
 //   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO 
 //   THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
 //   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
@@ -18,31 +18,39 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace Mobile.CQRS.Domain
+namespace MonoKit.Testing
 {
     using System;
     using System.Collections.Generic;
-    using Mobile.CQRS.Data;
-    using Mobile.CQRS.Serialization;
+    using NUnit.Framework;
 
-    public interface IDomainContext
+    public abstract class TestSpecification<TResult>
     {
-        IEventStoreRepository EventStore { get; }
+        protected TestSpecification()
+        {
+            this.Givens = new List<object>();
+        }
+
+        public List<object> Givens { get; private set; }
+
+        public TResult TestResult { get; private set; }
+
+        public abstract IEnumerable<object> Given();
+
+        public abstract TResult When();
+
+        [SetUp]
+        public virtual void SetUp()
+        {
+            this.Givens.AddRange(this.Given());
+            this.TestResult = this.When();
+        }
         
-        IDomainNotificationBus EventBus { get; }
-
-        ISerializer<IAggregateEvent> EventSerializer { get; }
-
-      //  ISerializer<T> GetSerializer<T>();
-        
-//        ISerializer<ISnapshot> SnapshotSerializer { get; }
-
-        IUnitOfWorkScope BeginUnitOfWork();
-
-        ICommandExecutor<T> NewCommandExecutor<T>() where T : class, IAggregateRoot, new();
-        
-        IAggregateRepository<T> GetAggregateRepository<T>(IDomainNotificationBus bus) where T : IAggregateRoot, new();
-
-        IList<IReadModelBuilder> GetReadModelBuilders<T>() where T : IAggregateRoot, new();
+        [TearDown]
+        public virtual void TearDown()
+        {
+            this.Givens.Clear();
+            this.TestResult = default(TResult);
+        }
     }
 }

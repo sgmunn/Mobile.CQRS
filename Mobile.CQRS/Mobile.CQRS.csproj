@@ -127,7 +127,7 @@
     <Compile Include="Domain\IAggregateEventContract.cs" />
     <Compile Include="Data\DictionaryRepositoryBase_T.cs" />
     <Compile Include="Domain\DomainNotificationBusExtensions.cs" />
-    <Compile Include="Domain\ObservableDomainNotificationtBus.cs" />
+    <Compile Include="Domain\ObservableDomainNotificationBus.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Runtime\" />

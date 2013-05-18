@@ -1,5 +1,5 @@
 // --------------------------------------------------------------------------------------------------------------------
-// <copyright file="DomainTopic.cs" company="sgmunn">
+// <copyright file="IDomainNotification.cs" company="sgmunn">
 //   (c) sgmunn 2013  
 //
 //   Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
@@ -18,28 +18,15 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace Mobile.CQRS
+namespace Mobile.CQRS.Domain
 {
     using System;
     
     /// <summary>
-    /// Implements IDomainTopic
+    /// Represents a notification of an event for an identifiable model
     /// </summary>
-    public sealed class DomainTopic : IDomainTopic
+    public interface IDomainNotification : INotification
     {
-        public DomainTopic(Type modelType, Guid modelId)
-        {
-            this.ModelType = modelType;
-            this.ModelId = modelId;
-        }
-
-        public Type ModelType { get; private set; }
-
-        public Guid ModelId { get; private set; }
-
-        public override string ToString()
-        {
-            return string.Format("Topic [{0}, {1}]", this.ModelType, this.ModelId);
-        }
+        IDomainTopic Topic { get; }
     }
 }

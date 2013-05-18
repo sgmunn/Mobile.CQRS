@@ -1,5 +1,5 @@
 // --------------------------------------------------------------------------------------------------------------------
-// <copyright file="NotificationExtensions.cs" company="sgmunn">
+// <copyright file="ITestSpecification.cs" company="sgmunn">
 //   (c) sgmunn 2013  
 //
 //   Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
@@ -18,15 +18,13 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace Mobile.CQRS.Data
+namespace MonoKit.Testing
 {
     using System;
 
-    public static class NotificationExtensions
+    public interface ITestSpecification
     {
-        public static IDomainNotification CreateModelNotification(Guid modelId, object model, ModelChangeKind change)
-        {
-            return new DomainNotification(new DomainTopic(model.GetType(), modelId), new ModelChangeEvent(model, change));
-        }
+        string Name { get; }
+        void Execute();
     }
 }

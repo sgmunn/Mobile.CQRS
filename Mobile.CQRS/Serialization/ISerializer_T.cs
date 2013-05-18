@@ -1,5 +1,5 @@
 // --------------------------------------------------------------------------------------------------------------------
-// <copyright file="IDomainContext.cs" company="sgmunn">
+// <copyright file="ISerializer_T.cs" company="sgmunn">
 //   (c) sgmunn 2012  
 //
 //   Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
@@ -18,31 +18,14 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace Mobile.CQRS.Domain
+namespace Mobile.CQRS.Serialization
 {
     using System;
-    using System.Collections.Generic;
-    using Mobile.CQRS.Data;
-    using Mobile.CQRS.Serialization;
 
-    public interface IDomainContext
+    public interface ISerializer<out T>
     {
-        IEventStoreRepository EventStore { get; }
-        
-        IDomainNotificationBus EventBus { get; }
+        string SerializeToString(object instance);
 
-        ISerializer<IAggregateEvent> EventSerializer { get; }
-
-      //  ISerializer<T> GetSerializer<T>();
-        
-//        ISerializer<ISnapshot> SnapshotSerializer { get; }
-
-        IUnitOfWorkScope BeginUnitOfWork();
-
-        ICommandExecutor<T> NewCommandExecutor<T>() where T : class, IAggregateRoot, new();
-        
-        IAggregateRepository<T> GetAggregateRepository<T>(IDomainNotificationBus bus) where T : IAggregateRoot, new();
-
-        IList<IReadModelBuilder> GetReadModelBuilders<T>() where T : IAggregateRoot, new();
+        T DeserializeFromString(string data);
     }
 }

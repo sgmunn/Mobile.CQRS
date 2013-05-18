@@ -1,6 +1,6 @@
 // --------------------------------------------------------------------------------------------------------------------
-// <copyright file="IDomainContext.cs" company="sgmunn">
-//   (c) sgmunn 2012  
+// <copyright file="TestExtensions.cs" company="sgmunn">
+//   (c) sgmunn 2013  
 //
 //   Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
 //   documentation files (the "Software"), to deal in the Software without restriction, including without limitation 
@@ -9,7 +9,7 @@
 //
 //   The above copyright notice and this permission notice shall be included in all copies or substantial portions of 
 //   the Software.
-// 
+//
 //   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO 
 //   THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
 //   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
@@ -18,31 +18,41 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace Mobile.CQRS.Domain
+namespace MonoKit.Testing
 {
     using System;
-    using System.Collections.Generic;
-    using Mobile.CQRS.Data;
-    using Mobile.CQRS.Serialization;
+    using NUnit.Framework;
 
-    public interface IDomainContext
+    public static class TestExtensions
     {
-        IEventStoreRepository EventStore { get; }
+        public static void ShouldBe<T>(this T value, T otherValue)
+        {
+            Assert.AreEqual(otherValue, value);
+        }
+
+        public static void ShouldBe<T>(this T value, T otherValue, string message)
+        {
+            Assert.AreEqual(otherValue, value, message);
+        }
+
+        public static void ShouldBeNull(this object value)
+        {
+            Assert.IsNull(value);
+        }
         
-        IDomainNotificationBus EventBus { get; }
-
-        ISerializer<IAggregateEvent> EventSerializer { get; }
-
-      //  ISerializer<T> GetSerializer<T>();
+        public static void ShouldBeNull(this object value, string message)
+        {
+            Assert.IsNull(value, message);
+        }
         
-//        ISerializer<ISnapshot> SnapshotSerializer { get; }
+        public static void ShouldNotBeNull(this object value)
+        {
+            Assert.IsNotNull(value);
+        }
 
-        IUnitOfWorkScope BeginUnitOfWork();
-
-        ICommandExecutor<T> NewCommandExecutor<T>() where T : class, IAggregateRoot, new();
-        
-        IAggregateRepository<T> GetAggregateRepository<T>(IDomainNotificationBus bus) where T : IAggregateRoot, new();
-
-        IList<IReadModelBuilder> GetReadModelBuilders<T>() where T : IAggregateRoot, new();
+        public static void ShouldNotBeNull(this object value, string message)
+        {
+            Assert.IsNotNull(value, message);
+        }
     }
 }

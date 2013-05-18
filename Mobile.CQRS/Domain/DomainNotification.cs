@@ -18,7 +18,7 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace Mobile.CQRS
+namespace Mobile.CQRS.Domain
 {
     using System;
     

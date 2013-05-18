@@ -17,6 +17,7 @@
 //   IN THE SOFTWARE.
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
+using System.Reflection;
 
 namespace Sample.Domain
 {
@@ -25,15 +26,28 @@ namespace Sample.Domain
     using Mobile.CQRS.Data.SQLite;
     using Mobile.CQRS.Domain.SQLite;
     using System.Collections.Generic;
-    using Mobile.CQRS;
+    using Mobile.CQRS.Serialization;
 
     public class TestDomainContext : SqlDomainContext
     {
         public TestDomainContext(SQLiteConnection connection, IAggregateManifestRepository manifest, IEventStoreRepository eventStore) 
             : base(connection, manifest, eventStore)
         {
-            this.EventSerializer = new DefaultEventSerializer<EventBase>();
+//            this.EventSerializer = new DataContractSerializer<EventBase>(TypeHelpers.FindSerializableTypes(typeof(IAggregateEvent), Assembly.GetCallingAssembly()));
+            this.EventSerializer = new DataContractSerializer<EventBase>(TypeHelpers.FindSerializableTypes(typeof(EventBase), Assembly.GetCallingAssembly()));
         }
+
+        
+//        public override ISerializer<T> GetSerializer<T>()
+//        {
+//            if (typeof(T) == typeof(IAggregateEvent))
+//            {
+//                return (ISerializer<T>)new DataContractSerializer<EventBase>(TypeHelpers.FindSerializableTypes(typeof(IAggregateEvent), Assembly.GetCallingAssembly()));
+//            }
+//
+//            return null;
+//        }
+
     }
 
 //    public class TestAggregateId : Identity

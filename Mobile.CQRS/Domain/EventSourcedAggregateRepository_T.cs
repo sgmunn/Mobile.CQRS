@@ -24,19 +24,20 @@ namespace Mobile.CQRS.Domain
     using System.Collections.Generic;
     using System.Linq;
     using Mobile.CQRS.Data;
-    
+    using Mobile.CQRS.Serialization;
+
     // TODO: pass in a repository of state and handle snaspshots as well as event sourced aggregates
     public class EventSourcedAggregateRepository<T> : IAggregateRepository<T> where T : IAggregateRoot, new()
     {
         private readonly IEventStoreRepository repository;
 
-        private readonly IEventSerializer serializer;
+        private readonly ISerializer<IAggregateEvent> serializer;
 
         private readonly IAggregateManifestRepository manifest;
         
         private readonly IDomainNotificationBus eventBus;
   
-        public EventSourcedAggregateRepository(IEventSerializer serializer, IEventStoreRepository repository, IAggregateManifestRepository manifest, IDomainNotificationBus eventBus)
+        public EventSourcedAggregateRepository(ISerializer<IAggregateEvent> serializer, IEventStoreRepository repository, IAggregateManifestRepository manifest, IDomainNotificationBus eventBus)
         {
             if (serializer == null)
             {
@@ -77,7 +78,7 @@ namespace Mobile.CQRS.Domain
 
             foreach (var storedEvent in allEvents)
             {
-                var evt = (IAggregateEvent)this.serializer.DeserializeFromString(storedEvent.EventData);
+                var evt = this.serializer.DeserializeFromString(storedEvent.EventData);
                 history.Add(evt);
             }
 

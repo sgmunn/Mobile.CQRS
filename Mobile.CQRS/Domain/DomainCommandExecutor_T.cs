@@ -95,6 +95,8 @@ namespace Mobile.CQRS.Domain
                 busBuffer.Commit();
 
                 // here is where we would trigger eventual consistency read models
+                // read models that have eventual consistency can be updated in a different database connection
+                // events / manifest and snapshots have to be in the same db.
             }
         }
     }

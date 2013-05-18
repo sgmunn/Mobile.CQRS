@@ -21,12 +21,18 @@
 namespace Mobile.CQRS.Domain
 {
     using System;
+    using Mobile.CQRS.Data;
 
     public static class NotificationExtensions
     {
         public static IDomainNotification CreateNotification(Type aggregateRootType, IAggregateEvent domainEvent)
         {
             return new DomainNotification(new DomainTopic(aggregateRootType, domainEvent.AggregateId), domainEvent);
+        }
+
+        public static IDomainNotification CreateModelNotification(Guid modelId, object model, ModelChangeKind change)
+        {
+            return new DomainNotification(new DomainTopic(model.GetType(), modelId), new ModelChangeEvent(model, change));
         }
     }
 }

@@ -1,6 +1,6 @@
 // --------------------------------------------------------------------------------------------------------------------
-// <copyright file="IDomainContext.cs" company="sgmunn">
-//   (c) sgmunn 2012  
+// <copyright file="TypeHelpers.cs" company="sgmunn">
+//   (c) sgmunn 2013  
 //
 //   Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
 //   documentation files (the "Software"), to deal in the Software without restriction, including without limitation 
@@ -9,7 +9,7 @@
 //
 //   The above copyright notice and this permission notice shall be included in all copies or substantial portions of 
 //   the Software.
-// 
+//
 //   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO 
 //   THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
 //   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
@@ -18,31 +18,18 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace Mobile.CQRS.Domain
+namespace Mobile.CQRS.Serialization
 {
     using System;
     using System.Collections.Generic;
-    using Mobile.CQRS.Data;
-    using Mobile.CQRS.Serialization;
+    using System.Reflection;
+    using System.Linq;
 
-    public interface IDomainContext
+    public static class TypeHelpers
     {
-        IEventStoreRepository EventStore { get; }
-        
-        IDomainNotificationBus EventBus { get; }
-
-        ISerializer<IAggregateEvent> EventSerializer { get; }
-
-      //  ISerializer<T> GetSerializer<T>();
-        
-//        ISerializer<ISnapshot> SnapshotSerializer { get; }
-
-        IUnitOfWorkScope BeginUnitOfWork();
-
-        ICommandExecutor<T> NewCommandExecutor<T>() where T : class, IAggregateRoot, new();
-        
-        IAggregateRepository<T> GetAggregateRepository<T>(IDomainNotificationBus bus) where T : IAggregateRoot, new();
-
-        IList<IReadModelBuilder> GetReadModelBuilders<T>() where T : IAggregateRoot, new();
+        public static IList<Type> FindSerializableTypes(Type interfaceType, Assembly assembly)
+        {
+            return assembly.GetTypes().Where(interfaceType.IsAssignableFrom).ToList();
+        }
     }
 }

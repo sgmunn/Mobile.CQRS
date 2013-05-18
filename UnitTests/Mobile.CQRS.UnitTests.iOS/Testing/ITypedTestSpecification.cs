@@ -1,5 +1,5 @@
 // --------------------------------------------------------------------------------------------------------------------
-// <copyright file="IDomainNotificationBus.cs" company="sgmunn">
+// <copyright file="ITypedTestSpecification.cs" company="sgmunn">
 //   (c) sgmunn 2013  
 //
 //   Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
@@ -18,15 +18,15 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace Mobile.CQRS
+namespace MonoKit.Testing
 {
     using System;
+    using System.Collections.Generic;
 
-    /// <summary>
-    /// An observable series of domain notifications
-    /// </summary>
-    public interface IDomainNotificationBus : IObservable<IDomainNotification> 
+    public interface ITypedTestSpecification<TGiven, TResult> : ITestSpecification
     {
-        void Publish(IDomainNotification notification);
+        Func<TGiven> Given { get; }
+        Func<TGiven, TResult> When { get; }
+        IList<Action<TResult>> Then { get; }
     }
 }

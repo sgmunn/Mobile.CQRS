@@ -26,6 +26,7 @@ namespace Sample.Domain
     using Mobile.CQRS.Data;
     using Mobile.CQRS.Domain;
 
+    //[]
     [DataContract(Name="EventBase", Namespace="urn:SampleDomain")]
     public class EventBase : IAggregateEvent
     {

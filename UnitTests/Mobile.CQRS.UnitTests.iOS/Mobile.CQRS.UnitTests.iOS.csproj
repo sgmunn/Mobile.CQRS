@@ -37,12 +37,15 @@
     <Reference Include="monotouch" />
     <Reference Include="System.Json" />
     <Reference Include="MonoTouch.NUnitLite" />
+    <Reference Include="System.Runtime.Serialization" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Resources\" />
     <Folder Include="Data\" />
     <Folder Include="Repositories\" />
     <Folder Include="Runtime\" />
+    <Folder Include="Data\SerializingRepository\" />
+    <Folder Include="Testing\" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
@@ -77,6 +80,14 @@
     <Compile Include="Repositories\SnapshotSourced\GivenAnEmptyRepository.cs" />
     <Compile Include="Runtime\GivenAnObjectToExecuteAMethodOn.cs" />
     <Compile Include="Runtime\MethodExecutionPerformance.cs" />
+    <Compile Include="Testing\TestExtensions.cs" />
+    <Compile Include="Testing\ITestSpecification.cs" />
+    <Compile Include="Testing\ITypedTestSpecification.cs" />
+    <Compile Include="Testing\QueryTestSpecification.cs" />
+    <Compile Include="Testing\TestSpecification.cs" />
+    <Compile Include="Data\SerializingRepository\WhenDeserializingAReadModel.cs" />
+    <Compile Include="Data\SerializingRepository\ReadModel.cs" />
+    <Compile Include="Data\SerializingRepository\WhenSerializingAReadModel.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Mobile.CQRS\Mobile.CQRS.iOS.csproj">

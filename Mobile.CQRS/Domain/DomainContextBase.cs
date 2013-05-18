@@ -24,7 +24,8 @@ namespace Mobile.CQRS.Domain
     using System.Collections.Generic;
     using System.Linq;
     using Mobile.CQRS.Data;
-    
+    using Mobile.CQRS.Serialization;
+
     public abstract class DomainContextBase : IDomainContext
     {
         private readonly Dictionary<Type, List<Func<IDomainContext, IReadModelBuilder>>> registeredBuilders;
@@ -64,7 +65,7 @@ namespace Mobile.CQRS.Domain
 
         public IDomainNotificationBus EventBus { get; protected set; }
 
-        public IEventSerializer EventSerializer { get; protected set; }
+        public ISerializer<IAggregateEvent> EventSerializer { get; protected set; }
 
         public virtual IUnitOfWorkScope BeginUnitOfWork()
         {
@@ -74,6 +75,11 @@ namespace Mobile.CQRS.Domain
         public ICommandExecutor<T> NewCommandExecutor<T>() where T : class, IAggregateRoot, new()
         {
             return new DomainCommandExecutor<T>(this);
+        }
+
+        public virtual ISerializer<T> GetSerializer<T>()
+        {
+            return null;
         }
 
         public virtual IAggregateRepository<T> GetAggregateRepository<T>(IDomainNotificationBus bus) 

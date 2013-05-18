@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Json;
+using Mobile.CQRS.Serialization;
 
 namespace Mobile.CQRS.Domain.UnitTests
 {
@@ -102,7 +103,7 @@ namespace Mobile.CQRS.Domain.UnitTests
         public int Value2 { get; set; }
     }
 
-    public class TestEventSerializer : IEventSerializer
+    public class TestEventSerializer : ISerializer<IAggregateEvent>
     {
         public static TestEventSerializer Instance = new TestEventSerializer();
 
@@ -117,7 +118,7 @@ namespace Mobile.CQRS.Domain.UnitTests
             return json.ToString();
         } 
 
-        public object DeserializeFromString(string data)
+        public IAggregateEvent DeserializeFromString(string data)
         {
             var json = JsonValue.Parse(data);
 

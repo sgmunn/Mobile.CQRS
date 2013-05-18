@@ -24,11 +24,28 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 
 // TODO: serialization support for complex read models and snapshots
+// ok an snapshot needs to have id, version, data (just like event) and THEN it can have custom fields
+// likewise, a read model should have the same.
+// in fact it would seem that all 3 have the same properties.= a read model at present might cause issue, how many serializers
+// do we need - one for each readmodel
+// we really need an IOC container now
+
+// we can find the event base type and register it
+
+// TODO: type id on manifest
+
+
+
+// datacontract serializer by default
+
+
+
 // TODO: thread safe event bus - need to be able to publish to it from any thread - Subject needs to be thread safe
 // TODO: event sourcing and snapshot support in the same aggregate
 // TODO: verify the aggregate manifest and see if we can have an easier name
 // TODO: we want an ISnapshotContract like we have for events that serialises, this would be opt-in and the aggregate would have to serialize??
 // TODO: view model with support for loading changes while being editing
+using System.Reflection;
 
 namespace Mobile.CQRS.Data
 {
@@ -112,5 +129,19 @@ namespace Mobile.CQRS.Data
 namespace Mobile.CQRS.Domain
 {
     using Mobile.CQRS.Data;
+
+    public static class KnownTypes
+    {
+        public static List<Type> EventTypes = new List<Type>();
+
+        public static void RegisterEvents(Assembly assembly)
+        {
+            Assembly.GetCallingAssembly();
+
+            var eventTypes = assembly.GetTypes().Where(t => typeof(IAggregateEvent).IsAssignableFrom(t)).ToList();
+            EventTypes.AddRange(eventTypes);
+        }
+    }
+
 
 }
