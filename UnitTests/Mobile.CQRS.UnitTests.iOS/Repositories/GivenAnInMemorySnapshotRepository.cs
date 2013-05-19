@@ -10,7 +10,7 @@ namespace Mobile.CQRS.Domain.UnitTests.Repositories
         
         public virtual void SetUp()
         {
-            //this.SnapshotStore = new InMemorySnapshotRepository<TestSnapshot>();
+            this.SnapshotStore = new InMemorySnapshotRepository<TestSnapshot>();
         }
     }
 }

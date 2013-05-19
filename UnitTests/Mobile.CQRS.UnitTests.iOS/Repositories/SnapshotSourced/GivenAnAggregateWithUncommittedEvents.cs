@@ -67,7 +67,7 @@ namespace Mobile.CQRS.Domain.UnitTests.Repositories.SnapshotSourced
         {
             this.Repository.Save(this.Aggregate);
 
-            Assert.AreEqual(3, this.Bus.PublishedEvents.Count);
+            Assert.AreEqual(3, this.Bus.PublishedEvents.Where(x => x.Event is IAggregateEvent).Count());
         }
 
         [Test]
@@ -81,4 +81,3 @@ namespace Mobile.CQRS.Domain.UnitTests.Repositories.SnapshotSourced
         }
     }
 }
-

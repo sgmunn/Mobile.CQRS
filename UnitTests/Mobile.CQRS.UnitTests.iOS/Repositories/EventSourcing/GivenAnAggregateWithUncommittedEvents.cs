@@ -32,7 +32,7 @@ namespace Mobile.CQRS.Domain.UnitTests.Repositories.EventSourcing
         public void WhenSavingTheAggregate_ThenTheEventStoreContainsTheEvents()
         {
             this.Repository.Save(this.Aggregate);
-//            Assert.AreEqual(3, this.EventStore.GetAll().Count);
+            Assert.AreEqual(3, this.EventStore.GetAllEvents(Aggregate.Identity).Count);
         }
 
         [Test]
@@ -53,7 +53,7 @@ namespace Mobile.CQRS.Domain.UnitTests.Repositories.EventSourcing
         public void WhenSavingTheAggregateAndAnotherProcessHasSavedOtherEvents_ThenAConcurrencyExceptionIsThrown()
         {
             // other process
-//            this.EventStore.Save(new TestSerializedEvent() {AggregateId = this.Aggregate.Identity, Version = 4, });
+            this.EventStore.SaveEvents(Aggregate.Identity, new[] { new TestEvent1() {AggregateId = this.Aggregate.Identity, Version = 4, }, });
 
             // this process
             this.Repository.Save(this.Aggregate);

@@ -15,11 +15,11 @@ namespace Mobile.CQRS.Domain.UnitTests.Repositories
             
             this.Bus = new MockBus();
 
-            this.Repository = null;
-//            this.Repository = new SnapshotAggregateRepository<TestAggregateRoot>(
-//                this.SnapshotStore,
-//                new MockAggregateManifestRepository(), 
-//                this.Bus);
+            this.Repository = new AggregateRepository<TestAggregateRoot>(
+                new MockAggregateManifestRepository(),
+                null, 
+                this.SnapshotStore,
+                this.Bus);
         }
     }
 }

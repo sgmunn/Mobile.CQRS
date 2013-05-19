@@ -81,6 +81,7 @@ namespace Mobile.CQRS.Domain.UnitTests
     {
         public EventBase()
         {
+            this.Identity = Guid.NewGuid();
         }
         
         public Guid Identity { get; set; }

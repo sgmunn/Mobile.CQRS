@@ -22,7 +22,6 @@ using System;
 using NUnit.Framework;
 using Mobile.CQRS.Data;
 using MonoKit.Testing;
-using System.Linq;
 using Mobile.CQRS.Serialization;
 
 namespace Mobile.CQRS.Core.UnitTests.Data

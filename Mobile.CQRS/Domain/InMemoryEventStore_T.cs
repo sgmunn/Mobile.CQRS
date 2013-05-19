@@ -28,31 +28,6 @@ namespace Mobile.CQRS.Domain
     public class InMemoryEventStore<T> : DictionaryRepositoryBase<IAggregateEvent>, IEventStore 
         where T : IAggregateEvent, new() 
     {
-        protected override IAggregateEvent InternalNew()
-        {
-            return new T(); 
-        }
-
-        protected override SaveResult InternalSave(IAggregateEvent evt)
-        {
-            if (this.Storage.ContainsKey(evt.Identity))
-            {
-                this.Storage[evt.Identity] = evt;
-                return SaveResult.Updated;
-            }
-
-            this.Storage[evt.Identity] = evt;
-            return SaveResult.Added;
-        }
-
-        protected override void InternalDelete(IAggregateEvent evt)
-        {
-            if (this.Storage.ContainsKey(evt.Identity))
-            {
-                this.Storage.Remove(evt.Identity);
-            }
-        }
-
         public IList<IAggregateEvent> GetAllEvents(Guid rootId)
         {
             return this.GetAll().Where(x => x.AggregateId == rootId).OrderBy(x => x.Version).ToList();
@@ -80,6 +55,31 @@ namespace Mobile.CQRS.Domain
             foreach (var evt in events)
             {
                 this.InternalSave(evt);
+            }
+        }
+
+        protected override IAggregateEvent InternalNew()
+        {
+            return new T(); 
+        }
+
+        protected override SaveResult InternalSave(IAggregateEvent evt)
+        {
+            if (this.Storage.ContainsKey(evt.Identity))
+            {
+                this.Storage[evt.Identity] = evt;
+                return SaveResult.Updated;
+            }
+
+            this.Storage[evt.Identity] = evt;
+            return SaveResult.Added;
+        }
+
+        protected override void InternalDelete(IAggregateEvent evt)
+        {
+            if (this.Storage.ContainsKey(evt.Identity))
+            {
+                this.Storage.Remove(evt.Identity);
             }
         }
     }

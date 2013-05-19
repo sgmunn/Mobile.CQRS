@@ -15,12 +15,11 @@ namespace Mobile.CQRS.Domain.UnitTests.Repositories
 
             this.Bus = new MockBus();
 
-            this.Repository = null;
-//            this.Repository = new EventSourcedAggregateRepository<TestAggregateRoot>(
-//                TestEventSerializer.Instance, 
-//                this.EventStore, 
-//                new MockAggregateManifestRepository(), 
-//                this.Bus);
+            this.Repository = new AggregateRepository<TestAggregateRoot>(
+                new MockAggregateManifestRepository(),
+                this.EventStore, 
+                null,
+                this.Bus);
         }
     }
 }

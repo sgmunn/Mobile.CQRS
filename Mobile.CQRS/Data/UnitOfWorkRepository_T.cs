@@ -108,6 +108,16 @@ namespace Mobile.CQRS.Data
             {
                 return SaveResult.Updated;
             }
+            else
+            {
+                // we don't know if the item exists or not, so for now just get the item
+                var realItem = this.repository.GetById(instance.Identity);
+                if (realItem != null)
+                {
+                    this.loadedItemKeys.Add(instance.Identity);
+                    return SaveResult.Updated;
+                }
+            }
 
             return SaveResult.Added;
         }

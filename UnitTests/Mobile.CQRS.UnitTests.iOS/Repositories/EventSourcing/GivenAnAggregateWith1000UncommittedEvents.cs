@@ -31,4 +31,3 @@ namespace Mobile.CQRS.Domain.UnitTests.Repositories.EventSourcing
         }
     }
 }
-
