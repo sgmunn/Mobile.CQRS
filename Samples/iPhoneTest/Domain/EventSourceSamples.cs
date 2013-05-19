@@ -34,7 +34,7 @@ namespace Sample.Domain
 
         public static IDomainContext GetDomainContext()
         {
-            KnownTypes.RegisterEvents(Assembly.GetExecutingAssembly());
+            //KnownTypes.RegisterEvents(Assembly.GetExecutingAssembly());
 
             var manifest = new AggregateManifestRepository(EventSourcedDB.Main);
 

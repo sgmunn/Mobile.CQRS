@@ -143,5 +143,9 @@
     <Compile Include="Domain\SQLite\SnapshotRepository_T.cs" />
     <Compile Include="Domain\SQLite\SerializedSnapshotRepository_T.cs" />
     <Compile Include="Domain\SQLite\AggregateSnapshot.cs" />
+    <Compile Include="Data\ISpecification_T.cs" />
+    <Compile Include="Data\IQuery_T.cs" />
+    <Compile Include="Data\SQLite\SqlQuery_T.cs" />
+    <Compile Include="Data\ISubscription.cs" />
   </ItemGroup>
 </Project>

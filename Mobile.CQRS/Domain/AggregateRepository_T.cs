@@ -102,7 +102,7 @@ namespace Mobile.CQRS.Domain
             var newVersion = instance.UncommittedEvents.Last().Version;
 
             // update the manifest without reading it - 
-            this.manifest.UpdateManifest(instance.Identity, expectedVersion, newVersion);
+            this.manifest.UpdateManifest(instance.AggregateType, instance.Identity, expectedVersion, newVersion);
 
             var snapshotChange = this.SaveSnapshot(instance, expectedVersion, newVersion);
             this.SaveEvents(instance);

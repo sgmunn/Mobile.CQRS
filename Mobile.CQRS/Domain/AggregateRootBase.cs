@@ -30,8 +30,11 @@ namespace Mobile.CQRS.Domain
 
         protected AggregateRootBase()
         {
+            this.AggregateType = this.GetType().Name;
             this.uncommittedEvents = new List<IAggregateEvent>();
         }
+
+        public string AggregateType { get; protected set; }
 
         public Guid Identity { get; set; }
 

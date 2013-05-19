@@ -1,6 +1,6 @@
 // --------------------------------------------------------------------------------------------------------------------
-// <copyright file="IAggregateRoot.cs" company="sgmunn">
-//   (c) sgmunn 2012  
+// <copyright file="ISpecification_T.cs" company="sgmunn">
+//   (c) sgmunn 2013  
 //
 //   Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
 //   documentation files (the "Software"), to deal in the Software without restriction, including without limitation 
@@ -9,7 +9,7 @@
 //
 //   The above copyright notice and this permission notice shall be included in all copies or substantial portions of 
 //   the Software.
-// 
+//
 //   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO 
 //   THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
 //   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
@@ -18,19 +18,26 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace Mobile.CQRS.Domain
+namespace Mobile.CQRS.Data
 {
     using System;
-    using System.Collections.Generic;
 
-    public interface IAggregateRoot : IUniqueId
+    public interface ISpecification<T>
     {
-        string AggregateType { get; }
-
-        int Version { get; }
-
-        IEnumerable<IAggregateEvent> UncommittedEvents { get; }
-
-        void Commit();
+        bool IsSatisfiedBy(T sut);
     }
+
+//    public class EligibleForDiscountSpecification : ISpecification<Customer>
+//    {
+//        private readonly Product _product;
+//        public EligibleForDiscountSpecification(Product product)
+//        {
+//            _product = product;
+//        }
+//
+//        public bool IsSatisfiedBy(Customer customer)
+//        {
+//            return (_product.Price < 100 && customer.CreditRating >= _product.MinimumCreditRating);
+//        }
+//    }
 }

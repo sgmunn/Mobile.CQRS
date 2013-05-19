@@ -35,7 +35,7 @@ namespace Mobile.CQRS.Domain.SQLite
             this.connection = connection;
         }
 
-        public void UpdateManifest(Guid aggregateId, int currentVersion, int newVersion)
+        public void UpdateManifest(string aggregateType, Guid aggregateId, int currentVersion, int newVersion)
         {
             bool updated = false;
 
@@ -43,7 +43,7 @@ namespace Mobile.CQRS.Domain.SQLite
             {
                 lock (this.connection)
                 {
-                    updated = this.DoUpdate(aggregateId, currentVersion, newVersion);
+                    updated = this.DoUpdate(aggregateType, aggregateId, currentVersion, newVersion);
                 }
             }
             catch (Exception ex)
@@ -58,11 +58,11 @@ namespace Mobile.CQRS.Domain.SQLite
             }
         }
 
-        private bool DoUpdate(Guid aggregateId, int currentVersion, int newVersion)
+        private bool DoUpdate(string aggregateType, Guid aggregateId, int currentVersion, int newVersion)
         {
             if (currentVersion == 0)
             {
-                this.connection.Insert(new AggregateManifest { Identity = aggregateId, Version = newVersion, });
+                this.connection.Insert(new AggregateManifest { Identity = aggregateId, AggregateType = aggregateType, Version = newVersion, });
             }
             else
             {
