@@ -1,6 +1,6 @@
 // --------------------------------------------------------------------------------------------------------------------
-// <copyright file="IAggregateCommand.cs" company="sgmunn">
-//   (c) sgmunn 2012  
+// <copyright file="InMemoryPendingCommandQueue.cs" company="sgmunn">
+//   (c) sgmunn 2013  
 //
 //   Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
 //   documentation files (the "Software"), to deal in the Software without restriction, including without limitation 
@@ -9,7 +9,7 @@
 //
 //   The above copyright notice and this permission notice shall be included in all copies or substantial portions of 
 //   the Software.
-// 
+//
 //   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO 
 //   THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
 //   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
@@ -21,9 +21,36 @@
 namespace Mobile.CQRS.Domain
 {
     using System;
+    using System.Collections.Generic;
 
-    public interface IAggregateCommand : IUniqueId
+    public class InMemoryPendingCommandQueue : IPendingCommandQueue 
     {
-        Guid AggregateId { get; }
+        private readonly Queue<IAggregateCommand> queue;
+
+        public InMemoryPendingCommandQueue()
+        {
+            this.queue = new Queue<IAggregateCommand>();
+        }
+
+        public void Dispose()
+        {
+        }
+
+        public IAggregateCommand PeekNextCommand(Guid rootId)
+        {
+            var result = this.queue.Count != 0 ? this.queue.Peek() : null;
+            return result;
+        }
+        
+        public IAggregateCommand DequeueNextCommand(Guid rootId)
+        {
+            var result = this.queue.Count != 0 ? this.queue.Dequeue() : null;
+            return result;
+        }
+
+        public void PushCommand(IAggregateCommand command)
+        {
+            this.queue.Enqueue(command);
+        }
     }
 }

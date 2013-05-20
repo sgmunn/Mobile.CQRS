@@ -22,9 +22,8 @@ namespace Mobile.CQRS.Domain
 {
     using System;
     using System.Collections.Generic;
-    using Mobile.CQRS.Data;
 
-    public interface IEventStore : IDisposable// : IRepository<IAggregateEvent>
+    public interface IEventStore : IDisposable
     {
         IList<IAggregateEvent> GetAllEvents(Guid rootId);
         IList<IAggregateEvent> GetEventsAfterVersion(Guid rootId, int version);

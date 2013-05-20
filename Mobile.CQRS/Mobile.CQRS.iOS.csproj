@@ -147,5 +147,7 @@
     <Compile Include="Data\IQuery_T.cs" />
     <Compile Include="Data\SQLite\SqlQuery_T.cs" />
     <Compile Include="Data\ISubscription.cs" />
+    <Compile Include="Domain\IPendingCommandQueue.cs" />
+    <Compile Include="Domain\InMemoryPendingCommandQueue.cs" />
   </ItemGroup>
 </Project>
