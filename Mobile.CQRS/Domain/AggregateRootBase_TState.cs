@@ -40,5 +40,10 @@ namespace Mobile.CQRS.Domain
         }
 
         public abstract ISnapshot GetSnapshot();
+
+        public virtual bool ShouldSaveSnapshot()
+        {
+            return true;
+        }
     }
 }

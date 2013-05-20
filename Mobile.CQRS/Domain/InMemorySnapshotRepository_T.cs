@@ -32,11 +32,6 @@ namespace Mobile.CQRS.Domain
         {
         }
 
-        public bool ShouldSaveSnapshot(int lastVersion, int currentVersion)
-        {
-            return true;
-        }
-
         protected override T InternalNew()
         {
             return new T(); 

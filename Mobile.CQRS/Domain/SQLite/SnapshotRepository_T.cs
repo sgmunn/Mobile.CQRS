@@ -36,11 +36,6 @@ namespace Mobile.CQRS.Domain.SQLite
             this.repository = new SqlRepository<T>(connection);
         }
 
-        public bool ShouldSaveSnapshot(int lastVersion, int currentVersion)
-        {
-            return true;
-        }
-
         public ISnapshot New()
         {
             return new T();

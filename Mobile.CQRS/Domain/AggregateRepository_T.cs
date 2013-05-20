@@ -104,7 +104,7 @@ namespace Mobile.CQRS.Domain
             // update the manifest without reading it - 
             this.manifest.UpdateManifest(instance.AggregateType, instance.Identity, expectedVersion, newVersion);
 
-            var snapshotChange = this.SaveSnapshot(instance, expectedVersion, newVersion);
+            var snapshotChange = this.SaveSnapshot(instance);
             this.SaveEvents(instance);
 
             this.PublishEvents(instance.UncommittedEvents, snapshotChange);
@@ -161,9 +161,9 @@ namespace Mobile.CQRS.Domain
             }
         }
 
-        private IDomainNotification SaveSnapshot(T instance, int lastVersion, int currentVersion)
+        private IDomainNotification SaveSnapshot(T instance)
         {
-            if (this.snapshotRepository != null && this.ShouldSaveSnapshot(lastVersion, currentVersion))
+            if (this.snapshotRepository != null && this.ShouldSaveSnapshot(instance))
             {
                 var snapshot = ((ISnapshotSupport)instance).GetSnapshot();
                 var saveResult = this.snapshotRepository.Save(snapshot);
@@ -174,14 +174,14 @@ namespace Mobile.CQRS.Domain
             return null;
         }
 
-        private bool ShouldSaveSnapshot(int lastVersion, int currentVersion)
+        private bool ShouldSaveSnapshot(T instance)
         {
             if (this.eventStore == null)
             {
                 return true;
             }
 
-            return this.snapshotRepository.ShouldSaveSnapshot(lastVersion, currentVersion);
+            return (instance is ISnapshotSupport) && ((ISnapshotSupport)instance).ShouldSaveSnapshot();
         }
 
         private int EnsureConcurrency(Guid id, int expectedVersion)

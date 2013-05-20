@@ -38,11 +38,6 @@ namespace Mobile.CQRS.Domain.SQLite
             this.repository = new SerializingRepository<T, AggregateSnapshot>(repo, serializer);
         }
 
-        public bool ShouldSaveSnapshot(int lastVersion, int currentVersion)
-        {
-            return currentVersion > 10;
-        }
-
         public ISnapshot New()
         {
             return this.repository.New();

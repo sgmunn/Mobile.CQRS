@@ -27,5 +27,7 @@ namespace Mobile.CQRS.Domain
         void LoadFromSnapshot(ISnapshot snapshot);
         
         ISnapshot GetSnapshot();
+
+        bool ShouldSaveSnapshot();
     }
 }
