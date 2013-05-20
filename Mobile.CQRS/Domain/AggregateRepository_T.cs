@@ -70,6 +70,7 @@ namespace Mobile.CQRS.Domain
 
             var result = this.New();
 
+            result.Identity = id;
             if (!this.LoadFromFromSnapshot(result, snapshot))
             {
                 // we failed to load

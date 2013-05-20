@@ -49,7 +49,7 @@ namespace Sample.Domain
         public void Execute(TestCommand1 command)
         {
             Console.WriteLine("Execute TestCommand1");
-            this.RaiseEvent(command.AggregateId, new TestEvent1{
+            this.RaiseEvent(command.CommandId, new TestEvent1{
                 Name = command.Name,
             });
         }
@@ -64,12 +64,12 @@ namespace Sample.Domain
         {
             Console.WriteLine("Execute TestCommand2");
 
-            this.RaiseEvent(command.AggregateId, new TestEvent2{
+            this.RaiseEvent(command.CommandId, new TestEvent2{
                 Description = command.Description,
                 Amount = command.Amount,
             });
 
-            this.RaiseEvent(command.AggregateId, new BalanceUpdatedEvent{
+            this.RaiseEvent(command.CommandId, new BalanceUpdatedEvent{
                 Balance = this.balance += command.Amount,
             });
         }
@@ -116,7 +116,7 @@ namespace Sample.Domain
         public void Execute(TestCommand1 command)
         {
             Console.WriteLine("Execute TestCommand1");
-            this.RaiseEvent(command.AggregateId, new TestEvent1{
+            this.RaiseEvent(command.CommandId, new TestEvent1{
                 Name = command.Name,
             });
         }
@@ -131,12 +131,12 @@ namespace Sample.Domain
         {
             Console.WriteLine("Execute TestCommand2");
 
-            this.RaiseEvent(command.AggregateId, new TestEvent2{
+            this.RaiseEvent(command.CommandId, new TestEvent2{
                 Description = command.Description,
                 Amount = command.Amount,
             });
 
-            this.RaiseEvent(command.AggregateId, new BalanceUpdatedEvent{
+            this.RaiseEvent(command.CommandId, new BalanceUpdatedEvent{
                 Balance = this.InternalState.Balance += command.Amount,
             });
         }

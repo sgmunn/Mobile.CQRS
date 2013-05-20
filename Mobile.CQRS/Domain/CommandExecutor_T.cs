@@ -68,7 +68,12 @@ namespace Mobile.CQRS.Domain
                 throw new InvalidOperationException("Can only execute commands for a single aggregate at a time");
             }
 
-            var root = this.repository.GetById(rootId) ?? this.repository.New();
+            var root = this.repository.GetById(rootId);
+            if (root == null)
+            {
+                root = this.repository.New();
+                root.Identity = rootId;
+            }
 
             if (expectedVersion != 0)
             {

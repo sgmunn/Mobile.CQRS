@@ -80,6 +80,7 @@ namespace Mobile.CQRS.Domain.SQLite
                 AggregateId = rootId, 
                 Identity = evt.Identity,
                 Version = evt.Version,
+                CommandId = evt.CommandId,
                 EventData = this.serializer.SerializeToString(evt),
             }).ToList();
 

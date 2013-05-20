@@ -22,7 +22,6 @@ namespace Mobile.CQRS.Domain
 {
     using System;
     using System.Collections.Generic;
-    using System.Linq;
 
     public abstract class AggregateRootBase : IAggregateRoot, IEventSourced
     {
@@ -60,11 +59,6 @@ namespace Mobile.CQRS.Domain
 
         protected void ApplyEvents(IList<IAggregateEvent> events)
         {
-            if (this.Identity == Guid.Empty && events.Any())
-            {
-                this.Identity = events.First().AggregateId;
-            }
-
             foreach (var evt in events)
             {
                 this.ApplyEvent(evt);
@@ -72,29 +66,20 @@ namespace Mobile.CQRS.Domain
             }
         }
 
-        protected void RaiseEvent(Guid aggregateId, IAggregateEvent evt)
+        protected void RaiseEvent(Guid commandId, IAggregateEvent evt)
         {
-            if (aggregateId == Guid.Empty)
+            if (commandId == Guid.Empty)
             {
-                throw new ArgumentNullException("aggregateId", "Cannot raise an event without specifying the correct aggregate id");
-            }
-
-            if (this.Identity == Guid.Empty)
-            {
-                this.Identity = aggregateId;
-            }
-
-            if (this.Identity != aggregateId)
-            {
-                throw new InvalidOperationException("Cannot raise an event for a different aggregate root id");
+                throw new ArgumentNullException("commandId", "Cannot raise an event without specifying the command id");
             }
 
             this.Version++;
 
             evt.Identity = Guid.NewGuid();
-            evt.AggregateId = aggregateId;
+            evt.AggregateId = this.Identity;
             evt.Version = this.Version;
             evt.Timestamp = DateTime.UtcNow;
+            evt.CommandId = commandId;
 
             this.ApplyEvent(evt);
             this.uncommittedEvents.Add(evt);

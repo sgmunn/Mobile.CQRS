@@ -29,5 +29,7 @@ namespace Mobile.CQRS.Domain
         int Version { get; set; }
         
         DateTime Timestamp { get; set; }
+
+        Guid CommandId { get; set; }
     }
 }

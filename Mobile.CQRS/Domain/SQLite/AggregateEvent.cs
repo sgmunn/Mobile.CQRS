@@ -32,6 +32,9 @@ namespace Mobile.CQRS.Domain.SQLite
         public Guid AggregateId { get; set; }
   
         public int Version { get; set; }
+
+        [Indexed]
+        public Guid CommandId { get; set; }
   
         public string EventData { get; set; }
 

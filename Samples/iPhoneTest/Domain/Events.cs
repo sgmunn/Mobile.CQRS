@@ -44,7 +44,10 @@ namespace Sample.Domain
         public int Version { get; set; }
 
         [DataMember]
-        public DateTime Timestamp { get; set; }      
+        public DateTime Timestamp { get; set; } 
+
+        [DataMember]
+        public Guid CommandId { get; set; }
     }
 
     [DataContract(Name="Event1", Namespace="urn:SampleDomain")]

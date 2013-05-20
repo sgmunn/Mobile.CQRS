@@ -33,7 +33,7 @@ namespace Mobile.CQRS.Domain.UnitTests
 
         public void Execute(TestCommand1 command)
         {
-            this.RaiseEvent(command.AggregateId, new TestEvent1 { Value1 = command.Value1, Value2 = command.Value2, });
+            this.RaiseEvent(command.CommandId, new TestEvent1 { Value1 = command.Value1, Value2 = command.Value2, });
         }
 
         public void Apply(TestEvent1 domainEvent)
@@ -90,7 +90,9 @@ namespace Mobile.CQRS.Domain.UnitTests
         
         public int Version { get; set; }
         
-        public DateTime Timestamp { get; set; }      
+        public DateTime Timestamp { get; set; } 
+
+        public Guid CommandId { get; set; }
     }
     
     public class TestEvent1 : EventBase
