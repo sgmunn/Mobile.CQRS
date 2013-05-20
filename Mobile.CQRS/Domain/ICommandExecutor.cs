@@ -1,5 +1,5 @@
 // --------------------------------------------------------------------------------------------------------------------
-// <copyright file="ICommandExecutor_T.cs" company="sgmunn">
+// <copyright file="ICommandExecutor.cs" company="sgmunn">
 //   (c) sgmunn 2012  
 //
 //   Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
@@ -22,9 +22,8 @@ namespace Mobile.CQRS.Domain
 {
     using System;
     using System.Collections.Generic;
-
-    public interface ICommandExecutor<T> 
-        where T : IAggregateRoot, new()
+    
+    public interface ICommandExecutor 
     {
         void Execute(IAggregateCommand command);
         void Execute(IList<IAggregateCommand> commands);

@@ -23,7 +23,7 @@ namespace Mobile.CQRS.Domain
     using System;
     using System.Collections.Generic;
 
-    public class InMemoryPendingCommandQueue : IPendingCommandQueue 
+    public sealed class InMemoryPendingCommandQueue : IPendingCommandQueue 
     {
         private readonly Queue<IAggregateCommand> queue;
 

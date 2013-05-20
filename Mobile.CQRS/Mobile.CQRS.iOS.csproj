@@ -68,7 +68,6 @@
     <Compile Include="Domain\IAggregateManifestRepository.cs" />
     <Compile Include="Domain\IAggregateRepository_T.cs" />
     <Compile Include="Domain\IAggregateRoot.cs" />
-    <Compile Include="Domain\ICommandExecutor_T.cs" />
     <Compile Include="Domain\IDomainContext.cs" />
     <Compile Include="Domain\IEventSourced.cs" />
     <Compile Include="Domain\IReadModelBuilder.cs" />
@@ -149,5 +148,6 @@
     <Compile Include="Data\ISubscription.cs" />
     <Compile Include="Domain\IPendingCommandQueue.cs" />
     <Compile Include="Domain\InMemoryPendingCommandQueue.cs" />
+    <Compile Include="Domain\ICommandExecutor.cs" />
   </ItemGroup>
 </Project>

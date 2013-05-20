@@ -69,7 +69,7 @@ namespace Mobile.CQRS.Domain
             return new InMemoryUnitOfWorkScope();
         }
 
-        public ICommandExecutor<T> NewCommandExecutor<T>() where T : class, IAggregateRoot, new()
+        public ICommandExecutor NewCommandExecutor<T>() where T : class, IAggregateRoot, new()
         {
             return new DomainCommandExecutor<T>(this);
         }

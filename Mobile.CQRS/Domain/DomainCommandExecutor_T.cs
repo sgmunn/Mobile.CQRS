@@ -25,7 +25,7 @@ namespace Mobile.CQRS.Domain
     using System.Linq;
     using Mobile.CQRS.Data;
 
-    public class DomainCommandExecutor<T> : ICommandExecutor<T> 
+    public class DomainCommandExecutor<T> : ICommandExecutor 
         where T : class, IAggregateRoot, new()
     {
         private readonly IDomainContext context;
@@ -33,6 +33,7 @@ namespace Mobile.CQRS.Domain
         public DomainCommandExecutor(IDomainContext context)
         {
             this.context = context;
+            // eventBus, readmodels, snapshot, manifest, scope - pretty much everything and now we need the commandqueue
         }
         
         public void Execute(IAggregateCommand command)

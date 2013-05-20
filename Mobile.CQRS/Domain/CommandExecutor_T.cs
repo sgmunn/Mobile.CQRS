@@ -26,7 +26,7 @@ namespace Mobile.CQRS.Domain
     using System.Linq;
     using Mobile.CQRS.Data;
 
-    public class CommandExecutor<T> : ICommandExecutor<T> 
+    public class CommandExecutor<T> : ICommandExecutor//<T> 
         where T : class, IAggregateRoot, new()
     {
         private readonly IRepository<T> repository;

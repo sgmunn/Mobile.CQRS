@@ -36,7 +36,7 @@ namespace Mobile.CQRS.Domain
 
         IUnitOfWorkScope BeginUnitOfWork();
 
-        ICommandExecutor<T> NewCommandExecutor<T>() where T : class, IAggregateRoot, new();
+        ICommandExecutor NewCommandExecutor<T>() where T : class, IAggregateRoot, new();
 
         IList<IReadModelBuilder> GetReadModelBuilders<T>() where T : IAggregateRoot, new();
     }
