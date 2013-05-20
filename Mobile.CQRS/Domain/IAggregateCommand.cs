@@ -22,10 +22,10 @@ namespace Mobile.CQRS.Domain
 {
     using System;
 
-    public interface IAggregateCommand
+    public interface IAggregateCommand : IUniqueId
     {
-        Guid AggregateId { get; }
+        Guid Identity { get; }
 
-        Guid CommandId { get; }
+        Guid AggregateId { get; }
     }
 }

@@ -33,7 +33,7 @@ namespace Mobile.CQRS.Domain.UnitTests
 
         public void Execute(TestCommand1 command)
         {
-            this.RaiseEvent(command.CommandId, new TestEvent1 { Value1 = command.Value1, Value2 = command.Value2, });
+            this.RaiseEvent(command.Identity, new TestEvent1 { Value1 = command.Value1, Value2 = command.Value2, });
         }
 
         public void Apply(TestEvent1 domainEvent)
@@ -63,12 +63,12 @@ namespace Mobile.CQRS.Domain.UnitTests
     {
         public CommandBase()
         {
-            this.CommandId = Guid.NewGuid();
+            this.Identity = Guid.NewGuid();
         }
         
         public Guid AggregateId { get; set; }
         
-        public Guid CommandId { get; set; }
+        public Guid Identity { get; set; }
     }
     
     public class TestCommand1 : CommandBase

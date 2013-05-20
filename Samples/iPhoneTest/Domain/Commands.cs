@@ -29,12 +29,12 @@ namespace Sample.Domain
     {
         public CommandBase()
         {
-            this.CommandId = Guid.NewGuid();
+            this.Identity = Guid.NewGuid();
         }
 
         public Guid AggregateId { get; set; }
         
-        public Guid CommandId { get; set; }
+        public Guid Identity { get; set; }
     }
 
     public class TestCommand1 : CommandBase
