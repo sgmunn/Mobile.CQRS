@@ -26,7 +26,7 @@ namespace Sample.Domain
     using Mobile.CQRS.Domain;
     using Mobile.CQRS.Domain.SQLite;
     using Mobile.CQRS.Data.SQLite;
-    using Mobile.CQRS;
+    using Mobile.CQRS.Reactive;
 
     public static class EventSourceSamples
     {
@@ -34,20 +34,14 @@ namespace Sample.Domain
 
         public static IDomainContext GetDomainContext()
         {
-            //KnownTypes.RegisterEvents(Assembly.GetExecutingAssembly());
-
-            var manifest = new AggregateManifestRepository(EventSourcedDB.Main);
-
             var eventSerializer = new DataContractSerializer<EventBase>(TypeHelpers.FindSerializableTypes(typeof(EventBase), Assembly.GetCallingAssembly()));
 
-            var eventStore = new EventStore(EventSourcedDB.Main, eventSerializer);
+            var context = new TestDomainContext(EventSourcedDB.Main, eventSerializer);
+            context.EventBus.Subscribe((x) => Console.WriteLine("domain bus event {0}", x));
 
-            var context = new TestDomainContext(EventSourcedDB.Main, manifest, eventStore);
-//            context.EventBus.Subscribe((x) => Console.WriteLine("domain bus event {0}", x));
-
-            // registrations
-            context.RegisterBuilder<EventSourcedRoot>((c) => 
-                 new TransactionReadModelBuilder(new SqlRepository<TransactionDataContract>(EventSourcedDB.Main)));
+            var registration = AggregateRegistration.ForType<EventSourcedRoot>()
+                .WithImmediateReadModel(c => new TransactionReadModelBuilder(new SqlRepository<TransactionDataContract>(SnapshotSourcedDB.Main)));
+            context.Register(registration);
 
             return context;
         }
@@ -58,9 +52,7 @@ namespace Sample.Domain
 
             var id = TestId;
 
-            var executor = context.NewCommandExecutor<EventSourcedRoot>();
-
-            executor.Execute(new TestCommand1 
+            context.Execute<EventSourcedRoot>(new TestCommand1 
                 { 
                     AggregateId = id,
                     Name = Guid.NewGuid().ToString().Substring(0, 8),
@@ -73,9 +65,7 @@ namespace Sample.Domain
 
             var id = TestId;
 
-            var executor = context.NewCommandExecutor<EventSourcedRoot>();
-
-            executor.Execute(new TestCommand2 
+            context.Execute<EventSourcedRoot>(new TestCommand2 
                 { 
                     AggregateId = id,
                     Description = Guid.NewGuid().ToString().Substring(0, 8),

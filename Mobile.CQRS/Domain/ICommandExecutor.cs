@@ -25,9 +25,6 @@ namespace Mobile.CQRS.Domain
     
     public interface ICommandExecutor 
     {
-        void Execute(IAggregateCommand command);
-        void Execute(IList<IAggregateCommand> commands);
-        void Execute(IAggregateCommand command, int expectedVersion);
         void Execute(IList<IAggregateCommand> commands, int expectedVersion);
     }
 }

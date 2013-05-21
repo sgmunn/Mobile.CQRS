@@ -1,6 +1,6 @@
 // --------------------------------------------------------------------------------------------------------------------
-// <copyright file="SqlDomainContext.cs" company="sgmunn">
-//   (c) sgmunn 2012  
+// <copyright file="IAggregateRegistration.cs" company="sgmunn">
+//   (c) sgmunn 2013  
 //
 //   Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
 //   documentation files (the "Software"), to deal in the Software without restriction, including without limitation 
@@ -9,7 +9,7 @@
 //
 //   The above copyright notice and this permission notice shall be included in all copies or substantial portions of 
 //   the Software.
-// 
+//
 //   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO 
 //   THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
 //   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
@@ -18,39 +18,15 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace Mobile.CQRS.Domain.SQLite
+namespace Mobile.CQRS.Domain
 {
     using System;
-    using Mobile.CQRS.Domain;
-    using Mobile.CQRS.Data;
-    using Mobile.CQRS.Data.SQLite;
-    using Mobile.CQRS.Serialization;
+    using System.Collections.Generic;
 
-    public class SqlDomainContext : DomainContextBase
+    public interface IAggregateRegistration
     {
-        public SqlDomainContext(SQLiteConnection connection)
-        {
-            this.Connection = connection;
-            this.Manifest = new AggregateManifestRepository(connection);
-        }
-
-        public SqlDomainContext(SQLiteConnection connection, ISerializer<IAggregateEvent> eventSerializer)
-        {
-            this.Connection = connection;
-            this.Manifest = new AggregateManifestRepository(connection);
-            this.EventStore = new EventStore(connection, eventSerializer);
-        }
-
-        public SQLiteConnection Connection { get; private set; }
-
-        protected override IUnitOfWorkScope BeginUnitOfWork()
-        {
-            return new SqlUnitOfWorkScope(this.Connection);
-        }
-
-        protected override object GetDataConnection()
-        {
-            return this.Connection;
-        }
+        Type AggregateType { get; }
+        IList<IReadModelBuilder> ReadModels(object connection);
+        ISnapshotRepository Snapshot(object connection);
     }
 }

@@ -26,7 +26,7 @@ namespace Mobile.CQRS.Domain
     using System.Linq;
     using Mobile.CQRS.Data;
 
-    public class CommandExecutor<T> : ICommandExecutor//<T> 
+    public class CommandExecutor<T> : ICommandExecutor
         where T : class, IAggregateRoot, new()
     {
         private readonly IRepository<T> repository;
@@ -37,21 +37,6 @@ namespace Mobile.CQRS.Domain
         {
             this.repository = aggregateRepository;
             this.versions = new Dictionary<Guid, int>();
-        }
-
-        public void Execute(IAggregateCommand command)
-        {
-            this.Execute(new [] { command }, 0);
-        }
-
-        public void Execute(IList<IAggregateCommand> commands)
-        {
-            this.Execute(commands, 0);
-        }
-
-        public void Execute(IAggregateCommand command, int expectedVersion)
-        {
-            this.Execute(new [] { command }, expectedVersion);
         }
 
         public void Execute(IList<IAggregateCommand> commands, int expectedVersion)

@@ -22,22 +22,14 @@ namespace Mobile.CQRS.Domain
 {
     using System;
     using System.Collections.Generic;
-    using Mobile.CQRS.Data;
 
     public interface IDomainContext
     {
-        IEventStore EventStore { get; }
-        
         IDomainNotificationBus EventBus { get; }
 
-        IAggregateManifestRepository Manifest { get; }
-
-        ISnapshotRepository GetSnapshotRepository<T>() where T : IAggregateRoot;
-
-        IUnitOfWorkScope BeginUnitOfWork();
-
-        ICommandExecutor NewCommandExecutor<T>() where T : class, IAggregateRoot, new();
-
-        IList<IReadModelBuilder> GetReadModelBuilders<T>() where T : IAggregateRoot, new();
+        void Execute<T>(IAggregateCommand command) where T : class, IAggregateRoot, new();
+        void Execute<T>(IList<IAggregateCommand> commands) where T : class, IAggregateRoot, new();
+        void Execute<T>(IAggregateCommand command, int expectedVersion) where T : class, IAggregateRoot, new();
+        void Execute<T>(IList<IAggregateCommand> commands, int expectedVersion) where T : class, IAggregateRoot, new();
     }
 }

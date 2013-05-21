@@ -34,6 +34,6 @@ using System.Reflection;
  * 
  */ 
 
-namespace Mobile.CQRS.Data
+namespace Mobile.CQRS.Domain
 {
 }

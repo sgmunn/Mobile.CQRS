@@ -24,82 +24,74 @@ namespace Mobile.CQRS.Domain
     using System.Collections.Generic;
     using System.Linq;
     using Mobile.CQRS.Data;
+    using Mobile.CQRS.Reactive;
 
     public class DomainCommandExecutor<T> : ICommandExecutor 
         where T : class, IAggregateRoot, new()
     {
-        private readonly IDomainContext context;
+        private readonly Func<IUnitOfWorkScope> scopeFactory;
 
-        public DomainCommandExecutor(IDomainContext context)
+        private readonly AggregateRepository<T> repository;
+
+        private readonly IList<IReadModelBuilder> readModelBuilders;
+
+        private readonly IDomainNotificationBus eventBus;
+
+        public DomainCommandExecutor(Func<IUnitOfWorkScope> scopeFactory, AggregateRepository<T> repository, IList<IReadModelBuilder> readModelBuilders, IDomainNotificationBus eventBus)
         {
-            this.context = context;
-            // eventBus, readmodels, snapshot, manifest, scope - pretty much everything and now we need the commandqueue
-        }
-        
-        public void Execute(IAggregateCommand command)
-        {
-            this.Execute(new[] { command }, 0);
-        }
-        
-        public void Execute(IList<IAggregateCommand> commands)
-        {
-            this.Execute(commands, 0);
-        }
-        
-        public void Execute(IAggregateCommand command, int expectedVersion)
-        {
-            this.Execute(new[] { command }, expectedVersion);
+            if (scopeFactory == null)
+                throw new ArgumentNullException("scopeFactory");
+            if (eventBus == null)
+                throw new ArgumentNullException("eventBus");
+            if (readModelBuilders == null)
+                throw new ArgumentNullException("readModelBuilders");
+            if (repository == null)
+                throw new ArgumentNullException("repository");
+
+            this.eventBus = eventBus;
+            this.repository = repository;
+            this.readModelBuilders = readModelBuilders;
+            this.scopeFactory = scopeFactory;
         }
  
         public void Execute(IList<IAggregateCommand> commands, int expectedVersion)
         {
-            // create a unit of work eventbus to capture events
-            var busBuffer = new UnitOfWorkEventBus(this.context.EventBus);
-            using (busBuffer)
+            var lifetime = new CompositeDisposable();
+            using (lifetime)
             {
-                var scope = this.context.BeginUnitOfWork();
-                using (scope)
-                {
-                    // create a bus that will build read models on commit of the events that are passed to it
-                    // it will pass events that it captured plus any events from updating the read models to busBuffer
-                    var readModelBuilderBus = new ReadModelBuildingEventBus<T>(this.context.GetReadModelBuilders<T>(), busBuffer);
+                var scope = this.scopeFactory();
+                lifetime.Add(scope);
 
-                    // capture the aggregate's events and pipe them into the read model builder when it is committed
-                    var aggregateEvents = new UnitOfWorkEventBus(readModelBuilderBus);
+                // create a bus that will build read models on commit of the events that are passed to it
+                // it will pass events that it captured plus any events from updating the read models to eventBus
+                var readModelBuilderBus = new ReadModelBuildingEventBus<T>(this.readModelBuilders, this.eventBus);
 
-                    var aggregateRepo = new AggregateRepository<T>(this.context.Manifest, this.context.EventStore, this.context.GetSnapshotRepository<T>(), aggregateEvents);
+                // capture the aggregate's events and pipe them into the read model builder when it is committed
+                var aggregateEvents = new UnitOfWorkEventBus(readModelBuilderBus);
 
-                    // create a unit of work repo to wrap the real aggregate repository, also caches the aggregate for multiple command executions
-                    var repo = new UnitOfWorkRepository<T>(aggregateRepo);
+                // subscribe to the changes in the aggregate and publish them to aggregateEvents
+                lifetime.Add(this.repository.Changes.Subscribe(aggregateEvents.Publish));
 
-                    // add them in this order,
-                    // on commit of the scope, the repo will attempt to commit the aggregate's events and will then raise
-                    // the events which will be passed to aggregateEvents
-                    // then aggregateEvents will be committed which will pass them to readModelBuilderBus
-                    // readModelBuilderBus will then be commited, which will then build read models and add more events to busBuffer
-                    // finally, if we get out of the scope, busBUffer will publish all the caught events
-                    scope.Add(repo);
-                    scope.Add(aggregateEvents);
-                    scope.Add(readModelBuilderBus);
-                
-                    // execute the commands
-                    var cmd = new CommandExecutor<T>(repo);
-                    foreach (var command in commands.ToList())
-                    {
-                        cmd.Execute(command, expectedVersion);
-                    }
-                
-                    // commit the changes made to the aggregate repo - eventstore and snapshots
-                    // this triggers off the read models to be updated from read models
-                    scope.Commit();
-                }
+                // create a unit of work repo to wrap the real aggregate repository, also caches the aggregate for multiple command executions
+                var repo = new UnitOfWorkRepository<T>(this.repository);
 
-                // now publish the events that we captured from the aggregate
-                busBuffer.Commit();
-
-                // here is where we would trigger eventual consistency read models
-                // read models that have eventual consistency can be updated in a different database connection
-                // events / manifest and snapshots have to be in the same db.
+                // add them in this order,
+                // on commit of the scope, the repo will attempt to commit the aggregate's events and will then raise
+                // the events which will be passed to aggregateEvents
+                // then aggregateEvents will be committed which will pass them to readModelBuilderBus
+                // readModelBuilderBus will then be commited, which will then build read models and add more events to busBuffer
+                // finally, if we get out of the scope, busBUffer will publish all the caught events
+                scope.Add(repo);
+                scope.Add(aggregateEvents);
+                scope.Add(readModelBuilderBus);
+            
+                // execute the commands
+                var cmd = new CommandExecutor<T>(repo);
+                cmd.Execute(commands.ToList(), expectedVersion);
+            
+                // commit the changes made to the aggregate repo - eventstore and snapshots
+                // this triggers off the read models to be updated from events
+                scope.Commit();
             }
         }
     }

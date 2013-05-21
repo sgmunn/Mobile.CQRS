@@ -31,8 +31,8 @@ namespace Sample.Domain
 
     public class TestDomainContext : SqlDomainContext
     {
-        public TestDomainContext(SQLiteConnection connection, IAggregateManifestRepository manifest, IEventStore eventStore) 
-            : base(connection, manifest, eventStore)
+        public TestDomainContext(SQLiteConnection connection, ISerializer<IAggregateEvent> serializer) 
+            : base(connection, serializer)
         {
         }
     }

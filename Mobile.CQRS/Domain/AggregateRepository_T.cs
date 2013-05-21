@@ -24,8 +24,9 @@ namespace Mobile.CQRS.Domain
     using System.Collections.Generic;
     using System.Linq;
     using Mobile.CQRS.Data;
+    using Mobile.CQRS.Reactive;
 
-    public class AggregateRepository<T> : IAggregateRepository<T> where T : IAggregateRoot, new()
+    public class AggregateRepository<T> : IAggregateRepository<T>, IObservableRepository where T : IAggregateRoot, new()
     {
         private readonly IEventStore eventStore;
 
@@ -33,12 +34,11 @@ namespace Mobile.CQRS.Domain
 
         private readonly ISnapshotRepository snapshotRepository;
 
-        private readonly IDomainNotificationBus eventBus;
+        private readonly Subject<IDomainNotification> changes;
 
         public AggregateRepository(IAggregateManifestRepository manifest,
                                    IEventStore eventStore, 
-                                   ISnapshotRepository snapshotRepository,
-                                   IDomainNotificationBus eventBus)
+                                   ISnapshotRepository snapshotRepository)
         {
             // we have to have either an eventStore or a snapshotRepository
             if (manifest == null)
@@ -46,10 +46,18 @@ namespace Mobile.CQRS.Domain
             if (eventStore == null && snapshotRepository == null)
                 throw new InvalidOperationException("An EventStore or Snapshot Repository is required");
 
+            this.changes = new Subject<IDomainNotification>();
             this.manifest = manifest;
             this.eventStore = eventStore;
             this.snapshotRepository = snapshotRepository;
-            this.eventBus = eventBus;
+        }
+        
+        public IObservable<IDomainNotification> Changes
+        {
+            get
+            {
+                return this.changes;
+            }
         }
 
         public T New()
@@ -139,18 +147,15 @@ namespace Mobile.CQRS.Domain
         
         private void PublishEvents(IEnumerable<IAggregateEvent> events, IDomainNotification snapshotChange)
         {
-            if (this.eventBus != null)
+            foreach (var evt in events.ToList())
             {
-                foreach (var evt in events.ToList())
-                {
-                    var modelChange = NotificationExtensions.CreateNotification(typeof(T), evt);
-                    this.eventBus.Publish(modelChange);
-                }
+                var modelChange = NotificationExtensions.CreateNotification(typeof(T), evt);
+                this.changes.OnNext(modelChange);
+            }
 
-                if (snapshotChange != null)
-                {
-                    this.eventBus.Publish(snapshotChange);
-                }
+            if (snapshotChange != null)
+            {
+                this.changes.OnNext(snapshotChange);
             }
         }
 

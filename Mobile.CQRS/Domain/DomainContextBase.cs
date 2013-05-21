@@ -22,40 +22,33 @@ namespace Mobile.CQRS.Domain
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using Mobile.CQRS.Data;
-    using Mobile.CQRS.Serialization;
 
     public abstract class DomainContextBase : IDomainContext
     {
-        private readonly Dictionary<Type, List<Func<IDomainContext, IReadModelBuilder>>> registeredBuilders;
-
-        private readonly Dictionary<Type, Func<IDomainContext, ISnapshotRepository>> registeredSnapshotRepositories;
+        private readonly List<IAggregateRegistration> registrations;
 
         protected DomainContextBase()
         {
             this.EventBus = new ObservableDomainNotificationBus();
-            this.registeredBuilders = new Dictionary<Type, List<Func<IDomainContext, IReadModelBuilder>>>();
-            this.registeredSnapshotRepositories = new Dictionary<Type, Func<IDomainContext, ISnapshotRepository>>();
+            this.registrations = new List<IAggregateRegistration>();
         }
 
         protected DomainContextBase(IAggregateManifestRepository manifest, IEventStore eventStore)
         {
             this.EventBus = new ObservableDomainNotificationBus();
+            this.registrations = new List<IAggregateRegistration>();
             this.Manifest = manifest;
             this.EventStore = eventStore;
-            
-            this.registeredBuilders = new Dictionary<Type, List<Func<IDomainContext, IReadModelBuilder>>>();
-            this.registeredSnapshotRepositories = new Dictionary<Type, Func<IDomainContext, ISnapshotRepository>>();
         }
 
         protected DomainContextBase(IAggregateManifestRepository manifest, IEventStore eventStore, IDomainNotificationBus eventBus)
         {
+            this.registrations = new List<IAggregateRegistration>();
             this.Manifest = manifest;
             this.EventBus = eventBus;
             this.EventStore = eventStore;
-
-            this.registeredBuilders = new Dictionary<Type, List<Func<IDomainContext, IReadModelBuilder>>>();
-            this.registeredSnapshotRepositories = new Dictionary<Type, Func<IDomainContext, ISnapshotRepository>>();
         }
         
         public IEventStore EventStore { get; protected set; }
@@ -64,55 +57,51 @@ namespace Mobile.CQRS.Domain
 
         public IAggregateManifestRepository Manifest { get; protected set; }
 
-        public virtual IUnitOfWorkScope BeginUnitOfWork()
+        public void Execute<T>(IAggregateCommand command) where T : class, IAggregateRoot, new()
+        {
+            this.Execute<T>(new[] { command }, 0);
+        }
+
+        public void Execute<T>(IList<IAggregateCommand> commands) where T : class, IAggregateRoot, new()
+        {
+            this.Execute<T>(commands, 0);
+        }
+
+        public void Execute<T>(IAggregateCommand command, int expectedVersion) where T : class, IAggregateRoot, new()
+        {
+            this.Execute<T>(new[] { command }, expectedVersion);
+        }
+
+        public void Execute<T>(IList<IAggregateCommand> commands, int expectedVersion) where T : class, IAggregateRoot, new()
+        {
+            var registration = this.registrations.FirstOrDefault(x => x.AggregateType == typeof(T));
+
+            var snapshotRepo = registration != null ? registration.Snapshot(this.GetDataConnection()) : null;
+            var readModelBuilders = registration != null ? registration.ReadModels(this.GetDataConnection()) : null;
+        
+            var aggregateRepo = new AggregateRepository<T>(this.Manifest, this.EventStore, snapshotRepo);
+
+            // create a unit of work eventbus to capture events
+            var busBuffer = new UnitOfWorkEventBus(this.EventBus);
+            using (busBuffer)
+            {
+                var executor = new DomainCommandExecutor<T>(this.BeginUnitOfWork, aggregateRepo, readModelBuilders, busBuffer);
+                executor.Execute(commands, expectedVersion);
+
+                busBuffer.Commit();
+            }
+        }
+
+        public void Register(IAggregateRegistration registration)
+        {
+            this.registrations.Add(registration);
+        }
+
+        protected virtual IUnitOfWorkScope BeginUnitOfWork()
         {
             return new InMemoryUnitOfWorkScope();
         }
 
-        public ICommandExecutor NewCommandExecutor<T>() where T : class, IAggregateRoot, new()
-        {
-            return new DomainCommandExecutor<T>(this);
-        }
-
-        public ISnapshotRepository GetSnapshotRepository<T>() where T : IAggregateRoot
-        {
-            var aggregateType = typeof(T);
-            if (this.registeredSnapshotRepositories.ContainsKey(aggregateType))
-            {
-                return this.registeredSnapshotRepositories[aggregateType](this);
-            }
-
-            return null;
-        }
-
-        public IList<IReadModelBuilder> GetReadModelBuilders<T>() where T : IAggregateRoot, new()
-        {
-            var result = new List<IReadModelBuilder>();
-
-            if (this.registeredBuilders.ContainsKey(typeof(T)))
-            {
-                foreach (var factory in this.registeredBuilders[typeof(T)])
-                {
-                    result.Add(factory(this));
-                }
-            }
-
-            return result;
-        }
-
-        public void RegisterSnapshot<T>(Func<IDomainContext, ISnapshotRepository> createSnapshotRepository) where T : IAggregateRoot
-        {
-            this.registeredSnapshotRepositories[typeof(T)] = createSnapshotRepository;
-        }
-
-        public void RegisterBuilder<T>(Func<IDomainContext, IReadModelBuilder> createBuilder) where T : IAggregateRoot
-        {
-            if (!this.registeredBuilders.ContainsKey(typeof(T)))
-            {
-                this.registeredBuilders [typeof(T)] = new List<Func<IDomainContext, IReadModelBuilder>>();
-            }
-
-            this.registeredBuilders [typeof(T)].Add(createBuilder);
-        }
+        protected abstract object GetDataConnection();
     }
 }

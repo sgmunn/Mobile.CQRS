@@ -104,7 +104,6 @@
     <Compile Include="Data\DataChangeEvent_.cs" />
     <Compile Include="Data\DataChangeEvent_T_.cs" />
     <Compile Include="Data\ModelChangeKind.cs" />
-    <Compile Include="Data\IRepositoryConnection.cs" />
     <Compile Include="Data\IUnitOfWorkRepository_T.cs" />
     <Compile Include="Domain\InMemoryUnitOfWorkScope.cs" />
     <Compile Include="Domain\DomainContextBase.cs" />
@@ -115,7 +114,6 @@
     <Compile Include="Domain\DomainNotificationBusExtensions.cs" />
     <Compile Include="Domain\ObservableDomainNotificationBus.cs" />
     <Compile Include="IEvent.cs" />
-    <Compile Include="_New.cs" />
     <Compile Include="INotification.cs" />
     <Compile Include="Data\IModelChangeEvent.cs" />
     <Compile Include="Data\ModelChangeEvent.cs" />
@@ -149,5 +147,8 @@
     <Compile Include="Domain\IPendingCommandQueue.cs" />
     <Compile Include="Domain\InMemoryPendingCommandQueue.cs" />
     <Compile Include="Domain\ICommandExecutor.cs" />
+    <Compile Include="_New.cs" />
+    <Compile Include="Domain\AggregateRegistration.cs" />
+    <Compile Include="Domain\IAggregateRegistration.cs" />
   </ItemGroup>
 </Project>

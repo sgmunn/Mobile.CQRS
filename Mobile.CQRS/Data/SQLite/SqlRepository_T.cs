@@ -24,7 +24,7 @@ namespace Mobile.CQRS.Data.SQLite
     using System.Collections.Generic;
     using System.Linq;
 
-    public class SqlRepository<T> : IRepository<T>, IRepositoryConnection 
+    public class SqlRepository<T> : IRepository<T> 
         where T: IUniqueId, new()
     {
         private readonly SQLiteConnection connection;
@@ -32,14 +32,6 @@ namespace Mobile.CQRS.Data.SQLite
         public SqlRepository(SQLiteConnection connection)
         {
             this.connection = connection;
-        }
-
-        object IRepositoryConnection.Connection
-        {
-            get
-            {
-                return this.Connection;
-            }
         }
 
         public SQLiteConnection Connection

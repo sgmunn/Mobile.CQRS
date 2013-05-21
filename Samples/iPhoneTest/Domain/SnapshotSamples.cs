@@ -34,25 +34,17 @@ namespace Sample.Domain
 
         public static IDomainContext GetDomainContext()
         {
-            var manifest = new AggregateManifestRepository(SnapshotSourcedDB.Main);
-
             var eventSerializer = new DataContractSerializer<EventBase>(TypeHelpers.FindSerializableTypes(typeof(EventBase), Assembly.GetCallingAssembly()));
 
-            var eventStore = new EventStore(SnapshotSourcedDB.Main, eventSerializer);
-
-
-
-            var context = new TestDomainContext(SnapshotSourcedDB.Main, manifest, eventStore);
+            var context = new TestDomainContext(SnapshotSourcedDB.Main, eventSerializer);
  //           context.EventBus.Subscribe((x) => Console.WriteLine("domain bus event {0}", x));
 
-            // registrations
-//            context.RegisterSnapshot<SnapshotTestRoot>(c => new SnapshotRepository<TestSnapshot>(SnapshotSourcedDB.Main));
-            context.RegisterSnapshot<SnapshotTestRoot>(c => new SerializedSnapshotRepository<TestSnapshot>(SnapshotSourcedDB.Main,
-                 new DataContractSerializer<TestSnapshot>()
-                                                                                                           ));
 
-            context.RegisterBuilder<SnapshotTestRoot>((c) => 
-                 new TransactionReadModelBuilder(new SqlRepository<TransactionDataContract>(SnapshotSourcedDB.Main)));
+            var registration = AggregateRegistration.ForType<SnapshotTestRoot>()
+                .WithImmediateReadModel(c => new TransactionReadModelBuilder(new SqlRepository<TransactionDataContract>(SnapshotSourcedDB.Main)))
+                .WithSnapshot(c => new SerializedSnapshotRepository<TestSnapshot>(SnapshotSourcedDB.Main, new DataContractSerializer<TestSnapshot>()));
+
+            context.Register(registration);
 
             return context;
         }
@@ -63,9 +55,7 @@ namespace Sample.Domain
 
             var id = TestId;
 
-            var executor = context.NewCommandExecutor<SnapshotTestRoot>();
-
-            executor.Execute(new TestCommand1 
+            context.Execute<SnapshotTestRoot>(new TestCommand1 
                 { 
                     AggregateId = id,
                     Name = Guid.NewGuid().ToString().Substring(0, 8),
@@ -78,9 +68,7 @@ namespace Sample.Domain
 
             var id = TestId;
 
-            var executor = context.NewCommandExecutor<SnapshotTestRoot>();
-
-            executor.Execute(new TestCommand2 
+            context.Execute<SnapshotTestRoot>(new TestCommand2 
                 { 
                     AggregateId = id,
                     Description = Guid.NewGuid().ToString().Substring(0, 8),
