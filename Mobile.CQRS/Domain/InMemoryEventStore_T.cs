@@ -50,6 +50,28 @@ namespace Mobile.CQRS.Domain
             return 0;
         }
 
+        public IList<IAggregateEvent> GetEventsAfterEvent(Guid eventId)
+        {
+            var result = new List<IAggregateEvent>();
+            var allEvents = this.GetAll();
+
+            bool found = false;
+            foreach (var evt in allEvents)
+            {
+                if (found)
+                {
+                    result.Add(evt);
+                }
+
+                if (evt.Identity == eventId)
+                {
+                    found = true;
+                }
+            }
+
+            return result;
+        }
+
         public void SaveEvents(Guid rootId, IList<IAggregateEvent> events)
         {
             foreach (var evt in events)

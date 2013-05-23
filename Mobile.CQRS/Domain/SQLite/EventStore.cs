@@ -74,6 +74,26 @@ namespace Mobile.CQRS.Domain.SQLite
             }
         }
 
+        public IList<IAggregateEvent> GetEventsAfterEvent(Guid eventId)
+        {
+            IList<AggregateEvent> events = null;
+            lock (this.Connection)
+            {
+                var evt = this.Connection.Table<AggregateEvent>().Where(x => x.Identity == eventId).FirstOrDefault();
+                if (evt != null)
+                {
+                    events = this.Connection.Table<AggregateEvent>().Where(x => x.GlobalKey > evt.GlobalKey).OrderBy(x => x.GlobalKey).ToList();
+                }
+            }
+
+            if (events != null)
+            {
+                return events.Select(evt => this.serializer.DeserializeFromString(evt.EventData)).ToList();
+            }
+
+            return new List<IAggregateEvent>();
+        }
+
         public void SaveEvents(Guid rootId, IList<IAggregateEvent> events)
         {
             var serializedEvents = events.Select(evt => new AggregateEvent{

@@ -26,6 +26,10 @@ namespace Mobile.CQRS.Domain.SQLite
     public sealed class AggregateEvent : IUniqueId
     {
         [PrimaryKey]
+        [AutoIncrement]
+        public int GlobalKey { get; set; }
+
+        [Indexed]
         public Guid Identity { get; set; }
 
         [Indexed]

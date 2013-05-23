@@ -29,5 +29,7 @@ namespace Mobile.CQRS.Domain
         IList<IAggregateEvent> GetEventsAfterVersion(Guid rootId, int version);
         int GetCurrentVersion(Guid rootId);
         void SaveEvents(Guid rootId, IList<IAggregateEvent> events);
+
+        IList<IAggregateEvent> GetEventsAfterEvent(Guid eventId);
     }
 }
