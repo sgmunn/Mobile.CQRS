@@ -59,5 +59,19 @@ namespace Mobile.CQRS.Domain
 
             return this.updatedReadModels;
         }
+
+        public IEnumerable<IDomainNotification> Process(IEnumerable<IDomainNotification> events)
+        {
+            this.updatedReadModels.Clear();
+
+            foreach (var evt in events)
+            {
+                MethodExecutor.ExecuteMethod(this, evt.Event);
+            }
+
+            return this.updatedReadModels;
+        }
+
+        public abstract void DeleteForAggregate(Guid aggregateId);
     }
 }

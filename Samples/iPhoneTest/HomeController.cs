@@ -33,6 +33,7 @@ namespace Sample.Domain
                     {
                     new StringElement("Test 1", EventSourceSamples.DoTest1),  
                     new StringElement("Test 2", EventSourceSamples.DoTest2),  
+                    new StringElement("Delete Test", EventSourceSamples.DoDeleteTest),  
                 });
             
             this.Root.Add

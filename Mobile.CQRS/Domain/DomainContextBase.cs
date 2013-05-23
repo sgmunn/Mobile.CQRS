@@ -74,34 +74,41 @@ namespace Mobile.CQRS.Domain
 
         public void Execute<T>(IList<IAggregateCommand> commands, int expectedVersion) where T : class, IAggregateRoot, new()
         {
-            var registration = this.registrations.FirstOrDefault(x => x.AggregateType == typeof(T));
-
-            var snapshotRepo = registration != null ? registration.Snapshot(this.GetDataConnection()) : null;
-            var readModelBuilders = registration != null ? registration.ReadModels(this.GetDataConnection()) : null;
-        
-            var aggregateRepo = new AggregateRepository<T>(this.Manifest, this.EventStore, snapshotRepo);
-
-            // create a unit of work eventbus to capture events
-            var busBuffer = new UnitOfWorkEventBus(this.EventBus);
-            using (busBuffer)
-            {
-                var executor = new DomainCommandExecutor<T>(this.BeginUnitOfWork, aggregateRepo, readModelBuilders, busBuffer);
-                executor.Execute(commands, expectedVersion);
-
-                busBuffer.Commit();
-            }
+            this.InternalExecute<T>(commands, expectedVersion);
         }
 
         public void Register(IAggregateRegistration registration)
         {
             this.registrations.Add(registration);
         }
+        
+        protected abstract object GetDataConnection();
 
         protected virtual IUnitOfWorkScope BeginUnitOfWork()
         {
             return new InMemoryUnitOfWorkScope();
         }
 
-        protected abstract object GetDataConnection();
+        protected virtual void InternalExecute<T>(IList<IAggregateCommand> commands, int expectedVersion) where T : class, IAggregateRoot, new()
+        {
+            var registration = this.registrations.FirstOrDefault(x => x.AggregateType == typeof(T));
+
+            var snapshotRepo = registration != null ? registration.Snapshot(this.GetDataConnection()) : null;
+            var readModelBuilders = registration != null ? registration.ReadModels(this.GetDataConnection()) : null;
+
+            var aggregateRepo = new AggregateRepository<T>(this.Manifest, this.EventStore, snapshotRepo);
+
+            // create a unit of work eventbus to capture events
+            var busBuffer = new UnitOfWorkEventBus(this.EventBus);
+            using (busBuffer)
+            {
+                // TODO: create another bus to capture events and link to commands, when published to, store commands and pass on events
+                // we need a bus that takes an action on publish 
+                var executor = new DomainCommandExecutor<T>(this.BeginUnitOfWork, aggregateRepo, readModelBuilders, busBuffer);
+                executor.Execute(commands, expectedVersion);
+
+                busBuffer.Commit();
+            }
+        }
     }
 }

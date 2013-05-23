@@ -30,7 +30,25 @@ using System.Reflection;
  *   rerun commands
  *     store events, update read models
  * 
+ * do we need to add an autoinc to the eventstore to ensure a global sequence??
+ * likewise PendingCommandQueue
  * 
+ * 
+ * 
+ * we will need a queue of pending events, which we need to get in order grouped by command id and aggregate
+ * we will need a queue of pending commands, which we need to get in order
+ * we will need to be able to rebuild read models
+ *      -- how do we delete all the read models for a given aggregate
+ *      -- this will have to be a method on the read model builder
+ *      -- we will need to publish read model changes, deletes, changes, additions etc and there could be lots depending on
+ *         the read model (eg transactions / item lines)
+ * 
+ * background process to get events from last synced version + events in queue for a given aggregate
+ *      -- store in pending events
+ * 
+ * when we execure commands, we need to store the command in the queue
+ * 
+ * we will need to be able to publish more than one event at a time to a bus I think?
  * 
  */ 
 

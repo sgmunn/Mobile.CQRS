@@ -150,5 +150,6 @@
     <Compile Include="_New.cs" />
     <Compile Include="Domain\AggregateRegistration.cs" />
     <Compile Include="Domain\IAggregateRegistration.cs" />
+    <Compile Include="Domain\SQLite\ReadModelBuilderBase_T.cs" />
   </ItemGroup>
 </Project>

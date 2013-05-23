@@ -40,7 +40,7 @@ namespace Sample.Domain
             context.EventBus.Subscribe((x) => Console.WriteLine("domain bus event {0}", x));
 
             var registration = AggregateRegistration.ForType<EventSourcedRoot>()
-                .WithImmediateReadModel(c => new TransactionReadModelBuilder(new SqlRepository<TransactionDataContract>(SnapshotSourcedDB.Main)));
+                .WithImmediateReadModel(c => new TransactionReadModelBuilder(EventSourcedDB.Main));
             context.Register(registration);
 
             return context;
@@ -71,6 +71,13 @@ namespace Sample.Domain
                     Description = Guid.NewGuid().ToString().Substring(0, 8),
                     Amount = 100,
                 });
+        }
+
+        public static void DoDeleteTest()
+        {
+            var context = GetDomainContext();
+
+            new TransactionReadModelBuilder(EventSourcedDB.Main).DeleteForAggregate(TestId);
         }
     }
 }

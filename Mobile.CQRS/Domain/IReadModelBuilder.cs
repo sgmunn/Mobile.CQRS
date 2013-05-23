@@ -26,5 +26,7 @@ namespace Mobile.CQRS.Domain
     public interface IReadModelBuilder
     {
         IEnumerable<IDomainNotification> Handle(IDomainNotification evt);
+        IEnumerable<IDomainNotification> Process(IEnumerable<IDomainNotification> events);
+        void DeleteForAggregate(Guid aggregateId);
     }
 }

@@ -17,6 +17,8 @@
 //    IN THE SOFTWARE.
 //  </copyright>
 //  --------------------------------------------------------------------------------------------------------------------
+using System.Collections.Generic;
+using Mobile.CQRS.Domain.SQLite;
 
 namespace Sample.Domain
 {
@@ -46,6 +48,11 @@ namespace Sample.Domain
         public void HandleMe(TestEvent2 @event)
         {
             Console.WriteLine("Builder TestEvent2 {0}", @event.Identity);
+        }
+
+        public override void DeleteForAggregate(Guid aggregateId)
+        {
+            Console.WriteLine("Delete {0}", aggregateId);
         }
     }
 
@@ -79,10 +86,11 @@ namespace Sample.Domain
         }
     }
     
-    public class TransactionReadModelBuilder : ReadModelBuilder<TransactionDataContract>
+    public class TransactionReadModelBuilder : ReadModelBuilderBase<TransactionDataContract>
     {
-        public TransactionReadModelBuilder(IRepository<TransactionDataContract> repository) : base(repository)
+        public TransactionReadModelBuilder(SQLiteConnection connection) : base(connection)
         {
+            this.AggregateFieldName = "TestId";
             Console.WriteLine("read model builder created");
         }
         
@@ -91,7 +99,7 @@ namespace Sample.Domain
             Console.WriteLine("read model updated");
             var transaction = this.Repository.New();
 
-            transaction.TestId = evt.Identity;
+            transaction.TestId = evt.AggregateId;
             transaction.Amount = evt.Amount;
             transaction.Description = evt.Description;
 

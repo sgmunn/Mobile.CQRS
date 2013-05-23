@@ -41,7 +41,7 @@ namespace Sample.Domain
 
 
             var registration = AggregateRegistration.ForType<SnapshotTestRoot>()
-                .WithImmediateReadModel(c => new TransactionReadModelBuilder(new SqlRepository<TransactionDataContract>(SnapshotSourcedDB.Main)))
+                .WithImmediateReadModel(c => new TransactionReadModelBuilder(SnapshotSourcedDB.Main))
                 .WithSnapshot(c => new SerializedSnapshotRepository<TestSnapshot>(SnapshotSourcedDB.Main, new DataContractSerializer<TestSnapshot>()));
 
             context.Register(registration);

@@ -66,7 +66,7 @@ namespace Mobile.CQRS.Domain
                 // it will pass events that it captured plus any events from updating the read models to eventBus
                 var readModelBuilderBus = new ReadModelBuildingEventBus<T>(this.readModelBuilders, this.eventBus);
 
-                // capture the aggregate's events and pipe them into the read model builder when it is committed
+                // capture the aggregate's events and pipe them into the read model builder when aggregateEvents is committed
                 var aggregateEvents = new UnitOfWorkEventBus(readModelBuilderBus);
 
                 // subscribe to the changes in the aggregate and publish them to aggregateEvents
