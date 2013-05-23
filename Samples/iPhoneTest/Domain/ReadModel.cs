@@ -86,11 +86,11 @@ namespace Sample.Domain
         }
     }
     
-    public class TransactionReadModelBuilder : ReadModelBuilderBase<TransactionDataContract>
+    public class TransactionReadModelBuilder : ReadModelBuilder<TransactionDataContract>
     {
-        public TransactionReadModelBuilder(SQLiteConnection connection) : base(connection)
+        // TODO: IOC to get the repositpry for TransactionDataContract
+        public TransactionReadModelBuilder(IRepository<TransactionDataContract> repository) : base(repository)
         {
-            this.AggregateFieldName = "TestId";
             Console.WriteLine("read model builder created");
         }
         

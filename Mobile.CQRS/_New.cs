@@ -8,6 +8,10 @@ using System.Runtime.CompilerServices;
 
 using System.Reflection;
 
+//TODO: our read model builder base is tied to SQLite, which means that we can't do in memory read model building
+// we need a way to pass in the IRepository as well as a means by which to delete for an aggregate
+// read model implementations need to be storage agnostic
+
 /*
  * Sync!
  * 
@@ -32,6 +36,13 @@ using System.Reflection;
  * 
  * do we need to add an autoinc to the eventstore to ensure a global sequence??
  * likewise PendingCommandQueue
+ * 
+ * for events from the remote server, do we simply create an event store for the remote events??
+ *  -- easy to work with, duplicates data???
+ *  -- add an extra method to delelete prior to an event id
+ * RemoteEventContract and RemoteEventStore, 
+ * 
+ * -- try it out like that.
  * 
  * 
  * 

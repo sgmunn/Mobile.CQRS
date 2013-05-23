@@ -99,11 +99,19 @@ namespace Mobile.CQRS.Domain
             var aggregateRepo = new AggregateRepository<T>(this.Manifest, this.EventStore, snapshotRepo);
 
             // create a unit of work eventbus to capture events
-            var busBuffer = new UnitOfWorkEventBus(this.EventBus);
+            var busBuffer = new UnitOfWorkEventBus(this.EventBus, () => {
+                // do something with the commands, store in a command queue
+
+            });
+
             using (busBuffer)
             {
                 // TODO: create another bus to capture events and link to commands, when published to, store commands and pass on events
                 // we need a bus that takes an action on publish 
+
+                // the events that are published to busBuffer are 'Publish'ed during the life of the unit of work
+                // in here we can push the commands that we are given to execute if we want, on first publish this will transactional
+
                 var executor = new DomainCommandExecutor<T>(this.BeginUnitOfWork, aggregateRepo, readModelBuilders, busBuffer);
                 executor.Execute(commands, expectedVersion);
 

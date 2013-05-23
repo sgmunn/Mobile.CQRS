@@ -71,7 +71,16 @@ namespace Mobile.CQRS.Domain
 
             return this.updatedReadModels;
         }
+        
+        public virtual void DeleteForAggregate(Guid aggregateId)
+        {
+            var scoped = this.Repository as IScopedRepository;
+            if (scoped == null)
+            {
+                throw new NotSupportedException("Repository does not support IScopedRepository");
+            }
 
-        public abstract void DeleteForAggregate(Guid aggregateId);
+            scoped.DeleteAllInScope(aggregateId);
+        }
     }
 }

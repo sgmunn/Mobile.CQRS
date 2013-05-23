@@ -55,6 +55,11 @@ namespace Mobile.CQRS.Domain
             var result = new List<IAggregateEvent>();
             var allEvents = this.GetAll();
 
+            if (eventId == Guid.Empty)
+            {
+                return allEvents;
+            }
+
             bool found = false;
             foreach (var evt in allEvents)
             {

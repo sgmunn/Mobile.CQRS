@@ -24,14 +24,16 @@ namespace Mobile.CQRS.Data.SQLite
     using System.Collections.Generic;
     using System.Linq;
 
-    public class SqlRepository<T> : IRepository<T> 
+    public class SqlRepository<T> : IRepository<T>, IScopedRepository 
         where T: IUniqueId, new()
     {
         private readonly SQLiteConnection connection;
         
-        public SqlRepository(SQLiteConnection connection)
+        public SqlRepository(SQLiteConnection connection, string scopeFieldName = "")
         {
             this.connection = connection;
+            this.ScopeFieldName = scopeFieldName;
+            this.TableName = typeof(T).Name;
         }
 
         public SQLiteConnection Connection
@@ -41,6 +43,10 @@ namespace Mobile.CQRS.Data.SQLite
                 return this.connection;
             }
         }
+        
+        protected string TableName { get; set; }
+
+        protected string ScopeFieldName { get; set; }
 
         public void Dispose()
         {
@@ -113,6 +119,16 @@ namespace Mobile.CQRS.Data.SQLite
                 var q = string.Format ("delete from \"{0}\" where \"{1}\" = ?", map.TableName, pk.Name);
                 this.Connection.Execute (q, id);
             }
+        }
+
+        public virtual void DeleteAllInScope(Guid scopeId)
+        {
+            if (string.IsNullOrWhiteSpace(this.ScopeFieldName) || string.IsNullOrEmpty(this.TableName))
+            {
+                throw new NotSupportedException();
+            }
+
+            this.Connection.Execute(string.Format("delete from {0} where {1} = ?", this.TableName, this.ScopeFieldName), scopeId);
         }
     }    
 }

@@ -25,7 +25,7 @@ namespace Mobile.CQRS.Domain
     using Mobile.CQRS.Data;
     using Mobile.CQRS.Reactive;
 
-    public class ObservableRepository<T> : IRepository<T>, IObservableRepository 
+    public class ObservableRepository<T> : IRepository<T>, IObservableRepository, IScopedRepository 
         where T : IUniqueId
     {
         private readonly IRepository<T> repository;
@@ -111,6 +111,17 @@ namespace Mobile.CQRS.Domain
             
             var modelChange = NotificationExtensions.CreateModelNotification(id, null, ModelChangeKind.Deleted);
             this.changes.OnNext(modelChange);
+        }
+
+        public void DeleteAllInScope(Guid scopeId)
+        {
+            var scoped = this.Repository as IScopedRepository;
+            if (scoped == null)
+            {
+                throw new NotSupportedException();
+            }
+
+            scoped.DeleteAllInScope(scopeId);
         }
     }
 }

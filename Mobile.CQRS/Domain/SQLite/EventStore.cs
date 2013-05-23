@@ -79,10 +79,17 @@ namespace Mobile.CQRS.Domain.SQLite
             IList<AggregateEvent> events = null;
             lock (this.Connection)
             {
-                var evt = this.Connection.Table<AggregateEvent>().Where(x => x.Identity == eventId).FirstOrDefault();
-                if (evt != null)
+                if (eventId == Guid.Empty)
                 {
-                    events = this.Connection.Table<AggregateEvent>().Where(x => x.GlobalKey > evt.GlobalKey).OrderBy(x => x.GlobalKey).ToList();
+                    events = this.Connection.Table<AggregateEvent>().OrderBy(x => x.GlobalKey).ToList();
+                }
+                else
+                {
+                    var evt = this.Connection.Table<AggregateEvent>().Where(x => x.Identity == eventId).FirstOrDefault();
+                    if (evt != null)
+                    {
+                        events = this.Connection.Table<AggregateEvent>().Where(x => x.GlobalKey > evt.GlobalKey).OrderBy(x => x.GlobalKey).ToList();
+                    }
                 }
             }
 

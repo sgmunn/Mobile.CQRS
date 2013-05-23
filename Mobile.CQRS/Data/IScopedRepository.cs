@@ -1,5 +1,5 @@
 // --------------------------------------------------------------------------------------------------------------------
-// <copyright file="ReadModelBuilderBase_T.cs" company="sgmunn">
+// <copyright file="IScopedRepository.cs" company="sgmunn">
 //   (c) sgmunn 2013  
 //
 //   Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
@@ -18,33 +18,12 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace Mobile.CQRS.Domain.SQLite
+namespace Mobile.CQRS.Data
 {
     using System;
-    using Mobile.CQRS.Data.SQLite;
 
-    public abstract class ReadModelBuilderBase<T> : ReadModelBuilder<T>
-        where T : class, IUniqueId, new()
+    public interface IScopedRepository
     {
-        protected ReadModelBuilderBase(SQLiteConnection connection) : base(new SqlRepository<T>(connection))
-        {
-            this.Connection = connection;
-            this.TableName = typeof(T).Name;
-        }
-
-        public SQLiteConnection Connection { get; private set; }
-
-        protected string TableName { get; set; }
-
-        protected string AggregateFieldName { get; set; }
-
-        public override void DeleteForAggregate(Guid aggregateId)
-        {
-            // TODO: a better way of declaring how to perform the delete would be good
-            if (!string.IsNullOrWhiteSpace(this.AggregateFieldName))
-            {
-                this.Connection.Execute(string.Format("delete from {0} where {1} = ?", this.TableName, this.AggregateFieldName), aggregateId);
-            }
-        }
+        void DeleteAllInScope(Guid scopeId);
     }
 }
