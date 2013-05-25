@@ -103,12 +103,6 @@ namespace Mobile.CQRS.Domain
         
         public IPendingCommands PendingCommands { get; private set; }
 
-        // TODO: can we get rid of the external requirement to interact with the manifest - can we move this to the eventstore instead!!!!!!!
-
-        // ISnapshotRepo needs a methid to Save(with expeced version);
-
-        // TODO: event store needs to have expected version for concurrency check in save events.
-
         // do this in a unit of work
         public bool SyncWithRemote<T>(Guid aggregateId) where T : class, IAggregateRoot, new()
         {

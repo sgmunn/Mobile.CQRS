@@ -62,7 +62,6 @@
     <Compile Include="Repositories\GivenAnInMemoryEventStore.cs" />
     <Compile Include="Repositories\GivenAnInMemoryEventStoreRepository.cs" />
     <Compile Include="Repositories\GivenAnInMemorySnapshotRepository.cs" />
-    <Compile Include="Repositories\MockAggregateManifestRepository.cs" />
     <Compile Include="Repositories\MockBus.cs" />
     <Compile Include="Repositories\TestSerializedEvent.cs" />
     <Compile Include="Repositories\EventSourcing\GivenAExistingAggregateWithUncommittedEvents.cs" />

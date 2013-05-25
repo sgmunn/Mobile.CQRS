@@ -18,7 +18,7 @@
 //  </copyright>
 //  --------------------------------------------------------------------------------------------------------------------
 
-namespace Mobile.CQRS.Domain
+namespace Mobile.CQRS.Domain.SQLite
 {
     using System;
 

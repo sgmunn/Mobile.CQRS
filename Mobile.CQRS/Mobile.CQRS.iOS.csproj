@@ -65,7 +65,6 @@
     <Compile Include="Domain\DomainCommandExecutor_T.cs" />
     <Compile Include="Domain\IAggregateCommand.cs" />
     <Compile Include="Domain\IAggregateEvent.cs" />
-    <Compile Include="Domain\IAggregateManifestRepository.cs" />
     <Compile Include="Domain\IAggregateRepository_T.cs" />
     <Compile Include="Domain\IAggregateRoot.cs" />
     <Compile Include="Domain\IDomainContext.cs" />
@@ -152,5 +151,6 @@
     <Compile Include="Domain\IAggregateRegistration.cs" />
     <Compile Include="Data\IScopedRepository.cs" />
     <Compile Include="Domain\ExecutingCommandExecutor.cs" />
+    <Compile Include="Domain\SQLite\IAggregateManifestRepository.cs" />
   </ItemGroup>
 </Project>
