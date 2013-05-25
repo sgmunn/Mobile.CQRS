@@ -26,28 +26,22 @@ namespace Mobile.CQRS.Domain
     using Mobile.CQRS.Data;
     using Mobile.CQRS.Reactive;
 
-    public class AggregateRepository<T> : IAggregateRepository<T>, IObservableRepository where T : IAggregateRoot, new()
+    public class AggregateRepository<T> : IAggregateRepository<T>, IObservableRepository 
+        where T : IAggregateRoot, new()
     {
         private readonly IEventStore eventStore;
-
-        private readonly IAggregateManifestRepository manifest;
 
         private readonly ISnapshotRepository snapshotRepository;
 
         private readonly Subject<IDomainNotification> changes;
 
-        public AggregateRepository(IAggregateManifestRepository manifest,
-                                   IEventStore eventStore, 
-                                   ISnapshotRepository snapshotRepository)
+        public AggregateRepository(IEventStore eventStore, ISnapshotRepository snapshotRepository)
         {
             // we have to have either an eventStore or a snapshotRepository
-            if (manifest == null)
-                throw new ArgumentNullException("manifest");
             if (eventStore == null && snapshotRepository == null)
                 throw new InvalidOperationException("An EventStore or Snapshot Repository is required");
 
             this.changes = new Subject<IDomainNotification>();
-            this.manifest = manifest;
             this.eventStore = eventStore;
             this.snapshotRepository = snapshotRepository;
         }
@@ -107,14 +101,12 @@ namespace Mobile.CQRS.Domain
             }
 
             var expectedVersion = instance.UncommittedEvents.First().Version - 1;
-            this.EnsureConcurrency(instance.Identity, expectedVersion);
+
+            ////this.EnsureConcurrency(instance.Identity, expectedVersion);
             var newVersion = instance.UncommittedEvents.Last().Version;
 
-            // update the manifest without reading it - 
-            this.manifest.UpdateManifest(instance.AggregateType, instance.Identity, expectedVersion, newVersion);
-
-            var snapshotChange = this.SaveSnapshot(instance);
-            this.SaveEvents(instance);
+            var snapshotChange = this.SaveSnapshot(instance, expectedVersion);
+            this.SaveEvents(instance, expectedVersion);
 
             this.PublishEvents(instance.UncommittedEvents, snapshotChange);
             instance.Commit();
@@ -159,20 +151,30 @@ namespace Mobile.CQRS.Domain
             }
         }
 
-        private void SaveEvents(T instance)
+        private void SaveEvents(T instance, int expectedVersion)
         {
             if (this.eventStore != null)
             {
-                this.eventStore.SaveEvents(instance.Identity, instance.UncommittedEvents.ToList());
+                this.eventStore.SaveEvents(instance.Identity, instance.UncommittedEvents.ToList(), expectedVersion);
             }
         }
 
-        private IDomainNotification SaveSnapshot(T instance)
+        private IDomainNotification SaveSnapshot(T instance, int expectedVersion)
         {
             if (this.snapshotRepository != null && this.ShouldSaveSnapshot(instance))
             {
                 var snapshot = ((ISnapshotSupport)instance).GetSnapshot();
-                var saveResult = this.snapshotRepository.Save(snapshot);
+
+                // we have to pass expected version if we don't have an event store, otherwise we need to validate the expected version
+                SaveResult saveResult;
+                if (this.eventStore == null)
+                {
+                    saveResult = this.snapshotRepository.Save(snapshot);
+                }
+                else
+                {
+                    saveResult = this.snapshotRepository.Save(snapshot, expectedVersion);
+                }
 
                 return NotificationExtensions.CreateModelNotification(instance.Identity, snapshot, saveResult == SaveResult.Added ? ModelChangeKind.Added : ModelChangeKind.Changed);
             }
@@ -190,31 +192,31 @@ namespace Mobile.CQRS.Domain
             return (instance is ISnapshotSupport) && ((ISnapshotSupport)instance).ShouldSaveSnapshot();
         }
 
-        private int EnsureConcurrency(Guid id, int expectedVersion)
-        {
-            int currentVersion = 0;
-
-            // the eventStore is the truth!
-            if (this.eventStore != null)
-            {
-                currentVersion = this.eventStore.GetCurrentVersion(id);
-            }
-            else
-            {
-                var current = this.snapshotRepository.GetById(id);
-                if (current != null)
-                {
-                    currentVersion = current.Version;
-                }
-            }
-            
-            if ((currentVersion == 0 && expectedVersion != 0) || (currentVersion != expectedVersion))
-            {
-                throw new ConcurrencyException(id, expectedVersion, currentVersion);
-            }
-
-            return currentVersion;
-        }
+////        private int EnsureConcurrency(Guid id, int expectedVersion)
+////        {
+////            int currentVersion = 0;
+////
+////            // the eventStore is the truth!
+////            if (this.eventStore != null)
+////            {
+////                currentVersion = this.eventStore.GetCurrentVersion(id);
+////            }
+////            else
+////            {
+////                var current = this.snapshotRepository.GetById(id);
+////                if (current != null)
+////                {
+////                    currentVersion = current.Version;
+////                }
+////            }
+////            
+////            if ((currentVersion == 0 && expectedVersion != 0) || (currentVersion != expectedVersion))
+////            {
+////                throw new ConcurrencyException(id, expectedVersion, currentVersion);
+////            }
+////
+////            return currentVersion;
+////        }
 
         private bool LoadFromFromSnapshot(IAggregateRoot aggregate, ISnapshot snapshot)
         {

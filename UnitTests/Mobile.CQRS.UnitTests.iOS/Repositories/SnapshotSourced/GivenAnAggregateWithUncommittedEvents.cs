@@ -62,22 +62,23 @@ namespace Mobile.CQRS.Domain.UnitTests.Repositories.SnapshotSourced
             this.Repository.Save(this.Aggregate);
         }
 
-        [Test]
-        public void WhenSavingTheAggregate_ThenTheUncommittedEventsArePublished()
-        {
-            this.Repository.Save(this.Aggregate);
-
-            Assert.AreEqual(3, this.Bus.PublishedEvents.Where(x => x.Event is IAggregateEvent).Count());
-        }
-
-        [Test]
-        public void WhenSavingTheAggregate_ThenTheUncommittedEventsArePublishedInOrder()
-        {
-            this.Repository.Save(this.Aggregate);
-            
-            Assert.AreEqual(1, ((TestEvent1)this.Bus.PublishedEvents[0].Event).Version);
-            Assert.AreEqual(2, ((TestEvent1)this.Bus.PublishedEvents[1].Event).Version);
-            Assert.AreEqual(3, ((TestEvent1)this.Bus.PublishedEvents[2].Event).Version);
-        }
+// events are not published any more
+//        [Test]
+//        public void WhenSavingTheAggregate_ThenTheUncommittedEventsArePublished()
+//        {
+//            this.Repository.Save(this.Aggregate);
+//
+//            Assert.AreEqual(3, this.Bus.PublishedEvents.Where(x => x.Event is IAggregateEvent).Count());
+//        }
+//
+//        [Test]
+//        public void WhenSavingTheAggregate_ThenTheUncommittedEventsArePublishedInOrder()
+//        {
+//            this.Repository.Save(this.Aggregate);
+//            
+//            Assert.AreEqual(1, ((TestEvent1)this.Bus.PublishedEvents[0].Event).Version);
+//            Assert.AreEqual(2, ((TestEvent1)this.Bus.PublishedEvents[1].Event).Version);
+//            Assert.AreEqual(3, ((TestEvent1)this.Bus.PublishedEvents[2].Event).Version);
+//        }
     }
 }

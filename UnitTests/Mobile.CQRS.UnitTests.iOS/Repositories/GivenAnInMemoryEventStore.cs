@@ -17,11 +17,11 @@ namespace Mobile.CQRS.Domain.UnitTests.Repositories
         public void WhenAddingEventsForAnAggregate_ThenAllEventsAreReturned()
         {
             var id = Guid.NewGuid();
-            this.EventStore.SaveEvents(id, new[] { new EventBase() {AggregateId = id, Version = 1, }});
-            this.EventStore.SaveEvents(id, new[] { new EventBase() {AggregateId = id, Version = 2, }});
-            this.EventStore.SaveEvents(id, new[] { new EventBase() {AggregateId = id, Version = 3, }});
-            this.EventStore.SaveEvents(id, new[] { new EventBase() {AggregateId = id, Version = 4, }});
-            this.EventStore.SaveEvents(id, new[] { new EventBase() {AggregateId = id, Version = 5, }});
+            this.EventStore.SaveEvents(id, new[] { new EventBase() {AggregateId = id, Version = 1, }}, 0);
+            this.EventStore.SaveEvents(id, new[] { new EventBase() {AggregateId = id, Version = 2, }}, 1);
+            this.EventStore.SaveEvents(id, new[] { new EventBase() {AggregateId = id, Version = 3, }}, 2);
+            this.EventStore.SaveEvents(id, new[] { new EventBase() {AggregateId = id, Version = 4, }}, 3);
+            this.EventStore.SaveEvents(id, new[] { new EventBase() {AggregateId = id, Version = 5, }}, 4);
 
             var events = this.EventStore.GetAllEvents(id);
             Assert.AreEqual(5, events.Count);
@@ -31,11 +31,11 @@ namespace Mobile.CQRS.Domain.UnitTests.Repositories
         public void WhenAddingEventsForAnAggregate_ThenTheEventsAreReturnedInOrder()
         {
             var id = Guid.NewGuid();
-            this.EventStore.SaveEvents(id, new[] { new EventBase() {AggregateId = id, Version = 1, }});
-            this.EventStore.SaveEvents(id, new[] { new EventBase() {AggregateId = id, Version = 2, }});
-            this.EventStore.SaveEvents(id, new[] { new EventBase() {AggregateId = id, Version = 3, }});
-            this.EventStore.SaveEvents(id, new[] { new EventBase() {AggregateId = id, Version = 4, }});
-            this.EventStore.SaveEvents(id, new[] { new EventBase() {AggregateId = id, Version = 5, }});
+            this.EventStore.SaveEvents(id, new[] { new EventBase() {AggregateId = id, Version = 1, }}, 0);
+            this.EventStore.SaveEvents(id, new[] { new EventBase() {AggregateId = id, Version = 2, }}, 1);
+            this.EventStore.SaveEvents(id, new[] { new EventBase() {AggregateId = id, Version = 3, }}, 2);
+            this.EventStore.SaveEvents(id, new[] { new EventBase() {AggregateId = id, Version = 4, }}, 3);
+            this.EventStore.SaveEvents(id, new[] { new EventBase() {AggregateId = id, Version = 5, }}, 4);
             
             var events = this.EventStore.GetAllEvents(id);
             Assert.AreEqual(1, events[0].Version);
@@ -49,11 +49,11 @@ namespace Mobile.CQRS.Domain.UnitTests.Repositories
         public void WhenAddingEventsForAnAggregate_ThenTheEventsHaveTheCorrectId()
         {
             var id = Guid.NewGuid();
-            this.EventStore.SaveEvents(id, new[] { new EventBase() {AggregateId = id, Version = 1, }});
-            this.EventStore.SaveEvents(id, new[] { new EventBase() {AggregateId = id, Version = 2, }});
-            this.EventStore.SaveEvents(id, new[] { new EventBase() {AggregateId = id, Version = 3, }});
-            this.EventStore.SaveEvents(id, new[] { new EventBase() {AggregateId = id, Version = 4, }});
-            this.EventStore.SaveEvents(id, new[] { new EventBase() {AggregateId = id, Version = 5, }});
+            this.EventStore.SaveEvents(id, new[] { new EventBase() {AggregateId = id, Version = 1, }}, 0);
+            this.EventStore.SaveEvents(id, new[] { new EventBase() {AggregateId = id, Version = 2, }}, 1);
+            this.EventStore.SaveEvents(id, new[] { new EventBase() {AggregateId = id, Version = 3, }}, 2);
+            this.EventStore.SaveEvents(id, new[] { new EventBase() {AggregateId = id, Version = 4, }}, 3);
+            this.EventStore.SaveEvents(id, new[] { new EventBase() {AggregateId = id, Version = 5, }}, 4);
             
             var events = this.EventStore.GetAllEvents(id);
             Assert.AreEqual(id, events[0].AggregateId);
@@ -67,18 +67,18 @@ namespace Mobile.CQRS.Domain.UnitTests.Repositories
         public void WhenAddingEventsForMultipleAggregates_ThenTheEventsHaveTheCorrectId()
         {
             var id1 = Guid.NewGuid();
-            this.EventStore.SaveEvents(id1, new[] { new EventBase() {AggregateId = id1, Version = 1, }});
-            this.EventStore.SaveEvents(id1, new[] { new EventBase() {AggregateId = id1, Version = 2, }});
-            this.EventStore.SaveEvents(id1, new[] { new EventBase() {AggregateId = id1, Version = 3, }});
-            this.EventStore.SaveEvents(id1, new[] { new EventBase() {AggregateId = id1, Version = 4, }});
-            this.EventStore.SaveEvents(id1, new[] { new EventBase() {AggregateId = id1, Version = 5, }});
+            this.EventStore.SaveEvents(id1, new[] { new EventBase() {AggregateId = id1, Version = 1, }}, 0);
+            this.EventStore.SaveEvents(id1, new[] { new EventBase() {AggregateId = id1, Version = 2, }}, 1);
+            this.EventStore.SaveEvents(id1, new[] { new EventBase() {AggregateId = id1, Version = 3, }}, 2);
+            this.EventStore.SaveEvents(id1, new[] { new EventBase() {AggregateId = id1, Version = 4, }}, 3);
+            this.EventStore.SaveEvents(id1, new[] { new EventBase() {AggregateId = id1, Version = 5, }}, 4);
             
             var id2 = Guid.NewGuid();
-            this.EventStore.SaveEvents(id2, new[] { new EventBase() {AggregateId = id2, Version = 1, }});
-            this.EventStore.SaveEvents(id2, new[] { new EventBase() {AggregateId = id2, Version = 2, }});
-            this.EventStore.SaveEvents(id2, new[] { new EventBase() {AggregateId = id2, Version = 3, }});
-            this.EventStore.SaveEvents(id2, new[] { new EventBase() {AggregateId = id2, Version = 4, }});
-            this.EventStore.SaveEvents(id2, new[] { new EventBase() {AggregateId = id2, Version = 5, }});
+            this.EventStore.SaveEvents(id2, new[] { new EventBase() {AggregateId = id2, Version = 1, }}, 0);
+            this.EventStore.SaveEvents(id2, new[] { new EventBase() {AggregateId = id2, Version = 2, }}, 1);
+            this.EventStore.SaveEvents(id2, new[] { new EventBase() {AggregateId = id2, Version = 3, }}, 2);
+            this.EventStore.SaveEvents(id2, new[] { new EventBase() {AggregateId = id2, Version = 4, }}, 3);
+            this.EventStore.SaveEvents(id2, new[] { new EventBase() {AggregateId = id2, Version = 5, }}, 4);
 
             var events1 = this.EventStore.GetAllEvents(id1);
             Assert.AreEqual(id1, events1[0].AggregateId);

@@ -32,6 +32,21 @@ namespace Mobile.CQRS.Domain
         {
         }
 
+        public SaveResult Save(ISnapshot instance, int expectedVersion)
+        {
+            lock (this.Storage)
+            {
+                // get the current version 
+                var current = this.GetById(instance.Identity);
+                if (current.Version != expectedVersion)
+                {
+                    throw new ConcurrencyException(instance.Identity, expectedVersion, current.Version);
+                }
+
+                return this.Save(instance);
+            }
+        }
+
         protected override T InternalNew()
         {
             return new T(); 
@@ -39,14 +54,17 @@ namespace Mobile.CQRS.Domain
 
         protected override SaveResult InternalSave(T snapshot)
         {
-            if (this.Storage.ContainsKey(snapshot.Identity))
+            lock (this.Storage)
             {
+                if (this.Storage.ContainsKey(snapshot.Identity))
+                {
+                    this.Storage[snapshot.Identity] = snapshot;
+                    return SaveResult.Updated;
+                }
+
                 this.Storage[snapshot.Identity] = snapshot;
-                return SaveResult.Updated;
+                return SaveResult.Added;
             }
-            
-            this.Storage[snapshot.Identity] = snapshot;
-            return SaveResult.Added;
         }
 
         protected override void InternalDelete(T snapshot)
@@ -64,22 +82,34 @@ namespace Mobile.CQRS.Domain
 
         public new ISnapshot GetById(Guid id)
         {
-            return base.GetById(id);
+            lock (this.Storage)
+            {
+                return base.GetById(id);
+            }
         }
 
         public new IList<ISnapshot> GetAll()
         {
-            return base.GetAll().Cast<ISnapshot>().ToList();
+            lock (this.Storage)
+            {
+                return base.GetAll().Cast<ISnapshot>().ToList();
+            }
         }
 
         public SaveResult Save(ISnapshot snapshot)
         {
-            return this.InternalSave((T)snapshot);
+            lock (this.Storage)
+            {
+                return this.InternalSave((T)snapshot);
+            }
         }
 
         public void Delete(ISnapshot snapshot)
         {
-            this.InternalDelete((T)snapshot);
+            lock (this.Storage)
+            {
+                this.InternalDelete((T)snapshot);
+            }
         }
     }
 }

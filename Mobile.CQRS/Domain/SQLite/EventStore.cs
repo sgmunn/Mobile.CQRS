@@ -26,9 +26,11 @@ namespace Mobile.CQRS.Domain.SQLite
     using Mobile.CQRS.Data.SQLite;
     using Mobile.CQRS.Serialization;
 
-    public class EventStore : SqlRepository<AggregateEvent>, IEventStore
+    public sealed class EventStore : SqlRepository<AggregateEvent>, IEventStore
     {
         private readonly ISerializer<IAggregateEvent> serializer;
+
+        private readonly IAggregateManifestRepository manifest;
 
         public EventStore(SQLiteConnection connection, ISerializer<IAggregateEvent> serializer) : base(connection)
         {
@@ -36,6 +38,60 @@ namespace Mobile.CQRS.Domain.SQLite
                 throw new ArgumentNullException("serializer");
 
             this.serializer = serializer;
+            this.manifest = new AggregateManifestRepository(connection);
+
+            connection.CreateTable<AggregateEvent>();
+        }
+        
+        public void SaveEvents(Guid aggregateId, IList<IAggregateEvent> events, int expectedVersion)
+        {
+            if (events.Count == 0)
+            {
+                return;
+            }
+
+            var serializedEvents = events.Select(evt => new AggregateEvent{
+                AggregateId = aggregateId, 
+                Identity = evt.Identity,
+                Version = evt.Version,
+                CommandId = evt.CommandId,
+                EventData = this.serializer.SerializeToString(evt),
+            }).ToList();
+
+            lock (this.Connection)
+            {
+                var newVersion = events[events.Count - 1].Version;
+                this.manifest.UpdateManifest(aggregateId, expectedVersion, newVersion);
+
+                foreach (var evt in serializedEvents)
+                {
+                    this.Connection.Insert(evt);
+                }
+            }
+        }
+
+        public void MergeEvents(Guid aggregateId, IList<IAggregateEvent> events, int expectedVersion, int fromVersion)
+        {
+            var serializedEvents = events.Select(evt => new AggregateEvent{
+                AggregateId = aggregateId, 
+                Identity = evt.Identity,
+                Version = evt.Version,
+                CommandId = evt.CommandId,
+                EventData = this.serializer.SerializeToString(evt),
+            }).ToList();
+
+            lock (this.Connection)
+            {
+                var newVersion = events[events.Count - 1].Version;
+                this.manifest.UpdateManifest(aggregateId, expectedVersion, newVersion);
+
+                this.Connection.Execute(string.Format("delete from AggregateEvent where AggregateId = ? and Version > {0}", fromVersion), aggregateId);
+
+                foreach (var evt in serializedEvents)
+                {
+                    this.Connection.Insert(evt);
+                }
+            }
         }
 
         public IList<IAggregateEvent> GetAllEvents(Guid rootId)
@@ -82,73 +138,6 @@ namespace Mobile.CQRS.Domain.SQLite
                         .Take(1).ToList();
 
                 return result.Select(x => x.Version).FirstOrDefault();
-            }
-        }
-
-        public IList<IAggregateEvent> GetEventsAfterEvent(Guid eventId)
-        {
-            IList<AggregateEvent> events = null;
-            lock (this.Connection)
-            {
-                if (eventId == Guid.Empty)
-                {
-                    events = this.Connection.Table<AggregateEvent>().OrderBy(x => x.GlobalKey).ToList();
-                }
-                else
-                {
-                    var evt = this.Connection.Table<AggregateEvent>().Where(x => x.Identity == eventId).FirstOrDefault();
-                    if (evt != null)
-                    {
-                        events = this.Connection.Table<AggregateEvent>().Where(x => x.GlobalKey > evt.GlobalKey).OrderBy(x => x.GlobalKey).ToList();
-                    }
-                }
-            }
-
-            if (events != null)
-            {
-                return events.Select(evt => this.serializer.DeserializeFromString(evt.EventData)).ToList();
-            }
-
-            return new List<IAggregateEvent>();
-        }
-
-        public void SaveEvents(Guid rootId, IList<IAggregateEvent> events)
-        {
-            var serializedEvents = events.Select(evt => new AggregateEvent{
-                AggregateId = rootId, 
-                Identity = evt.Identity,
-                Version = evt.Version,
-                CommandId = evt.CommandId,
-                EventData = this.serializer.SerializeToString(evt),
-            }).ToList();
-
-            lock (this.Connection)
-            {
-                foreach (var evt in serializedEvents)
-                {
-                    this.Connection.Insert(evt);
-                }
-            }
-        }
-
-        public void MergeEvents(Guid rootId, IList<IAggregateEvent> events, int fromVersion)
-        {
-            var serializedEvents = events.Select(evt => new AggregateEvent{
-                AggregateId = rootId, 
-                Identity = evt.Identity,
-                Version = evt.Version,
-                CommandId = evt.CommandId,
-                EventData = this.serializer.SerializeToString(evt),
-            }).ToList();
-            
-            lock (this.Connection)
-            {
-                this.Connection.Execute(string.Format("delete from AggregateEvent where AggregateId = ? and Version > {0}", fromVersion), rootId);
-
-                foreach (var evt in serializedEvents)
-                {
-                    this.Connection.Insert(evt);
-                }
             }
         }
     }

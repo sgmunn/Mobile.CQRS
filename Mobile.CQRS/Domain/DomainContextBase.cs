@@ -35,18 +35,16 @@ namespace Mobile.CQRS.Domain
             this.registrations = new List<IAggregateRegistration>();
         }
 
-        protected DomainContextBase(IAggregateManifestRepository manifest, IEventStore eventStore)
+        protected DomainContextBase(IEventStore eventStore)
         {
             this.EventBus = new ObservableDomainNotificationBus();
             this.registrations = new List<IAggregateRegistration>();
-            this.Manifest = manifest;
             this.EventStore = eventStore;
         }
 
-        protected DomainContextBase(IAggregateManifestRepository manifest, IEventStore eventStore, IDomainNotificationBus eventBus)
+        protected DomainContextBase(IEventStore eventStore, IDomainNotificationBus eventBus)
         {
             this.registrations = new List<IAggregateRegistration>();
-            this.Manifest = manifest;
             this.EventBus = eventBus;
             this.EventStore = eventStore;
         }
@@ -54,8 +52,6 @@ namespace Mobile.CQRS.Domain
         public IEventStore EventStore { get; protected set; }
         
         public IDomainNotificationBus EventBus { get; protected set; }
-
-        public IAggregateManifestRepository Manifest { get; protected set; }
 
         public void Execute<T>(IAggregateCommand command) where T : class, IAggregateRoot, new()
         {
@@ -96,7 +92,7 @@ namespace Mobile.CQRS.Domain
             var snapshotRepo = registration != null ? registration.Snapshot(this.GetDataConnection()) : null;
             var readModelBuilders = registration != null ? registration.ReadModels(this.GetDataConnection()) : null;
 
-            var aggregateRepo = new AggregateRepository<T>(this.Manifest, this.EventStore, snapshotRepo);
+            var aggregateRepo = new AggregateRepository<T>(this.EventStore, snapshotRepo);
 
             // create a unit of work eventbus to capture events
             var busBuffer = new UnitOfWorkEventBus(this.EventBus, () => {

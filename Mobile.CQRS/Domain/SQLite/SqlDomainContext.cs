@@ -31,13 +31,11 @@ namespace Mobile.CQRS.Domain.SQLite
         public SqlDomainContext(SQLiteConnection connection)
         {
             this.Connection = connection;
-            this.Manifest = new AggregateManifestRepository(connection);
         }
 
         public SqlDomainContext(SQLiteConnection connection, ISerializer<IAggregateEvent> eventSerializer)
         {
             this.Connection = connection;
-            this.Manifest = new AggregateManifestRepository(connection);
             this.EventStore = new EventStore(connection, eventSerializer);
         }
 

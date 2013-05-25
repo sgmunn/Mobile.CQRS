@@ -10,7 +10,7 @@ namespace Mobile.CQRS.Domain.UnitTests.Repositories
 
         public virtual void SetUp()
         {
-            this.EventStore = new InMemoryEventStore<EventBase>();
+            this.EventStore = new InMemoryEventStore();
         }
     }
 }

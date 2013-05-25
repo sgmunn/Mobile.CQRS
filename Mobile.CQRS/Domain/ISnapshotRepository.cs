@@ -25,5 +25,6 @@ namespace Mobile.CQRS.Domain
 
     public interface ISnapshotRepository : IRepository<ISnapshot>
     {
+        SaveResult Save(ISnapshot instance, int expectedVersion);
     }
 }

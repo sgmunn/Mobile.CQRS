@@ -53,28 +53,29 @@ namespace Mobile.CQRS.Domain.UnitTests.Repositories.EventSourcing
         public void WhenSavingTheAggregateAndAnotherProcessHasSavedOtherEvents_ThenAConcurrencyExceptionIsThrown()
         {
             // other process
-            this.EventStore.SaveEvents(Aggregate.Identity, new[] { new TestEvent1() {AggregateId = this.Aggregate.Identity, Version = 4, }, });
+            this.EventStore.SaveEvents(Aggregate.Identity, new[] { new TestEvent1() {AggregateId = this.Aggregate.Identity, Version = 4, }, }, 3);
 
             // this process
             this.Repository.Save(this.Aggregate);
         }
 
-        [Test]
-        public void WhenSavingTheAggregate_ThenTheUncommittedEventsArePublished()
-        {
-            this.Repository.Save(this.Aggregate);
-
-            Assert.AreEqual(3, this.Bus.PublishedEvents.Count);
-        }
-
-        [Test]
-        public void WhenSavingTheAggregate_ThenTheUncommittedEventsArePublishedInOrder()
-        {
-            this.Repository.Save(this.Aggregate);
-            
-            Assert.AreEqual(1, ((TestEvent1)this.Bus.PublishedEvents[0].Event).Version);
-            Assert.AreEqual(2, ((TestEvent1)this.Bus.PublishedEvents[1].Event).Version);
-            Assert.AreEqual(3, ((TestEvent1)this.Bus.PublishedEvents[2].Event).Version);
-        }
+// events are not published anymore
+//        [Test]
+//        public void WhenSavingTheAggregate_ThenTheUncommittedEventsArePublished()
+//        {
+//            this.Repository.Save(this.Aggregate);
+//
+//            Assert.AreEqual(3, this.Bus.PublishedEvents.Count);
+//        }
+//
+//        [Test]
+//        public void WhenSavingTheAggregate_ThenTheUncommittedEventsArePublishedInOrder()
+//        {
+//            this.Repository.Save(this.Aggregate);
+//            
+//            Assert.AreEqual(1, ((TestEvent1)this.Bus.PublishedEvents[0].Event).Version);
+//            Assert.AreEqual(2, ((TestEvent1)this.Bus.PublishedEvents[1].Event).Version);
+//            Assert.AreEqual(3, ((TestEvent1)this.Bus.PublishedEvents[2].Event).Version);
+//        }
     }
 }

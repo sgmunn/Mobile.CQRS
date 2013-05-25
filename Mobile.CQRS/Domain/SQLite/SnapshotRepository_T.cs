@@ -30,10 +30,13 @@ namespace Mobile.CQRS.Domain.SQLite
         where T : class, ISnapshot, new() 
     {
         private readonly SqlRepository<T> repository;
+        
+        private readonly IAggregateManifestRepository manifest;
 
         public SnapshotRepository(SQLiteConnection connection)
         {
             this.repository = new SqlRepository<T>(connection);
+            this.manifest = new AggregateManifestRepository(connection);
         }
 
         public ISnapshot New()
@@ -54,6 +57,12 @@ namespace Mobile.CQRS.Domain.SQLite
         public SaveResult Save(ISnapshot instance)
         {
             return this.repository.Save((T)instance);
+        }
+        
+        public SaveResult Save(ISnapshot instance, int expectedVersion)
+        {
+            this.manifest.UpdateManifest(instance.Identity, expectedVersion, instance.Version);
+            return this.Save(instance);
         }
 
         public void Delete(ISnapshot instance)

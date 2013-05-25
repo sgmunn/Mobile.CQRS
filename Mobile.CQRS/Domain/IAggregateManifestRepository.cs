@@ -24,6 +24,6 @@ namespace Mobile.CQRS.Domain
 
     public interface IAggregateManifestRepository
     {
-        void UpdateManifest(string aggregateType, Guid aggregateId, int currentVersion, int newVersion);
+        void UpdateManifest(Guid aggregateId, int currentVersion, int newVersion);
     }
 }

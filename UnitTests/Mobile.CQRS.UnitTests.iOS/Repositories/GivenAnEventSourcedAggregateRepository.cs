@@ -16,7 +16,6 @@ namespace Mobile.CQRS.Domain.UnitTests.Repositories
             this.Bus = new MockBus();
 
             this.Repository = new AggregateRepository<TestAggregateRoot>(
-                new MockAggregateManifestRepository(),
                 this.EventStore, 
                 null);
             //,

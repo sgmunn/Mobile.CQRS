@@ -1,5 +1,5 @@
 // --------------------------------------------------------------------------------------------------------------------
-// <copyright file="ExecutingCommandExecutor_T.cs" company="sgmunn">
+// <copyright file="ExecutingCommandExecutor.cs" company="sgmunn">
 //   (c) sgmunn 2013  
 //
 //   Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
@@ -24,8 +24,7 @@ namespace Mobile.CQRS.Domain
     using System.Collections.Generic;
     using System.Diagnostics;
 
-    public sealed class ExecutingCommandExecutor<T> : ICommandExecutor
-        where T : class, IAggregateRoot, new()
+    public sealed class ExecutingCommandExecutor : ICommandExecutor
     {
         private readonly IAggregateRoot root;
 

@@ -23,7 +23,7 @@ namespace Mobile.CQRS.Domain.SQLite
     using System;
     using Mobile.CQRS.Data.SQLite;
 
-    public class AggregateManifestRepository : IAggregateManifestRepository
+    public sealed class AggregateManifestRepository : IAggregateManifestRepository
     {
         ////private const string UpdateSql = "update AggregateManifest set Version = ? where Identity = ? and Version = ?";
         private const string UpdateSql = "update AggregateManifest set Version = {0} where Identity = '{1}' and Version = {2}";
@@ -33,9 +33,10 @@ namespace Mobile.CQRS.Domain.SQLite
         public AggregateManifestRepository(SQLiteConnection connection)
         {
             this.connection = connection;
+            this.connection.CreateTable<AggregateManifest>();
         }
 
-        public void UpdateManifest(string aggregateType, Guid aggregateId, int currentVersion, int newVersion)
+        public void UpdateManifest(Guid aggregateId, int currentVersion, int newVersion)
         {
             bool updated = false;
 
@@ -43,7 +44,7 @@ namespace Mobile.CQRS.Domain.SQLite
             {
                 lock (this.connection)
                 {
-                    updated = this.DoUpdate(aggregateType, aggregateId, currentVersion, newVersion);
+                    updated = this.DoUpdate(aggregateId, currentVersion, newVersion);
                 }
             }
             catch (Exception ex)
@@ -58,11 +59,11 @@ namespace Mobile.CQRS.Domain.SQLite
             }
         }
 
-        private bool DoUpdate(string aggregateType, Guid aggregateId, int currentVersion, int newVersion)
+        private bool DoUpdate(Guid aggregateId, int currentVersion, int newVersion)
         {
             if (currentVersion == 0)
             {
-                this.connection.Insert(new AggregateManifest { Identity = aggregateId, AggregateType = aggregateType, Version = newVersion, });
+                this.connection.Insert(new AggregateManifest { Identity = aggregateId, Version = newVersion, });
             }
             else
             {

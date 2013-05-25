@@ -23,106 +23,117 @@ namespace Mobile.CQRS.Domain
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using Mobile.CQRS.Data;
     
-    public class InMemoryEventStore<T> : DictionaryRepositoryBase<IAggregateEvent>, IEventStore 
-        where T : IAggregateEvent, new() 
+    public class InMemoryEventStore : IEventStore
     {
+        private readonly Dictionary<Guid, List<IAggregateEvent>> storage;
+
+        public InMemoryEventStore()
+        {
+            this.storage = new Dictionary<Guid, List<IAggregateEvent>>();    
+        }
+
+        public void Dispose()
+        {
+        }
+
+        public void SaveEvents(Guid aggregateId, IList<IAggregateEvent> events, int expectedVersion)
+        {
+            lock(this.storage)
+            {
+                var currentVersion = this.GetCurrentVersion(aggregateId);
+                if (currentVersion != expectedVersion)
+                {
+                    throw new ConcurrencyException(aggregateId, expectedVersion, currentVersion);
+                }
+
+                var savedEvents = this.GetEvents(aggregateId);
+                savedEvents.AddRange(events);
+                this.storage[aggregateId] = savedEvents;
+            }
+        }
+
+        public void MergeEvents(Guid aggregateId, IList<IAggregateEvent> events, int expectedVersion, int afterVersion)
+        {
+            lock(this.storage)
+            {
+                var currentVersion = this.GetCurrentVersion(aggregateId);
+                if (currentVersion != expectedVersion)
+                {
+                    throw new ConcurrencyException(aggregateId, expectedVersion, currentVersion);
+                }
+
+                var savedEvents = this.GetEvents(aggregateId);
+                // TODO: Test this
+                // list is zero based
+                // 0 1 2 3 4 5 6 7 8
+                // 1 2 3 4 5 6 7 8 9
+                savedEvents.RemoveRange(afterVersion, currentVersion - afterVersion);
+
+                savedEvents.AddRange(events);
+                this.storage[aggregateId] = savedEvents;
+            }
+        }
+        
+        public int GetCurrentVersion(Guid rootId)
+        {
+            List<IAggregateEvent> savedEvents;
+            lock(this.storage)
+            {
+                savedEvents = this.GetEvents(rootId);
+            }
+
+            if (savedEvents.Count == 0)
+            {
+                return 0;
+            }
+
+            return savedEvents[savedEvents.Count - 1].Version;
+        }
+
         public IList<IAggregateEvent> GetAllEvents(Guid rootId)
         {
-            return this.GetAll().Where(x => x.AggregateId == rootId).OrderBy(x => x.Version).ToList();
+            List<IAggregateEvent> savedEvents;
+            lock(this.storage)
+            {
+                savedEvents = this.GetEvents(rootId);
+            }
+
+            return savedEvents;
         }
 
         public IList<IAggregateEvent> GetEventsAfterVersion(Guid rootId, int version)
         {
-            return this.GetAll().Where(x => x.AggregateId == rootId && x.Version > version).OrderBy(x => x.Version).ToList();
+            List<IAggregateEvent> savedEvents;
+            lock(this.storage)
+            {
+                savedEvents = this.GetEvents(rootId);
+            }
+
+            return savedEvents.Where(x => x.Version > version).ToList();
         }
         
         public IList<IAggregateEvent> GetEventsUpToVersion(Guid rootId, int version)
         {
-            return this.GetAll().Where(x => x.AggregateId == rootId && x.Version <= version).OrderBy(x => x.Version).ToList();
-        }
-
-        public int GetCurrentVersion(Guid rootId)
-        {
-            var allEvents = this.GetAllEvents(rootId);
-
-            if (allEvents.Any())
+            List<IAggregateEvent> savedEvents;
+            lock(this.storage)
             {
-                return allEvents.Last().Version;
+                savedEvents = this.GetEvents(rootId);
             }
 
-            return 0;
+            return savedEvents.Where(x => x.Version <= version).ToList();
         }
 
-        public IList<IAggregateEvent> GetEventsAfterEvent(Guid eventId)
+        private List<IAggregateEvent> GetEvents(Guid rootId)
         {
-            var result = new List<IAggregateEvent>();
-            var allEvents = this.GetAll();
-
-            if (eventId == Guid.Empty)
+            List<IAggregateEvent> result;
+            if (this.storage.TryGetValue(rootId, out result))
             {
-                return allEvents;
+                // return a new copy
+                return result.ToList();
             }
 
-            bool found = false;
-            foreach (var evt in allEvents)
-            {
-                if (found)
-                {
-                    result.Add(evt);
-                }
-
-                if (evt.Identity == eventId)
-                {
-                    found = true;
-                }
-            }
-
-            return result;
-        }
-
-        public void SaveEvents(Guid rootId, IList<IAggregateEvent> events)
-        {
-            foreach (var evt in events)
-            {
-                this.InternalSave(evt);
-            }
-        }
-        
-        public void MergeEvents(Guid rootId, IList<IAggregateEvent> events, int fromVersion)
-        {
-            foreach (var evt in this.GetEventsAfterVersion(rootId, fromVersion).ToList())
-            {
-                this.Delete(evt);
-            }
-
-            this.SaveEvents(rootId, events);
-        }
-
-        protected override IAggregateEvent InternalNew()
-        {
-            return new T(); 
-        }
-
-        protected override SaveResult InternalSave(IAggregateEvent evt)
-        {
-            if (this.Storage.ContainsKey(evt.Identity))
-            {
-                this.Storage[evt.Identity] = evt;
-                return SaveResult.Updated;
-            }
-
-            this.Storage[evt.Identity] = evt;
-            return SaveResult.Added;
-        }
-
-        protected override void InternalDelete(IAggregateEvent evt)
-        {
-            if (this.Storage.ContainsKey(evt.Identity))
-            {
-                this.Storage.Remove(evt.Identity);
-            }
+            return new List<IAggregateEvent>();
         }
     }
 }

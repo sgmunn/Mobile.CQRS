@@ -25,13 +25,13 @@ namespace Mobile.CQRS.Domain
 
     public interface IEventStore : IDisposable
     {
+        // 
+        void SaveEvents(Guid aggregateId, IList<IAggregateEvent> events, int expectedVersion);
+        void MergeEvents(Guid aggregateId, IList<IAggregateEvent> events, int expectedVersion, int afterVersion);
+        //
+        int GetCurrentVersion(Guid rootId);
         IList<IAggregateEvent> GetAllEvents(Guid rootId);
         IList<IAggregateEvent> GetEventsAfterVersion(Guid rootId, int version);
         IList<IAggregateEvent> GetEventsUpToVersion(Guid rootId, int version);
-        int GetCurrentVersion(Guid rootId);
-        void SaveEvents(Guid rootId, IList<IAggregateEvent> events);
-        void MergeEvents(Guid rootId, IList<IAggregateEvent> events, int fromVersion);
-
-        IList<IAggregateEvent> GetEventsAfterEvent(Guid eventId);
     }
 }

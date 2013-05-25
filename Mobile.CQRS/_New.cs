@@ -103,10 +103,6 @@ namespace Mobile.CQRS.Domain
         
         public IPendingCommands PendingCommands { get; private set; }
 
-        public IAggregateManifestRepository LocalManifest { get; private set; }
-        
-        public IAggregateManifestRepository RemoteManifest { get; private set; }
-
         // TODO: can we get rid of the external requirement to interact with the manifest - can we move this to the eventstore instead!!!!!!!
 
         // ISnapshotRepo needs a methid to Save(with expeced version);
@@ -139,7 +135,7 @@ namespace Mobile.CQRS.Domain
             {
                 ((IEventSourced)aggregate).LoadFromEvents(commonEvents);
 
-                var exec = new ExecutingCommandExecutor<T>(aggregate);
+                var exec = new ExecutingCommandExecutor(aggregate);
                 exec.Execute(pendingCommands, 0);
 
                 pendingEvents.AddRange(aggregate.UncommittedEvents.ToList());
@@ -154,9 +150,8 @@ namespace Mobile.CQRS.Domain
             if (pendingEvents.Count > 0)
             {
                 var currentRemoteVersion = newRemoteEvents.Count > 0 ? newRemoteEvents.Last().Version : syncState.LastSyncedVersion;
-                this.RemoteManifest.UpdateManifest(aggregate.AggregateType, aggregateId, currentRemoteVersion, pendingEvents.Last().Version);
 
-                this.RemoteEventStore.SaveEvents(aggregateId, pendingEvents);
+                this.RemoteEventStore.SaveEvents(aggregateId, pendingEvents, currentRemoteVersion);
             }
 
             this.PendingCommands.RemovePendingCommands(pendingCommands);
@@ -165,10 +160,9 @@ namespace Mobile.CQRS.Domain
 
             // because the event store doesn't do this for us, we need to 
             // this is essentially our concurrency check that we haven't added another pending command to the queue
-            this.LocalManifest.UpdateManifest(aggregate.AggregateType, aggregateId, currentVersion, newRemoteEvents.Last().Version);
 
             // merge events back to local event store
-            this.LocalEventStore.MergeEvents(aggregateId, newRemoteEvents, syncState.LastSyncedVersion);
+            this.LocalEventStore.MergeEvents(aggregateId, newRemoteEvents, currentVersion, syncState.LastSyncedVersion);
 
             // rebuild .. if we had no pending commands, then we can simply do a build not a rebuild
             // return true for full rebuild, false for partial, but from what version
