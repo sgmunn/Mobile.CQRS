@@ -48,6 +48,11 @@ namespace Sample.Domain
 
         [DataMember]
         public Guid CommandId { get; set; }
+
+        public bool ConflictsWith(IAggregateEvent otherEvent)
+        {
+            return false;
+        }
     }
 
     [DataContract(Name="Event1", Namespace="urn:SampleDomain")]

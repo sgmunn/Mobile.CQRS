@@ -93,6 +93,11 @@ namespace Mobile.CQRS.Domain.UnitTests
         public DateTime Timestamp { get; set; } 
 
         public Guid CommandId { get; set; }
+        
+        public bool ConflictsWith(IAggregateEvent otherEvent)
+        {
+            return false;
+        }
     }
     
     public class TestEvent1 : EventBase

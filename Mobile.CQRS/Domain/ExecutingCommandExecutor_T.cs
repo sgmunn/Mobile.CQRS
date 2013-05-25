@@ -1,6 +1,6 @@
 // --------------------------------------------------------------------------------------------------------------------
-// <copyright file="IEventStore.cs" company="sgmunn">
-//   (c) sgmunn 2012  
+// <copyright file="ExecutingCommandExecutor_T.cs" company="sgmunn">
+//   (c) sgmunn 2013  
 //
 //   Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
 //   documentation files (the "Software"), to deal in the Software without restriction, including without limitation 
@@ -9,7 +9,7 @@
 //
 //   The above copyright notice and this permission notice shall be included in all copies or substantial portions of 
 //   the Software.
-// 
+//
 //   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO 
 //   THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
 //   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
@@ -22,16 +22,40 @@ namespace Mobile.CQRS.Domain
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
 
-    public interface IEventStore : IDisposable
+    public sealed class ExecutingCommandExecutor<T> : ICommandExecutor
+        where T : class, IAggregateRoot, new()
     {
-        IList<IAggregateEvent> GetAllEvents(Guid rootId);
-        IList<IAggregateEvent> GetEventsAfterVersion(Guid rootId, int version);
-        IList<IAggregateEvent> GetEventsUpToVersion(Guid rootId, int version);
-        int GetCurrentVersion(Guid rootId);
-        void SaveEvents(Guid rootId, IList<IAggregateEvent> events);
-        void MergeEvents(Guid rootId, IList<IAggregateEvent> events, int fromVersion);
+        private readonly IAggregateRoot root;
 
-        IList<IAggregateEvent> GetEventsAfterEvent(Guid eventId);
+        public ExecutingCommandExecutor(IAggregateRoot root)
+        {
+            this.root = root;
+        }
+
+        public void Execute(IList<IAggregateCommand> commands, int expectedVersion)
+        {
+            foreach (var cmd in commands)
+            {
+                this.Execute(this.root, cmd);
+            }
+        }
+
+        private void Execute(object aggregate, object command)
+        {
+            try
+            {
+                if (!MethodExecutor.ExecuteMethod(aggregate, command))
+                {
+                    throw new MissingMethodException(string.Format("Aggregate {0} does not support a method that can be called with {1}", aggregate, command));
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine("Error executing command\n{0}", ex);
+                throw;
+            }
+        }
     }
 }

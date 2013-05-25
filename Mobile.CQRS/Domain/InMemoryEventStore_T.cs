@@ -37,6 +37,11 @@ namespace Mobile.CQRS.Domain
         {
             return this.GetAll().Where(x => x.AggregateId == rootId && x.Version > version).OrderBy(x => x.Version).ToList();
         }
+        
+        public IList<IAggregateEvent> GetEventsUpToVersion(Guid rootId, int version)
+        {
+            return this.GetAll().Where(x => x.AggregateId == rootId && x.Version <= version).OrderBy(x => x.Version).ToList();
+        }
 
         public int GetCurrentVersion(Guid rootId)
         {
@@ -83,6 +88,16 @@ namespace Mobile.CQRS.Domain
             {
                 this.InternalSave(evt);
             }
+        }
+        
+        public void MergeEvents(Guid rootId, IList<IAggregateEvent> events, int fromVersion)
+        {
+            foreach (var evt in this.GetEventsAfterVersion(rootId, fromVersion).ToList())
+            {
+                this.Delete(evt);
+            }
+
+            this.SaveEvents(rootId, events);
         }
 
         protected override IAggregateEvent InternalNew()

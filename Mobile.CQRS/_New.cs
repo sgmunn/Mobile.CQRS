@@ -8,10 +8,6 @@ using System.Runtime.CompilerServices;
 
 using System.Reflection;
 
-//TODO: our read model builder base is tied to SQLite, which means that we can't do in memory read model building
-// we need a way to pass in the IRepository as well as a means by which to delete for an aggregate
-// read model implementations need to be storage agnostic
-
 /*
  * Sync!
  * 
@@ -61,8 +57,129 @@ using System.Reflection;
  * 
  * we will need to be able to publish more than one event at a time to a bus I think?
  * 
- */ 
+ */
+using Mobile.CQRS.Data; 
 
 namespace Mobile.CQRS.Domain
 {
+    public interface ISyncState : IUniqueId
+    {
+        int LastSyncedVersion { get; }
+
+    }
+
+    public interface IPendingCommands : IRepository<IAggregateCommand>
+    {
+        IList<IAggregateCommand> PendingCommandsForAggregate(Guid id);
+        void RemovePendingCommands(IList<IAggregateCommand> commands);
+    }
+
+    public class ConflictException : Exception
+    {
+        public ConflictException(string message) : base(message)
+        {
+        }
+    }
+
+    public class MergeManager 
+    {
+        /* This class is repsonsible for merging changes from _the_ remote event store into our 
+         * event store.
+         * 
+         * Load events up to last sync version.
+         * Add new remote events from sync version (get aggregate up to date with remote).
+         * Execute pending commands and catch uncomitted events.
+         * Check for conflicts with uncommitted events and new remote events.
+         * if no conflicts, update eventstore with new events passing last sync version, current version to ensure concurrency
+         * rebuild read models for aggregate
+         * 
+         */
+
+        public IEventStore RemoteEventStore { get; private set; }
+        
+        public IEventStore LocalEventStore { get; private set; }
+
+        public IRepository<ISyncState> SyncState { get; private set; }
+        
+        public IPendingCommands PendingCommands { get; private set; }
+
+        public IAggregateManifestRepository LocalManifest { get; private set; }
+        
+        public IAggregateManifestRepository RemoteManifest { get; private set; }
+
+        // TODO: can we get rid of the external requirement to interact with the manifest - can we move this to the eventstore instead!!!!!!!
+
+        // ISnapshotRepo needs a methid to Save(with expeced version);
+
+        // TODO: event store needs to have expected version for concurrency check in save events.
+
+        // do this in a unit of work
+        public bool SyncWithRemote<T>(Guid aggregateId) where T : class, IAggregateRoot, new()
+        {
+            var currentVersion = this.LocalEventStore.GetCurrentVersion(aggregateId);
+
+            var syncState = this.SyncState.GetById(aggregateId);
+
+            var commonEvents = this.LocalEventStore.GetEventsUpToVersion(aggregateId, syncState.LastSyncedVersion);
+
+            var newRemoteEvents = this.RemoteEventStore.GetEventsAfterVersion(aggregateId, syncState.LastSyncedVersion).ToList();
+
+            if (newRemoteEvents.Count == 0 && currentVersion == syncState.LastSyncedVersion)
+            {
+                // ain't nothin' to merge (in either direction)
+                return false;
+            }
+
+            var aggregate = new T();
+            aggregate.Identity = aggregateId;
+            var pendingEvents = new List<IAggregateEvent>();
+
+            var pendingCommands = this.PendingCommands.PendingCommandsForAggregate(aggregateId).ToList();
+            if (pendingCommands.Count > 0)
+            {
+                ((IEventSourced)aggregate).LoadFromEvents(commonEvents);
+
+                var exec = new ExecutingCommandExecutor<T>(aggregate);
+                exec.Execute(pendingCommands, 0);
+
+                pendingEvents.AddRange(aggregate.UncommittedEvents.ToList());
+
+                var hasConflicts = pendingEvents.Any(local => newRemoteEvents.Any(remote => local.ConflictsWith(remote)));
+                if (hasConflicts)
+                {
+                    throw new ConflictException("Pending commands conflict with new remote events");
+                }
+            }
+
+            if (pendingEvents.Count > 0)
+            {
+                var currentRemoteVersion = newRemoteEvents.Count > 0 ? newRemoteEvents.Last().Version : syncState.LastSyncedVersion;
+                this.RemoteManifest.UpdateManifest(aggregate.AggregateType, aggregateId, currentRemoteVersion, pendingEvents.Last().Version);
+
+                this.RemoteEventStore.SaveEvents(aggregateId, pendingEvents);
+            }
+
+            this.PendingCommands.RemovePendingCommands(pendingCommands);
+
+            newRemoteEvents.AddRange(pendingEvents);
+
+            // because the event store doesn't do this for us, we need to 
+            // this is essentially our concurrency check that we haven't added another pending command to the queue
+            this.LocalManifest.UpdateManifest(aggregate.AggregateType, aggregateId, currentVersion, newRemoteEvents.Last().Version);
+
+            // merge events back to local event store
+            this.LocalEventStore.MergeEvents(aggregateId, newRemoteEvents, syncState.LastSyncedVersion);
+
+            // rebuild .. if we had no pending commands, then we can simply do a build not a rebuild
+            // return true for full rebuild, false for partial, but from what version
+            // if we have no pending commands then build read models from their current state 
+            return pendingCommands.Count > 0;
+        }
+    }
+
+
 }
+
+
+
+

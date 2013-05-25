@@ -25,8 +25,8 @@ namespace Mobile.CQRS.Domain
     using System.Diagnostics;
     using System.Linq;
     using Mobile.CQRS.Data;
-
-    public class CommandExecutor<T> : ICommandExecutor
+    
+    public sealed class CommandExecutor<T> : ICommandExecutor
         where T : class, IAggregateRoot, new()
     {
         private readonly IRepository<T> repository;
@@ -67,7 +67,7 @@ namespace Mobile.CQRS.Domain
                 {
                     rootVersion = this.versions[root.Identity];
                 }
-    
+
                 if (rootVersion != expectedVersion)
                 {
                     throw new InvalidOperationException(string.Format("Not Expected Version {0}, {1}", expectedVersion, root.Version));

@@ -31,5 +31,7 @@ namespace Mobile.CQRS.Domain
         DateTime Timestamp { get; set; }
 
         Guid CommandId { get; set; }
+
+        bool ConflictsWith(IAggregateEvent otherEvent);
     }
 }

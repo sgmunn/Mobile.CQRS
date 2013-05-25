@@ -151,5 +151,6 @@
     <Compile Include="Domain\AggregateRegistration.cs" />
     <Compile Include="Domain\IAggregateRegistration.cs" />
     <Compile Include="Data\IScopedRepository.cs" />
+    <Compile Include="Domain\ExecutingCommandExecutor_T.cs" />
   </ItemGroup>
 </Project>

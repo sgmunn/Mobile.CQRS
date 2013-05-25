@@ -61,6 +61,17 @@ namespace Mobile.CQRS.Domain.SQLite
             return events.Select(evt => this.serializer.DeserializeFromString(evt.EventData)).ToList();
         }
 
+        public IList<IAggregateEvent> GetEventsUpToVersion(Guid rootId, int version)
+        {
+            IList<AggregateEvent> events;
+            lock (this.Connection)
+            {
+                events = this.Connection.Table<AggregateEvent>().Where(x => x.AggregateId == rootId && x.Version <= version).OrderBy(x => x.Version).ToList();
+            }
+
+            return events.Select(evt => this.serializer.DeserializeFromString(evt.EventData)).ToList();
+        }
+
         public int GetCurrentVersion(Guid rootId)
         {
             lock (this.Connection)
@@ -113,6 +124,27 @@ namespace Mobile.CQRS.Domain.SQLite
 
             lock (this.Connection)
             {
+                foreach (var evt in serializedEvents)
+                {
+                    this.Connection.Insert(evt);
+                }
+            }
+        }
+
+        public void MergeEvents(Guid rootId, IList<IAggregateEvent> events, int fromVersion)
+        {
+            var serializedEvents = events.Select(evt => new AggregateEvent{
+                AggregateId = rootId, 
+                Identity = evt.Identity,
+                Version = evt.Version,
+                CommandId = evt.CommandId,
+                EventData = this.serializer.SerializeToString(evt),
+            }).ToList();
+            
+            lock (this.Connection)
+            {
+                this.Connection.Execute(string.Format("delete from AggregateEvent where AggregateId = ? and Version > {0}", fromVersion), rootId);
+
                 foreach (var evt in serializedEvents)
                 {
                     this.Connection.Insert(evt);
