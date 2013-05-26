@@ -158,5 +158,6 @@
     <Compile Include="UnitOfWorkRepository_T.cs" />
     <Compile Include="SQLite\Domain\EventSourcingDomainContext.cs" />
     <Compile Include="Domain\SyncAgent.cs" />
+    <Compile Include="SQLite\Domain\SyncStateRepository.cs" />
   </ItemGroup>
 </Project>
