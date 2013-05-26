@@ -37,6 +37,14 @@ namespace Mobile.CQRS.SQLite.Domain
             this.Connection = connection;
             this.EventStore = new EventStore(connection, eventSerializer);
         }
+        
+        public EventSourcingDomainContext(SQLiteConnection connection, ISerializer<IAggregateEvent> eventSerializer, ISerializer<IAggregateCommand> commandSerializer)
+        {
+            this.Connection = connection;
+            this.EventStore = new EventStore(connection, eventSerializer);
+            this.PendingCommands = new PendingCommandRepository(connection, commandSerializer);
+            this.SyncState = new SyncStateRepository(connection);
+        }
 
         public SQLiteConnection Connection { get; private set; }
 
@@ -48,19 +56,6 @@ namespace Mobile.CQRS.SQLite.Domain
         protected override object GetDataConnection()
         {
             return this.Connection;
-        }
-        
-        public static ISerializer<IAggregateCommand> CommandSerializer;
-
-        protected override void HandleCommands(IList<IAggregateCommand> commands)
-        {
-            var commandRepo =            new PendingCommandRepository(this.Connection, CommandSerializer);
-
-            foreach (var cmd in commands)
-            {
-                commandRepo.StorePendingCommand(cmd);
-            }
-
         }
     }
 }

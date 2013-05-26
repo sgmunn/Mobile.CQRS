@@ -25,5 +25,7 @@ namespace Mobile.CQRS.Domain
     public interface ISyncState : IUniqueId
     {
         int LastSyncedVersion { get; set; }
+
+        string AggregateType { get; set; }
     }
 }

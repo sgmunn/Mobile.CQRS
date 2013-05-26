@@ -75,7 +75,7 @@ namespace Sample.Domain
 
         public static void DoDeleteTest()
         {
-            var context = GetDomainContext();
+            //var context = GetDomainContext();
 
             new TransactionReadModelBuilder(new SqlRepository<TransactionDataContract>(EventSourcedDB.Main, "TestId")).DeleteForAggregate(TestId);
         }

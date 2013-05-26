@@ -48,9 +48,15 @@ namespace Mobile.CQRS.Domain
             this.EventStore = eventStore;
         }
         
-        public IEventStore EventStore { get; protected set; }
-        
         public IDomainNotificationBus EventBus { get; protected set; }
+
+        // note, if we change the way our unit of work scopes are handled, then we may need to provide a fn to create these as needed
+        // rather than a property on the context
+        public IEventStore EventStore { get; protected set; }
+
+        public IRepository<ISyncState> SyncState { get; protected set; }
+
+        public IPendingCommandRepository PendingCommands { get; protected set; }
 
         public void Execute<T>(IAggregateCommand command) where T : class, IAggregateRoot, new()
         {
@@ -84,8 +90,15 @@ namespace Mobile.CQRS.Domain
             return new InMemoryUnitOfWorkScope();
         }
 
-        protected virtual void HandleCommands(IList<IAggregateCommand> commands)
+        protected virtual void EnqueueCommands(IList<IAggregateCommand> commands)
         {
+            if (this.PendingCommands != null)
+            {
+                foreach (var cmd in commands)
+                {
+                    this.PendingCommands.StorePendingCommand(cmd);
+                }
+            }
         }
 
         protected virtual void InternalExecute<T>(IList<IAggregateCommand> commands, int expectedVersion) where T : class, IAggregateRoot, new()
@@ -106,7 +119,7 @@ namespace Mobile.CQRS.Domain
             // create a unit of work eventbus to capture events
             var busBuffer = new UnitOfWorkEventBus(this.EventBus, () => {
                 // do something with the commands, store in a command queue
-                HandleCommands(commands);
+                this.EnqueueCommands(commands);
             });
 
             using (busBuffer)

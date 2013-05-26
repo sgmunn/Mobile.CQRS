@@ -114,8 +114,6 @@ namespace Sample.Domain
         
         public static Guid TestId;
 
-        public static ISerializer<IAggregateCommand> CommandSerializer;
-
         public static void InitSample()
         {
             if (Remote == null)
@@ -123,17 +121,15 @@ namespace Sample.Domain
                 TestId = Guid.NewGuid();
 
                 var eventSerializer = new DataContractSerializer<EventBase>(TypeHelpers.FindSerializableTypes(typeof(EventBase), Assembly.GetCallingAssembly()));
+                var commandSerializer = new DataContractSerializer<CommandBase>(TypeHelpers.FindSerializableTypes(typeof(CommandBase), Assembly.GetCallingAssembly()));
 
                 Remote = new EventSourcingDomainContext(RemoteDB.Main, eventSerializer);
-                Client1 = new EventSourcingDomainContext(Client1DB.Main, eventSerializer);
-                Client2 = new EventSourcingDomainContext(Client2DB.Main, eventSerializer);
+                Client1 = new EventSourcingDomainContext(Client1DB.Main, eventSerializer, commandSerializer);
+                Client2 = new EventSourcingDomainContext(Client2DB.Main, eventSerializer, commandSerializer);
 
                 //var registration = AggregateRegistration.ForType<EventSourcedRoot>()
                 //    .WithImmediateReadModel(c => new TransactionReadModelBuilder(new SqlRepository<TransactionDataContract>(EventSourcedDB.Main, "TestId")));
                 //context.Register(registration);
-
-                CommandSerializer = new DataContractSerializer<CommandBase>(TypeHelpers.FindSerializableTypes(typeof(CommandBase), Assembly.GetCallingAssembly()));
-                EventSourcingDomainContext.CommandSerializer = CommandSerializer;
             }
         }
         
@@ -197,11 +193,11 @@ namespace Sample.Domain
         {
             InitSample();
 
-            var mm = new MergeManager();
+            var mm = new SyncAgent();
             mm.LocalEventStore = Client1.EventStore;
-            mm.PendingCommands = new PendingCommandRepository(Client1DB.Main, CommandSerializer);
+            mm.PendingCommands = Client1.PendingCommands;
             mm.RemoteEventStore = Remote.EventStore;
-            mm.SyncState = new SyncStateRepository(Client1DB.Main);
+            mm.SyncState = Client1.SyncState;
 
             mm.SyncWithRemote<EventSourcedRoot>(TestId);
         }
@@ -210,11 +206,11 @@ namespace Sample.Domain
         {
             InitSample();
             
-            var mm = new MergeManager();
+            var mm = new SyncAgent();
             mm.LocalEventStore = Client2.EventStore;
-            mm.PendingCommands = new PendingCommandRepository(Client2DB.Main, CommandSerializer);
+            mm.PendingCommands = Client2.PendingCommands;
             mm.RemoteEventStore = Remote.EventStore;
-            mm.SyncState = new SyncStateRepository(Client2DB.Main);
+            mm.SyncState = Client2.SyncState;
 
             mm.SyncWithRemote<EventSourcedRoot>(TestId);
         }

@@ -33,10 +33,10 @@ namespace Sample.Domain
                     {
                     new StringElement("Reset", SyncSample.ResetSample),  
                     new StringElement("Create (client) 1", SyncSample.CreateRootClient1),  
-                    new StringElement("Edit on client 1", SyncSample.EditClient1),  
-                    new StringElement("Edit on client 1", SyncSample.EditClient2),  
                     new StringElement("Client 1 sync with remote", SyncSample.Client1SyncWithRemote),  
                     new StringElement("Client 2 sync with remote", SyncSample.Client2SyncWithRemote),  
+                    new StringElement("Edit on client 1", SyncSample.EditClient1),  
+                    new StringElement("Edit on client 2", SyncSample.EditClient2),  
                 });
             
             this.Root.Add
