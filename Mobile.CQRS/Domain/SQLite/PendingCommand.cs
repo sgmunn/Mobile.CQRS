@@ -1,5 +1,5 @@
 // --------------------------------------------------------------------------------------------------------------------
-// <copyright file="InMemoryPendingCommandQueue.cs" company="sgmunn">
+// <copyright file="PendingCommand.cs" company="sgmunn">
 //   (c) sgmunn 2013  
 //
 //   Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
@@ -18,39 +18,26 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace Mobile.CQRS.Domain
+namespace Mobile.CQRS.Domain.SQLite
 {
     using System;
-    using System.Collections.Generic;
-
-    public sealed class InMemoryPendingCommandQueue : IPendingCommandQueue 
+    using Mobile.CQRS.Data.SQLite;
+    
+    public sealed class PendingCommand : IUniqueId
     {
-        private readonly Queue<IAggregateCommand> queue;
+        // we need this because we want to ensure that commands are read back in the order they were written
+        [AutoIncrement]
+        [PrimaryKey]
+        public int Key { get; set; }
 
-        public InMemoryPendingCommandQueue()
-        {
-            this.queue = new Queue<IAggregateCommand>();
-        }
+        [Indexed]
+        public Guid Identity { get; set; }
 
-        public void Dispose()
-        {
-        }
+        [Indexed]
+        public Guid AggregateId { get; set; }
 
-        public IAggregateCommand PeekNextCommand(Guid rootId)
-        {
-            var result = this.queue.Count != 0 ? this.queue.Peek() : null;
-            return result;
-        }
-        
-        public IAggregateCommand DequeueNextCommand(Guid rootId)
-        {
-            var result = this.queue.Count != 0 ? this.queue.Dequeue() : null;
-            return result;
-        }
+        public Guid CommandId { get; set; }
 
-        public void PushCommand(IAggregateCommand command)
-        {
-            this.queue.Enqueue(command);
-        }
+        public string CommandData { get; set; }
     }
 }

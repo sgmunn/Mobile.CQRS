@@ -4,82 +4,17 @@ using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 
+// TODO: Use lastest SQLite with Async
 // TODO: Mobile.Mvvm view model with support for loading changes while being editing
 
 using System.Reflection;
 
-/*
- * Sync!
- * 
- * 2 clients updating a common aggregate
- * the common event store will have to support concurrency
- * thus, when we merge we will either incorporate the remote events with our own, or we will discard our events
- *  -- both options require us to be able to rebuild a read model from scratch
- *  -- 
- * 
- * locally read models are always based on our local events
- * we update a sync event id to indicate which events afterwards need to be merged
- * 
- * IAggregateEvent.ConflictsWith(IAggregateEvent)
- * 
- * we might need a pending events queue
- * 
- * if no conflicts, 
- *   add server events to eventstore from sync verion
- *   rebuild read models
- *   rerun commands
- *     store events, update read models
- * 
- * do we need to add an autoinc to the eventstore to ensure a global sequence??
- * likewise PendingCommandQueue
- * 
- * for events from the remote server, do we simply create an event store for the remote events??
- *  -- easy to work with, duplicates data???
- *  -- add an extra method to delelete prior to an event id
- * RemoteEventContract and RemoteEventStore, 
- * 
- * -- try it out like that.
- * 
- * 
- * 
- * we will need a queue of pending events, which we need to get in order grouped by command id and aggregate
- * we will need a queue of pending commands, which we need to get in order
- * we will need to be able to rebuild read models
- *      -- how do we delete all the read models for a given aggregate
- *      -- this will have to be a method on the read model builder
- *      -- we will need to publish read model changes, deletes, changes, additions etc and there could be lots depending on
- *         the read model (eg transactions / item lines)
- * 
- * background process to get events from last synced version + events in queue for a given aggregate
- *      -- store in pending events
- * 
- * when we execure commands, we need to store the command in the queue
- * 
- * we will need to be able to publish more than one event at a time to a bus I think?
- * 
- */
 using Mobile.CQRS.Data; 
 
 namespace Mobile.CQRS.Domain
 {
-    public interface ISyncState : IUniqueId
-    {
-        int LastSyncedVersion { get; }
 
-    }
 
-    public interface IPendingCommands : IRepository<IAggregateCommand>
-    {
-        IList<IAggregateCommand> PendingCommandsForAggregate(Guid id);
-        void RemovePendingCommands(IList<IAggregateCommand> commands);
-    }
-
-    public class ConflictException : Exception
-    {
-        public ConflictException(string message) : base(message)
-        {
-        }
-    }
 
     public class MergeManager 
     {
@@ -101,7 +36,7 @@ namespace Mobile.CQRS.Domain
 
         public IRepository<ISyncState> SyncState { get; private set; }
         
-        public IPendingCommands PendingCommands { get; private set; }
+        public IPendingCommandRepository PendingCommands { get; private set; }
 
         // do this in a unit of work
         public bool SyncWithRemote<T>(Guid aggregateId) where T : class, IAggregateRoot, new()
@@ -141,6 +76,9 @@ namespace Mobile.CQRS.Domain
                 }
             }
 
+            // TODO: try to update the remote store last, we need our local commit to succeed if it succeeds
+            // otherwise, what state are we in??
+
             if (pendingEvents.Count > 0)
             {
                 var currentRemoteVersion = newRemoteEvents.Count > 0 ? newRemoteEvents.Last().Version : syncState.LastSyncedVersion;
@@ -148,7 +86,8 @@ namespace Mobile.CQRS.Domain
                 this.RemoteEventStore.SaveEvents(aggregateId, pendingEvents, currentRemoteVersion);
             }
 
-            this.PendingCommands.RemovePendingCommands(pendingCommands);
+            // TODO: can we delete all and rely on the transaction rolling back if concurrency?
+            this.PendingCommands.RemovePendingCommands(aggregateId);
 
             newRemoteEvents.AddRange(pendingEvents);
 
@@ -157,6 +96,9 @@ namespace Mobile.CQRS.Domain
 
             // merge events back to local event store
             this.LocalEventStore.MergeEvents(aggregateId, newRemoteEvents, currentVersion, syncState.LastSyncedVersion);
+
+            syncState.LastSyncedVersion = newRemoteEvents.Last().Version;
+            this.SyncState.Save(syncState);
 
             // rebuild .. if we had no pending commands, then we can simply do a build not a rebuild
             // return true for full rebuild, false for partial, but from what version

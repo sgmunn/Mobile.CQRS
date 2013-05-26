@@ -40,6 +40,7 @@
   <ItemGroup>
     <Folder Include="Resources\" />
     <Folder Include="Serialization\" />
+    <Folder Include="SQLite\" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>
@@ -143,8 +144,6 @@
     <Compile Include="Data\IQuery_T.cs" />
     <Compile Include="Data\SQLite\SqlQuery_T.cs" />
     <Compile Include="Data\ISubscription.cs" />
-    <Compile Include="Domain\IPendingCommandQueue.cs" />
-    <Compile Include="Domain\InMemoryPendingCommandQueue.cs" />
     <Compile Include="Domain\ICommandExecutor.cs" />
     <Compile Include="_New.cs" />
     <Compile Include="Domain\AggregateRegistration.cs" />
@@ -152,5 +151,11 @@
     <Compile Include="Data\IScopedRepository.cs" />
     <Compile Include="Domain\ExecutingCommandExecutor.cs" />
     <Compile Include="Domain\SQLite\IAggregateManifestRepository.cs" />
+    <Compile Include="Domain\SQLite\PendingCommand.cs" />
+    <Compile Include="Domain\SQLite\SyncState.cs" />
+    <Compile Include="Domain\SQLite\PendingCommandRepository.cs" />
+    <Compile Include="Domain\IPendingCommandRepository.cs" />
+    <Compile Include="Domain\ISyncState.cs" />
+    <Compile Include="Domain\ConflictException.cs" />
   </ItemGroup>
 </Project>

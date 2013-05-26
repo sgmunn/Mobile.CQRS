@@ -1,5 +1,5 @@
 // --------------------------------------------------------------------------------------------------------------------
-// <copyright file="IPendingCommandQueue.cs" company="sgmunn">
+// <copyright file="ConflictException.cs" company="sgmunn">
 //   (c) sgmunn 2013  
 //
 //   Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
@@ -21,11 +21,11 @@
 namespace Mobile.CQRS.Domain
 {
     using System;
-    
-    public interface IPendingCommandQueue : IDisposable
+
+    public class ConflictException : Exception
     {
-        IAggregateCommand PeekNextCommand(Guid rootId);
-        IAggregateCommand DequeueNextCommand(Guid rootId);
-        void PushCommand(IAggregateCommand command);
+        public ConflictException(string message) : base(message)
+        {
+        }
     }
 }
