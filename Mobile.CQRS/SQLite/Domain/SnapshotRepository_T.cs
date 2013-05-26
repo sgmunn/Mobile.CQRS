@@ -23,7 +23,6 @@ namespace Mobile.CQRS.SQLite.Domain
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using Mobile.CQRS.Data;
     using Mobile.CQRS.Domain;
 
     public class SnapshotRepository<T> : ISnapshotRepository 

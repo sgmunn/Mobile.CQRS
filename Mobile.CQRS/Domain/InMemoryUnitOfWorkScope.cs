@@ -22,7 +22,6 @@ namespace Mobile.CQRS.Domain
 {
     using System;
     using System.Collections.Generic;
-    using Mobile.CQRS.Data;
 
     public sealed class InMemoryUnitOfWorkScope : IUnitOfWorkScope
     {

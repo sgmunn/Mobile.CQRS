@@ -25,8 +25,6 @@ namespace Sample.Domain
     using System;
     using System.Reflection;
     using Mobile.CQRS.Domain;
-    using Mobile.CQRS.SQLite.Domain;
-    using Mobile.CQRS.Data;
     using Mobile.CQRS.Reactive;
 
     public static class EventSourceSamples

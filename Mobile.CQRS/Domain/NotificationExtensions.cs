@@ -21,7 +21,6 @@
 namespace Mobile.CQRS.Domain
 {
     using System;
-    using Mobile.CQRS.Data;
 
     public static class NotificationExtensions
     {

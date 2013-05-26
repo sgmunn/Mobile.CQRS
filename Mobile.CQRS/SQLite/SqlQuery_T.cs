@@ -22,7 +22,6 @@ namespace Mobile.CQRS.SQLite
 {
     using System;
     using System.Collections.Generic;
-    using Mobile.CQRS.Data;
 
     /// <summary>
     /// Represents a query that returns instances of TState.

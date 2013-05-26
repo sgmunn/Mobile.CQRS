@@ -23,7 +23,6 @@ namespace Mobile.CQRS.Domain
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using Mobile.CQRS.Data;
     using Mobile.CQRS.Reactive;
 
     public class AggregateRepository<T> : IAggregateRepository<T>, IObservableRepository 

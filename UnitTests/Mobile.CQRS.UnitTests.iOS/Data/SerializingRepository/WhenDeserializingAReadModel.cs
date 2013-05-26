@@ -20,7 +20,6 @@
 
 using System;
 using NUnit.Framework;
-using Mobile.CQRS.Data;
 using MonoKit.Testing;
 using Mobile.CQRS.Serialization;
 

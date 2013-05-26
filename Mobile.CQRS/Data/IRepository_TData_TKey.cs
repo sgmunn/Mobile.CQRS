@@ -18,7 +18,7 @@
 //  </copyright>
 //  --------------------------------------------------------------------------------------------------------------------
 
-namespace Mobile.CQRS.Data
+namespace Mobile.CQRS
 {
     using System;
     using System.Collections.Generic;

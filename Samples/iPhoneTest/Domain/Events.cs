@@ -23,7 +23,6 @@ namespace Sample.Domain
 {
     using System;
     using System.Runtime.Serialization;
-    using Mobile.CQRS.Data;
     using Mobile.CQRS.Domain;
 
     //[]

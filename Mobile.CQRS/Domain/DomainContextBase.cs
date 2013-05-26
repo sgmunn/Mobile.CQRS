@@ -23,7 +23,6 @@ namespace Mobile.CQRS.Domain
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using Mobile.CQRS.Data;
 
     public abstract class DomainContextBase : IDomainContext
     {

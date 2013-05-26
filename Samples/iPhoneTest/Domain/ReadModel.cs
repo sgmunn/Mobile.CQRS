@@ -24,7 +24,6 @@ namespace Sample.Domain
 {
     using System;
     using Mobile.CQRS;
-    using Mobile.CQRS.Data;
     using Mobile.CQRS.SQLite;
     using Mobile.CQRS.Domain;
 

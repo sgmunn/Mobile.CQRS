@@ -18,12 +18,11 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace Mobile.CQRS.Data
+namespace Mobile.CQRS
 {
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using Mobile.CQRS.Data;
 
     public class UnitOfWorkRepository<T> : IUnitOfWorkRepository<T> 
         where T : IUniqueId

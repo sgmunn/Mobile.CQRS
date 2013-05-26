@@ -21,7 +21,6 @@
 namespace Mobile.CQRS.SQLite.Domain
 {
     using System;
-    using Mobile.CQRS.Data;
     using Mobile.CQRS.Domain;
 
     public sealed class AggregateSnapshot : ISnapshot, ISerializedReadModel

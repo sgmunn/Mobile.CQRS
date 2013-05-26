@@ -9,7 +9,6 @@ using System.Runtime.CompilerServices;
 
 using System.Reflection;
 
-using Mobile.CQRS.Data; 
 
 namespace Mobile.CQRS.Domain
 {

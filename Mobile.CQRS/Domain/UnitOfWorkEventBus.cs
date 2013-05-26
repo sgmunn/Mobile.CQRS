@@ -22,7 +22,6 @@ namespace Mobile.CQRS.Domain
 {
     using System;
     using System.Collections.Generic;
-    using Mobile.CQRS.Data;
 
     /// <summary>
     /// An event bus that performs all publishing in a single unit of work

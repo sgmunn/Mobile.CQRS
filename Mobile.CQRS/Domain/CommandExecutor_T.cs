@@ -24,7 +24,6 @@ namespace Mobile.CQRS.Domain
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Linq;
-    using Mobile.CQRS.Data;
     
     public sealed class CommandExecutor<T> : ICommandExecutor
         where T : class, IAggregateRoot, new()

@@ -22,7 +22,6 @@ namespace Mobile.CQRS.SQLite.Domain
 {
     using System;
     using Mobile.CQRS.Domain;
-    using Mobile.CQRS.Data;
     using Mobile.CQRS.Serialization;
 
     public class SqlDomainContext : DomainContextBase

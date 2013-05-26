@@ -22,7 +22,6 @@ namespace Mobile.CQRS.Domain
 {
     using System;
     using System.Collections.Generic;
-    using Mobile.CQRS.Data;
     using Mobile.CQRS.Reactive;
 
     public abstract class ReadModelBuilder<T> : IReadModelBuilder<T>

@@ -1,6 +1,5 @@
 using System;
 using NUnit.Framework;
-using Mobile.CQRS.Data;
 
 namespace Mobile.CQRS.Domain.UnitTests.Repositories.EventSourcing
 {

@@ -19,7 +19,6 @@
 // --------------------------------------------------------------------------------------------------------------------
 
 using System;
-using Mobile.CQRS.Data;
 using System.Runtime.Serialization;
 
 namespace Mobile.CQRS.Core.UnitTests.Data
