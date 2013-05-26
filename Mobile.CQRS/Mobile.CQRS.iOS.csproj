@@ -54,14 +54,6 @@
     </MonoDevelop>
   </ProjectExtensions>
   <ItemGroup>
-    <Compile Include="Data\IRepository_T.cs" />
-    <Compile Include="Data\IRepository_TData_TKey.cs" />
-    <Compile Include="Data\IUnitOfWork.cs" />
-    <Compile Include="Data\IUnitOfWorkScope.cs" />
-    <Compile Include="Data\IdDictionaryRepository_T.cs" />
-    <Compile Include="Data\IdLock.cs" />
-    <Compile Include="Data\SaveResult.cs" />
-    <Compile Include="Data\UnitOfWorkRepository_T.cs" />
     <Compile Include="Domain\CommandExecutor_T.cs" />
     <Compile Include="Domain\ConcurrencyException.cs" />
     <Compile Include="Domain\DomainCommandExecutor_T.cs" />
@@ -98,19 +90,14 @@
     <Compile Include="Reactive\Unit.cs" />
     <Compile Include="MethodExecutor.cs" />
     <Compile Include="IUniqueId.cs" />
-    <Compile Include="Data\ModelChangeKind.cs" />
-    <Compile Include="Data\IUnitOfWorkRepository_T.cs" />
     <Compile Include="Domain\InMemoryUnitOfWorkScope.cs" />
     <Compile Include="Domain\DomainContextBase.cs" />
     <Compile Include="Domain\AggregateRootBase.cs" />
     <Compile Include="Domain\AggregateRootBase_TState.cs" />
-    <Compile Include="Data\DictionaryRepositoryBase_T.cs" />
     <Compile Include="Domain\DomainNotificationBusExtensions.cs" />
     <Compile Include="Domain\ObservableDomainNotificationBus.cs" />
     <Compile Include="IEvent.cs" />
     <Compile Include="INotification.cs" />
-    <Compile Include="Data\IModelChangeEvent.cs" />
-    <Compile Include="Data\ModelChangeEvent.cs" />
     <Compile Include="Domain\NotificationExtensions.cs" />
     <Compile Include="Serialization\ISerializer_T.cs" />
     <Compile Include="Serialization\TypeHelpers.cs" />
@@ -122,20 +109,14 @@
     <Compile Include="Domain\IDomainTopic.cs" />
     <Compile Include="Domain\IObservableRepository.cs" />
     <Compile Include="Domain\ObservableRepository_T.cs" />
-    <Compile Include="Data\SerializingRepository_TReadModel_TSerialized.cs" />
-    <Compile Include="Data\ISerializedReadModel.cs" />
     <Compile Include="Domain\IEventStore.cs" />
     <Compile Include="Domain\InMemoryEventStore_T.cs" />
     <Compile Include="Domain\UnsupportedSnapshotException.cs" />
     <Compile Include="Domain\AggregateRepository_T.cs" />
-    <Compile Include="Data\ISpecification_T.cs" />
-    <Compile Include="Data\IQuery_T.cs" />
-    <Compile Include="Data\ISubscription.cs" />
     <Compile Include="Domain\ICommandExecutor.cs" />
     <Compile Include="_New.cs" />
     <Compile Include="Domain\AggregateRegistration.cs" />
     <Compile Include="Domain\IAggregateRegistration.cs" />
-    <Compile Include="Data\IScopedRepository.cs" />
     <Compile Include="Domain\ExecutingCommandExecutor.cs" />
     <Compile Include="Domain\IPendingCommandRepository.cs" />
     <Compile Include="Domain\ISyncState.cs" />
@@ -156,5 +137,24 @@
     <Compile Include="SQLite\Domain\SnapshotRepository_T.cs" />
     <Compile Include="SQLite\Domain\SqlDomainContext.cs" />
     <Compile Include="SQLite\Domain\SyncState.cs" />
+    <Compile Include="DictionaryRepositoryBase_T.cs" />
+    <Compile Include="IdDictionaryRepository_T.cs" />
+    <Compile Include="IdLock.cs" />
+    <Compile Include="IModelChangeEvent.cs" />
+    <Compile Include="IQuery_T.cs" />
+    <Compile Include="IRepository_T.cs" />
+    <Compile Include="IRepository_TData_TKey.cs" />
+    <Compile Include="IScopedRepository.cs" />
+    <Compile Include="ISerializedReadModel.cs" />
+    <Compile Include="ISpecification_T.cs" />
+    <Compile Include="ISubscription.cs" />
+    <Compile Include="IUnitOfWork.cs" />
+    <Compile Include="IUnitOfWorkRepository_T.cs" />
+    <Compile Include="IUnitOfWorkScope.cs" />
+    <Compile Include="ModelChangeEvent.cs" />
+    <Compile Include="ModelChangeKind.cs" />
+    <Compile Include="SaveResult.cs" />
+    <Compile Include="SerializingRepository_TReadModel_TSerialized.cs" />
+    <Compile Include="UnitOfWorkRepository_T.cs" />
   </ItemGroup>
 </Project>
