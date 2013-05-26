@@ -17,6 +17,7 @@
 //   IN THE SOFTWARE.
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
+using System.Collections.Generic;
 
 namespace Mobile.CQRS.SQLite.Domain
 {
@@ -47,6 +48,19 @@ namespace Mobile.CQRS.SQLite.Domain
         protected override object GetDataConnection()
         {
             return this.Connection;
+        }
+        
+        public static ISerializer<IAggregateCommand> CommandSerializer;
+
+        protected override void HandleCommands(IList<IAggregateCommand> commands)
+        {
+            var commandRepo =            new PendingCommandRepository(this.Connection, CommandSerializer);
+
+            foreach (var cmd in commands)
+            {
+                commandRepo.StorePendingCommand(cmd);
+            }
+
         }
     }
 }

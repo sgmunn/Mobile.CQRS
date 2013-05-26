@@ -84,6 +84,10 @@ namespace Mobile.CQRS.Domain
             return new InMemoryUnitOfWorkScope();
         }
 
+        protected virtual void HandleCommands(IList<IAggregateCommand> commands)
+        {
+        }
+
         protected virtual void InternalExecute<T>(IList<IAggregateCommand> commands, int expectedVersion) where T : class, IAggregateRoot, new()
         {
             var registration = this.registrations.FirstOrDefault(x => x.AggregateType == typeof(T));
@@ -97,10 +101,12 @@ namespace Mobile.CQRS.Domain
 
             var aggregateRepo = new AggregateRepository<T>(this.EventStore, snapshotRepo);
 
+
+
             // create a unit of work eventbus to capture events
             var busBuffer = new UnitOfWorkEventBus(this.EventBus, () => {
                 // do something with the commands, store in a command queue
-
+                HandleCommands(commands);
             });
 
             using (busBuffer)

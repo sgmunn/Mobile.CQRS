@@ -81,12 +81,13 @@ namespace Mobile.CQRS.Domain
             // we need to do a full rebuild if we have previously synced with remote and we merged in any remote events
             var needsFullRebuild = syncState.LastSyncedVersion > 0 && newRemoteEvents.Count != 0;
 
-            var newVersion = pendingEvents.Last().Version;
+            // if we're receiving an aggregate with changes and we have no changes, this fails
+            var newVersion = pendingEvents.Count > 0 ? pendingEvents.Last().Version : currentRemoteVersion;
 
             // merge remote events into our eventstore - including our pending events
             if (newRemoteEvents.Count != 0)
             {
-                this.LocalEventStore.MergeEvents(aggregateId, newCommonHistory.Concat(pendingEvents).ToList(), currentVersion, newVersion);
+                this.LocalEventStore.MergeEvents(aggregateId, newRemoteEvents.Concat(pendingEvents).ToList(), currentVersion, syncState.LastSyncedVersion);
             }
 
             // update sync state

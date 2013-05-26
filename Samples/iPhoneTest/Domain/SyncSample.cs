@@ -133,6 +133,7 @@ namespace Sample.Domain
                 //context.Register(registration);
 
                 CommandSerializer = new DataContractSerializer<CommandBase>(TypeHelpers.FindSerializableTypes(typeof(CommandBase), Assembly.GetCallingAssembly()));
+                EventSourcingDomainContext.CommandSerializer = CommandSerializer;
             }
         }
         
@@ -211,9 +212,9 @@ namespace Sample.Domain
             
             var mm = new MergeManager();
             mm.LocalEventStore = Client2.EventStore;
-            mm.PendingCommands = null;
+            mm.PendingCommands = new PendingCommandRepository(Client2DB.Main, CommandSerializer);
             mm.RemoteEventStore = Remote.EventStore;
-            mm.SyncState = null;
+            mm.SyncState = new SyncStateRepository(Client2DB.Main);
 
             mm.SyncWithRemote<EventSourcedRoot>(TestId);
         }
