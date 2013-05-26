@@ -98,8 +98,6 @@
     <Compile Include="Reactive\Unit.cs" />
     <Compile Include="MethodExecutor.cs" />
     <Compile Include="IUniqueId.cs" />
-    <Compile Include="Data\DataChangeEvent_.cs" />
-    <Compile Include="Data\DataChangeEvent_T_.cs" />
     <Compile Include="Data\ModelChangeKind.cs" />
     <Compile Include="Data\IUnitOfWorkRepository_T.cs" />
     <Compile Include="Domain\InMemoryUnitOfWorkScope.cs" />
