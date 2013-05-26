@@ -1,5 +1,5 @@
 // --------------------------------------------------------------------------------------------------------------------
-// <copyright file="CommandExecutor_T.cs" company="sgmunn">
+// <copyright file="CommandExecutor.cs" company="sgmunn">
 //   (c) sgmunn 2012  
 //
 //   Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
@@ -22,17 +22,15 @@ namespace Mobile.CQRS.Domain
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics;
     using System.Linq;
     
-    public sealed class CommandExecutor<T> : ICommandExecutor
-        where T : class, IAggregateRoot, new()
+    public sealed class CommandExecutor : ICommandExecutor
     {
-        private readonly IRepository<T> repository;
+        private readonly IAggregateRepository repository;
 
         private readonly Dictionary<Guid, int> versions;
 
-        public CommandExecutor(IRepository<T> aggregateRepository)
+        public CommandExecutor(IAggregateRepository aggregateRepository)
         {
             this.repository = aggregateRepository;
             this.versions = new Dictionary<Guid, int>();
@@ -61,6 +59,10 @@ namespace Mobile.CQRS.Domain
 
             if (expectedVersion != 0)
             {
+                // if we using this command executor multiple times for the same aggregate, when we invoke it we will often have the 
+                // verion of the roor prior to the first invocation. Consequently when we check the expected version the second time, 
+                // we have a different version and we get an exception. This is supposed to handle that case by remembering what the 
+                // version of the root was when we first saw it.
                 var rootVersion = root.Version;
                 if (this.versions.ContainsKey(root.Identity))
                 {
@@ -73,32 +75,14 @@ namespace Mobile.CQRS.Domain
                 }
             }
 
-            foreach (var cmd in commands)
-            {
-                this.Execute(root, cmd);
-            }
+            var exec = new ExecutingCommandExecutor(root);
+            exec.Execute(commands, expectedVersion);
 
             this.repository.Save(root);
 
             if (expectedVersion != 0 && !this.versions.ContainsKey(root.Identity))
             {
                 this.versions[root.Identity] = expectedVersion;
-            }
-        }
-
-        private void Execute(object aggregate, object command)
-        {
-            try
-            {
-                if (!MethodExecutor.ExecuteMethod(aggregate, command))
-                {
-                    throw new MissingMethodException(string.Format("Aggregate {0} does not support a method that can be called with {1}", aggregate, command));
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine("Error executing command\n{0}", ex);
-                throw;
             }
         }
     }

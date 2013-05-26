@@ -1,5 +1,5 @@
 // --------------------------------------------------------------------------------------------------------------------
-// <copyright file="DomainCommandExecutor_T.cs" company="sgmunn">
+// <copyright file="DomainCommandExecutor.cs" company="sgmunn">
 //   (c) sgmunn 2012  
 //
 //   Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
@@ -25,18 +25,17 @@ namespace Mobile.CQRS.Domain
     using System.Linq;
     using Mobile.CQRS.Reactive;
 
-    public class DomainCommandExecutor<T> : ICommandExecutor 
-        where T : class, IAggregateRoot, new()
+    public class DomainCommandExecutor : ICommandExecutor 
     {
         private readonly Func<IUnitOfWorkScope> scopeFactory;
 
-        private readonly AggregateRepository<T> repository;
+        private readonly AggregateRepository repository;
 
         private readonly IList<IReadModelBuilder> readModelBuilders;
 
         private readonly IDomainNotificationBus eventBus;
 
-        public DomainCommandExecutor(Func<IUnitOfWorkScope> scopeFactory, AggregateRepository<T> repository, IList<IReadModelBuilder> readModelBuilders, IDomainNotificationBus eventBus)
+        public DomainCommandExecutor(Func<IUnitOfWorkScope> scopeFactory, AggregateRepository repository, IList<IReadModelBuilder> readModelBuilders, IDomainNotificationBus eventBus)
         {
             if (scopeFactory == null)
                 throw new ArgumentNullException("scopeFactory");
@@ -63,7 +62,7 @@ namespace Mobile.CQRS.Domain
 
                 // create a bus that will build read models on commit of the events that are passed to it
                 // it will pass events that it captured plus any events from updating the read models to eventBus
-                var readModelBuilderBus = new ReadModelBuildingEventBus<T>(this.readModelBuilders, this.eventBus);
+                var readModelBuilderBus = new ReadModelBuildingEventBus(this.readModelBuilders, this.eventBus);
 
                 // capture the aggregate's events and pipe them into the read model builder when aggregateEvents is committed
                 var aggregateEvents = new UnitOfWorkEventBus(readModelBuilderBus);
@@ -72,7 +71,7 @@ namespace Mobile.CQRS.Domain
                 lifetime.Add(this.repository.Changes.Subscribe(aggregateEvents.Publish));
 
                 // create a unit of work repo to wrap the real aggregate repository, also caches the aggregate for multiple command executions
-                var repo = new UnitOfWorkRepository<T>(this.repository);
+//                var repo = new UnitOfWorkRepository<T>(this.repository);
 
                 // add them in this order,
                 // on commit of the scope, the repo will attempt to commit the aggregate's events and will then raise
@@ -80,12 +79,13 @@ namespace Mobile.CQRS.Domain
                 // then aggregateEvents will be committed which will pass them to readModelBuilderBus
                 // readModelBuilderBus will then be commited, which will then build read models and add more events to busBuffer
                 // finally, if we get out of the scope, busBUffer will publish all the caught events
-                scope.Add(repo);
+//                scope.Add(repo);
                 scope.Add(aggregateEvents);
                 scope.Add(readModelBuilderBus);
             
                 // execute the commands
-                var cmd = new CommandExecutor<T>(repo);
+//                var cmd = new CommandExecutor<T>(repo);
+                var cmd = new CommandExecutor(this.repository);
                 cmd.Execute(commands.ToList(), expectedVersion);
             
                 // commit the changes made to the aggregate repo - eventstore and snapshots

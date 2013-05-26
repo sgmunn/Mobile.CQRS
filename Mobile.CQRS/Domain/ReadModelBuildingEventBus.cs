@@ -1,5 +1,5 @@
 // --------------------------------------------------------------------------------------------------------------------
-// <copyright file="ReadModelBuildingEventBus_T.cs" company="sgmunn">
+// <copyright file="ReadModelBuildingEventBus.cs" company="sgmunn">
 //   (c) sgmunn 2012  
 //
 //   Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
@@ -23,8 +23,7 @@ namespace Mobile.CQRS.Domain
     using System;
     using System.Collections.Generic;
 
-    public class ReadModelBuildingEventBus<T> : UnitOfWorkEventBus 
-        where T : IAggregateRoot, new()
+    public class ReadModelBuildingEventBus : UnitOfWorkEventBus 
     {
         private readonly IList<IReadModelBuilder> builders;
 

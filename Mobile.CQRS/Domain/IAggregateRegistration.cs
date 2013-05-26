@@ -26,6 +26,7 @@ namespace Mobile.CQRS.Domain
     public interface IAggregateRegistration
     {
         Type AggregateType { get; }
+        IAggregateRoot New();
         IList<IReadModelBuilder> ReadModels(object connection);
         ISnapshotRepository Snapshot(object connection);
     }

@@ -54,12 +54,9 @@
     </MonoDevelop>
   </ProjectExtensions>
   <ItemGroup>
-    <Compile Include="Domain\CommandExecutor_T.cs" />
     <Compile Include="Domain\ConcurrencyException.cs" />
-    <Compile Include="Domain\DomainCommandExecutor_T.cs" />
     <Compile Include="Domain\IAggregateCommand.cs" />
     <Compile Include="Domain\IAggregateEvent.cs" />
-    <Compile Include="Domain\IAggregateRepository_T.cs" />
     <Compile Include="Domain\IAggregateRoot.cs" />
     <Compile Include="Domain\IDomainContext.cs" />
     <Compile Include="Domain\IEventSourced.cs" />
@@ -70,7 +67,6 @@
     <Compile Include="Domain\ISnapshotSupport.cs" />
     <Compile Include="Domain\InMemorySnapshotRepository_T.cs" />
     <Compile Include="Domain\ReadModelBuilder.cs" />
-    <Compile Include="Domain\ReadModelBuildingEventBus_T.cs" />
     <Compile Include="Domain\UnitOfWorkEventBus.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Reactive\AnonymousDisposable.cs" />
@@ -110,9 +106,7 @@
     <Compile Include="Domain\IObservableRepository.cs" />
     <Compile Include="Domain\ObservableRepository_T.cs" />
     <Compile Include="Domain\IEventStore.cs" />
-    <Compile Include="Domain\InMemoryEventStore_T.cs" />
     <Compile Include="Domain\UnsupportedSnapshotException.cs" />
-    <Compile Include="Domain\AggregateRepository_T.cs" />
     <Compile Include="Domain\ICommandExecutor.cs" />
     <Compile Include="_New.cs" />
     <Compile Include="Domain\AggregateRegistration.cs" />
@@ -159,5 +153,11 @@
     <Compile Include="SQLite\Domain\EventSourcingDomainContext.cs" />
     <Compile Include="Domain\SyncAgent.cs" />
     <Compile Include="SQLite\Domain\SyncStateRepository.cs" />
+    <Compile Include="Domain\ReadModelBuildingEventBus.cs" />
+    <Compile Include="Domain\IAggregateRepository.cs" />
+    <Compile Include="Domain\AggregateRepository.cs" />
+    <Compile Include="Domain\CommandExecutor.cs" />
+    <Compile Include="Domain\InMemoryEventStore.cs" />
+    <Compile Include="Domain\DomainCommandExecutor.cs" />
   </ItemGroup>
 </Project>

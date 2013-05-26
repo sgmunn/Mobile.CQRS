@@ -112,7 +112,7 @@ namespace Mobile.CQRS.Domain
                 readModelBuilders.AddRange(registration.ReadModels(this.GetDataConnection()));
             }
 
-            var aggregateRepo = new AggregateRepository<T>(this.EventStore, snapshotRepo);
+            var aggregateRepo = new AggregateRepository(() => new T(), this.EventStore, snapshotRepo);
 
 
 
@@ -130,7 +130,7 @@ namespace Mobile.CQRS.Domain
                 // the events that are published to busBuffer are 'Publish'ed during the life of the unit of work
                 // in here we can push the commands that we are given to execute if we want, on first publish this will transactional
 
-                var executor = new DomainCommandExecutor<T>(this.BeginUnitOfWork, aggregateRepo, readModelBuilders, busBuffer);
+                var executor = new DomainCommandExecutor(this.BeginUnitOfWork, aggregateRepo, readModelBuilders, busBuffer);
                 executor.Execute(commands, expectedVersion);
 
                 busBuffer.Commit();

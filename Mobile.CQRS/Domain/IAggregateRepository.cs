@@ -1,5 +1,5 @@
 // --------------------------------------------------------------------------------------------------------------------
-// <copyright file="IAggregateRepository_T.cs" company="sgmunn">
+// <copyright file="IAggregateRepository.cs" company="sgmunn">
 //   (c) sgmunn 2012  
 //
 //   Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
@@ -22,8 +22,10 @@ namespace Mobile.CQRS.Domain
 {
     using System;
 
-    public interface IAggregateRepository<T> : IRepository<T> 
-        where T : IAggregateRoot, new()
+    public interface IAggregateRepository
     {
+        IAggregateRoot New();
+        IAggregateRoot GetById(Guid id);
+        SaveResult Save(IAggregateRoot instance);
     }
 }

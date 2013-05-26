@@ -1,5 +1,5 @@
 // --------------------------------------------------------------------------------------------------------------------
-// <copyright file="AggregateRepository_T.cs" company="sgmunn">
+// <copyright file="AggregateRepository.cs" company="sgmunn">
 //   (c) sgmunn 2012  
 //
 //   Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
@@ -25,22 +25,49 @@ namespace Mobile.CQRS.Domain
     using System.Linq;
     using Mobile.CQRS.Reactive;
 
-    public class AggregateRepository<T> : IAggregateRepository<T>, IObservableRepository 
-        where T : IAggregateRoot, new()
+    public sealed class AggregateRepository : IAggregateRepository, IObservableRepository
     {
+        private readonly Func<IAggregateRoot> factory;
+
         private readonly IEventStore eventStore;
 
         private readonly ISnapshotRepository snapshotRepository;
 
         private readonly Subject<IDomainNotification> changes;
-
-        public AggregateRepository(IEventStore eventStore, ISnapshotRepository snapshotRepository)
+        
+        public AggregateRepository(Func<IAggregateRoot> factory, IEventStore eventStore)
         {
-            // we have to have either an eventStore or a snapshotRepository
-            if (eventStore == null && snapshotRepository == null)
-                throw new InvalidOperationException("An EventStore or Snapshot Repository is required");
+            if (factory == null)
+                throw new ArgumentNullException("factory");
+            if (eventStore == null)
+                throw new ArgumentNullException("eventStore");
 
             this.changes = new Subject<IDomainNotification>();
+            this.factory = factory;
+            this.eventStore = eventStore;
+        }
+        
+        public AggregateRepository(Func<IAggregateRoot> factory, ISnapshotRepository snapshotRepository)
+        {
+            if (factory == null)
+                throw new ArgumentNullException("factory");
+            if (snapshotRepository == null)
+                throw new ArgumentNullException("snapshotRepository");
+
+            this.changes = new Subject<IDomainNotification>();
+            this.factory = factory;
+            this.snapshotRepository = snapshotRepository;
+        }
+
+        public AggregateRepository(Func<IAggregateRoot> factory, IEventStore eventStore, ISnapshotRepository snapshotRepository)
+        {
+            if (factory == null)
+                throw new ArgumentNullException("factory");
+            if (eventStore == null && snapshotRepository == null)
+                throw new InvalidOperationException("eventStore or snapshotRepository is required");
+
+            this.changes = new Subject<IDomainNotification>();
+            this.factory = factory;
             this.eventStore = eventStore;
             this.snapshotRepository = snapshotRepository;
         }
@@ -53,12 +80,12 @@ namespace Mobile.CQRS.Domain
             }
         }
 
-        public T New()
+        public IAggregateRoot New()
         {
-            return new T();
+            return this.factory();
         }
 
-        public T GetById(Guid id)
+        public IAggregateRoot GetById(Guid id)
         {
             var snapshot = this.GetSnapshot(id);
             var version = snapshot != null ? snapshot.Version : 0;
@@ -66,7 +93,7 @@ namespace Mobile.CQRS.Domain
 
             if (version == 0 && eventsAfterSnapshot.Count == 0)
             {
-                return default(T);
+                return null;
             }
 
             var result = this.New();
@@ -87,12 +114,7 @@ namespace Mobile.CQRS.Domain
             return result;
         }
 
-        public IList<T> GetAll()
-        {
-            throw new NotSupportedException();
-        }
-
-        public SaveResult Save(T instance)
+        public SaveResult Save(IAggregateRoot instance)
         {
             if (!instance.UncommittedEvents.Any())
             {
@@ -107,20 +129,10 @@ namespace Mobile.CQRS.Domain
             var snapshotChange = this.SaveSnapshot(instance, expectedVersion);
             this.SaveEvents(instance, expectedVersion);
 
-            this.PublishEvents(instance.UncommittedEvents, snapshotChange);
+            this.PublishEvents(instance, snapshotChange);
             instance.Commit();
 
             return expectedVersion == 0 ? SaveResult.Added : SaveResult.Updated;
-        }
-
-        public void Delete(T instance)
-        {
-            throw new NotSupportedException();
-        }
-
-        public void DeleteId(Guid id)
-        {
-            throw new NotSupportedException();
         }
 
         public void Dispose()
@@ -136,11 +148,11 @@ namespace Mobile.CQRS.Domain
             }
         }
         
-        private void PublishEvents(IEnumerable<IAggregateEvent> events, IDomainNotification snapshotChange)
+        private void PublishEvents(IAggregateRoot instance, IDomainNotification snapshotChange)
         {
-            foreach (var evt in events.ToList())
+            foreach (var evt in instance.UncommittedEvents.ToList())
             {
-                var modelChange = NotificationExtensions.CreateNotification(typeof(T), evt);
+                var modelChange = NotificationExtensions.CreateNotification(instance.GetType(), evt);
                 this.changes.OnNext(modelChange);
             }
 
@@ -150,7 +162,7 @@ namespace Mobile.CQRS.Domain
             }
         }
 
-        private void SaveEvents(T instance, int expectedVersion)
+        private void SaveEvents(IAggregateRoot instance, int expectedVersion)
         {
             if (this.eventStore != null)
             {
@@ -158,7 +170,7 @@ namespace Mobile.CQRS.Domain
             }
         }
 
-        private IDomainNotification SaveSnapshot(T instance, int expectedVersion)
+        private IDomainNotification SaveSnapshot(IAggregateRoot instance, int expectedVersion)
         {
             if (this.snapshotRepository != null && this.ShouldSaveSnapshot(instance))
             {
@@ -181,7 +193,7 @@ namespace Mobile.CQRS.Domain
             return null;
         }
 
-        private bool ShouldSaveSnapshot(T instance)
+        private bool ShouldSaveSnapshot(IAggregateRoot instance)
         {
             if (this.eventStore == null)
             {

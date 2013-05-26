@@ -27,14 +27,17 @@ namespace Mobile.CQRS.Domain
     public sealed class AggregateRegistration : IAggregateRegistration
     {
         private readonly Type aggregateType;
+        
+        private readonly Func<IAggregateRoot> instantiator;
 
         private readonly List<Func<object, IReadModelBuilder>> registeredBuilders;
 
         private Func<object, ISnapshotRepository> snapshotRepository;
 
-        private AggregateRegistration(Type aggregateType)
+        private AggregateRegistration(Type aggregateType, Func<IAggregateRoot> instantiator)
         {
             this.aggregateType = aggregateType;
+            this.instantiator = instantiator;
             this.registeredBuilders = new List<Func<object, IReadModelBuilder>>();
         }
 
@@ -52,6 +55,16 @@ namespace Mobile.CQRS.Domain
                 return this.aggregateType;
             }
         }
+        
+        public static AggregateRegistration ForType<T>() where T : class, IAggregateRoot, new()
+        {
+            return new AggregateRegistration(typeof(T), () => new T());
+        }
+
+        public IAggregateRoot New()
+        {
+            return this.instantiator();
+        }
 
         public IList<IReadModelBuilder> ReadModels(object connection)
         {
@@ -66,11 +79,6 @@ namespace Mobile.CQRS.Domain
             }
 
             return null;
-        }
-
-        public static AggregateRegistration ForType<T>() where T : IAggregateRoot
-        {
-            return new AggregateRegistration(typeof(T));
         }
 
         public AggregateRegistration WithImmediateReadModel(Func<object, IReadModelBuilder> builderFactory)
