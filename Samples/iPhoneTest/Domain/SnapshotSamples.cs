@@ -24,8 +24,8 @@ namespace Sample.Domain
 {
     using System;
     using Mobile.CQRS.Domain;
-    using Mobile.CQRS.Domain.SQLite;
-    using Mobile.CQRS.Data.SQLite;
+    using Mobile.CQRS.SQLite.Domain;
+    using Mobile.CQRS.SQLite;
     using Mobile.CQRS;
 
     public static class SnapshotSamples

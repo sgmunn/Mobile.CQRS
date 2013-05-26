@@ -1,5 +1,5 @@
 // --------------------------------------------------------------------------------------------------------------------
-// <copyright file="SyncState.cs" company="sgmunn">
+// <copyright file="PendingCommand.cs" company="sgmunn">
 //   (c) sgmunn 2013  
 //
 //   Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
@@ -18,19 +18,25 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace Mobile.CQRS.Domain.SQLite
+namespace Mobile.CQRS.SQLite.Domain
 {
     using System;
-    using Mobile.CQRS.Data.SQLite;
     
-    public sealed class SyncState : ISyncState, IUniqueId
+    public sealed class PendingCommand : IUniqueId
     {
+        // we need this because we want to ensure that commands are read back in the order they were written
+        [AutoIncrement]
         [PrimaryKey]
-        public Guid Identity { get; set; }
-        
-        [Indexed]
-        public string AggregateType { get; set; }
+        public int Key { get; set; }
 
-        public int LastSyncedVersion { get; set; }
+        [Indexed]
+        public Guid Identity { get; set; }
+
+        [Indexed]
+        public Guid AggregateId { get; set; }
+
+        public Guid CommandId { get; set; }
+
+        public string CommandData { get; set; }
     }
 }

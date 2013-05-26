@@ -18,14 +18,14 @@
 //  </copyright>
 //  --------------------------------------------------------------------------------------------------------------------
 using System.Collections.Generic;
-using Mobile.CQRS.Domain.SQLite;
+using Mobile.CQRS.SQLite.Domain;
 
 namespace Sample.Domain
 {
     using System;
     using Mobile.CQRS;
     using Mobile.CQRS.Data;
-    using Mobile.CQRS.Data.SQLite;
+    using Mobile.CQRS.SQLite;
     using Mobile.CQRS.Domain;
 
     public class TestReadModel : IUniqueId

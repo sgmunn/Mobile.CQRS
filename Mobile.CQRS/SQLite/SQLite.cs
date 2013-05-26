@@ -40,7 +40,7 @@ using Sqlite3DatabaseHandle = System.IntPtr;
 using Sqlite3Statement = System.IntPtr;
 #endif
 
-namespace Mobile.CQRS.Data.SQLite
+namespace Mobile.CQRS.SQLite
 {
 	public class SQLiteException : System.Exception
 	{

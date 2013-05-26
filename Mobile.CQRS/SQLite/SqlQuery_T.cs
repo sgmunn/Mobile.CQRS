@@ -1,6 +1,6 @@
 // --------------------------------------------------------------------------------------------------------------------
-// <copyright file="SqlDomainContext.cs" company="sgmunn">
-//   (c) sgmunn 2012  
+// <copyright file="SqlQuery_T.cs" company="sgmunn">
+//   (c) sgmunn 2013  
 //
 //   Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
 //   documentation files (the "Software"), to deal in the Software without restriction, including without limitation 
@@ -9,7 +9,7 @@
 //
 //   The above copyright notice and this permission notice shall be included in all copies or substantial portions of 
 //   the Software.
-// 
+//
 //   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO 
 //   THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
 //   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
@@ -18,37 +18,46 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace Mobile.CQRS.Domain.SQLite
+namespace Mobile.CQRS.SQLite
 {
     using System;
-    using Mobile.CQRS.Domain;
+    using System.Collections.Generic;
     using Mobile.CQRS.Data;
-    using Mobile.CQRS.Data.SQLite;
-    using Mobile.CQRS.Serialization;
 
-    public class SqlDomainContext : DomainContextBase
+    /// <summary>
+    /// Represents a query that returns instances of TState.
+    /// </summary>
+    public class SqlQuery<TState> : IQuery<TState>
+        where TState : IUniqueId
     {
-        public SqlDomainContext(SQLiteConnection connection)
+        private readonly SQLiteConnection connection;
+
+        private Func<SQLiteConnection, int, int, IList<TState>> onExecute;
+
+        public SqlQuery(SQLiteConnection connection)
         {
-            this.Connection = connection;
+            this.connection = connection;
         }
 
-        public SqlDomainContext(SQLiteConnection connection, ISerializer<IAggregateEvent> eventSerializer)
+        public SqlQuery(SQLiteConnection connection, Func<SQLiteConnection, int, int, IList<TState>> onExecute)
         {
-            this.Connection = connection;
-            this.EventStore = new EventStore(connection, eventSerializer);
+            this.connection = connection;
+            this.onExecute = onExecute;
         }
 
-        public SQLiteConnection Connection { get; private set; }
-
-        protected override IUnitOfWorkScope BeginUnitOfWork()
+        public virtual IList<TState> Execute(int page, int pageSize)
         {
-            return new SqlUnitOfWorkScope(this.Connection);
+            if (this.onExecute != null)
+            {
+                return this.onExecute(this.connection, page, pageSize);
+            }
+
+            return null;
         }
-
-        protected override object GetDataConnection()
+        
+        public IList<TState> Execute()
         {
-            return this.Connection;
+            return this.Execute(0, 0);
         }
     }
 }

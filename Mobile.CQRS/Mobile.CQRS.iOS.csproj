@@ -41,6 +41,7 @@
     <Folder Include="Resources\" />
     <Folder Include="Serialization\" />
     <Folder Include="SQLite\" />
+    <Folder Include="SQLite\Domain\" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>
@@ -95,10 +96,6 @@
     <Compile Include="Reactive\ScheduledObserver.cs" />
     <Compile Include="Reactive\Subject_T.cs" />
     <Compile Include="Reactive\Unit.cs" />
-    <Compile Include="Data\SQLite\SQLite.cs" />
-    <Compile Include="Data\SQLite\SqlRepository_T.cs" />
-    <Compile Include="Data\SQLite\SqlUnitOfWorkScope.cs" />
-    <Compile Include="Domain\SQLite\SqlDomainContext.cs" />
     <Compile Include="MethodExecutor.cs" />
     <Compile Include="IUniqueId.cs" />
     <Compile Include="Data\DataChangeEvent_.cs" />
@@ -109,7 +106,6 @@
     <Compile Include="Domain\DomainContextBase.cs" />
     <Compile Include="Domain\AggregateRootBase.cs" />
     <Compile Include="Domain\AggregateRootBase_TState.cs" />
-    <Compile Include="Domain\SQLite\AggregateManifestRepository.cs" />
     <Compile Include="Data\DictionaryRepositoryBase_T.cs" />
     <Compile Include="Domain\DomainNotificationBusExtensions.cs" />
     <Compile Include="Domain\ObservableDomainNotificationBus.cs" />
@@ -131,18 +127,11 @@
     <Compile Include="Data\SerializingRepository_TReadModel_TSerialized.cs" />
     <Compile Include="Data\ISerializedReadModel.cs" />
     <Compile Include="Domain\IEventStore.cs" />
-    <Compile Include="Domain\SQLite\EventStore.cs" />
     <Compile Include="Domain\InMemoryEventStore_T.cs" />
-    <Compile Include="Domain\SQLite\AggregateEvent.cs" />
-    <Compile Include="Domain\SQLite\AggregateManifest.cs" />
     <Compile Include="Domain\UnsupportedSnapshotException.cs" />
     <Compile Include="Domain\AggregateRepository_T.cs" />
-    <Compile Include="Domain\SQLite\SnapshotRepository_T.cs" />
-    <Compile Include="Domain\SQLite\SerializedSnapshotRepository_T.cs" />
-    <Compile Include="Domain\SQLite\AggregateSnapshot.cs" />
     <Compile Include="Data\ISpecification_T.cs" />
     <Compile Include="Data\IQuery_T.cs" />
-    <Compile Include="Data\SQLite\SqlQuery_T.cs" />
     <Compile Include="Data\ISubscription.cs" />
     <Compile Include="Domain\ICommandExecutor.cs" />
     <Compile Include="_New.cs" />
@@ -150,12 +139,24 @@
     <Compile Include="Domain\IAggregateRegistration.cs" />
     <Compile Include="Data\IScopedRepository.cs" />
     <Compile Include="Domain\ExecutingCommandExecutor.cs" />
-    <Compile Include="Domain\SQLite\IAggregateManifestRepository.cs" />
-    <Compile Include="Domain\SQLite\PendingCommand.cs" />
-    <Compile Include="Domain\SQLite\SyncState.cs" />
-    <Compile Include="Domain\SQLite\PendingCommandRepository.cs" />
     <Compile Include="Domain\IPendingCommandRepository.cs" />
     <Compile Include="Domain\ISyncState.cs" />
     <Compile Include="Domain\ConflictException.cs" />
+    <Compile Include="SQLite\SQLite.cs" />
+    <Compile Include="SQLite\SqlQuery_T.cs" />
+    <Compile Include="SQLite\SqlRepository_T.cs" />
+    <Compile Include="SQLite\SqlUnitOfWorkScope.cs" />
+    <Compile Include="SQLite\Domain\AggregateEvent.cs" />
+    <Compile Include="SQLite\Domain\AggregateManifest.cs" />
+    <Compile Include="SQLite\Domain\AggregateManifestRepository.cs" />
+    <Compile Include="SQLite\Domain\AggregateSnapshot.cs" />
+    <Compile Include="SQLite\Domain\EventStore.cs" />
+    <Compile Include="SQLite\Domain\IAggregateManifestRepository.cs" />
+    <Compile Include="SQLite\Domain\PendingCommand.cs" />
+    <Compile Include="SQLite\Domain\PendingCommandRepository.cs" />
+    <Compile Include="SQLite\Domain\SerializedSnapshotRepository_T.cs" />
+    <Compile Include="SQLite\Domain\SnapshotRepository_T.cs" />
+    <Compile Include="SQLite\Domain\SqlDomainContext.cs" />
+    <Compile Include="SQLite\Domain\SyncState.cs" />
   </ItemGroup>
 </Project>

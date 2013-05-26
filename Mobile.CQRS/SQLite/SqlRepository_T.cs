@@ -18,11 +18,12 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace Mobile.CQRS.Data.SQLite
+namespace Mobile.CQRS.SQLite
 {
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using Mobile.CQRS.Data;
 
     public class SqlRepository<T> : IRepository<T>, IScopedRepository 
         where T: IUniqueId, new()

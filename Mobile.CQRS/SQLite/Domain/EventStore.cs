@@ -18,13 +18,13 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace Mobile.CQRS.Domain.SQLite
+namespace Mobile.CQRS.SQLite.Domain
 {
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using Mobile.CQRS.Data.SQLite;
     using Mobile.CQRS.Serialization;
+    using Mobile.CQRS.Domain;
 
     public sealed class EventStore : SqlRepository<AggregateEvent>, IEventStore
     {

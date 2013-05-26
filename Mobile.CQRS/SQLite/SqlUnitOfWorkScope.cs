@@ -18,11 +18,12 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace Mobile.CQRS.Data.SQLite
+namespace Mobile.CQRS.SQLite
 {
     using System;
     using System.Collections.Generic;
     using System.Threading;
+    using Mobile.CQRS.Data;
 
     public class SqlUnitOfWorkScope : IUnitOfWorkScope
     {

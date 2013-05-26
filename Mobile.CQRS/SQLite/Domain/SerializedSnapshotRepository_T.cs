@@ -18,14 +18,14 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace Mobile.CQRS.Domain.SQLite
+namespace Mobile.CQRS.SQLite.Domain
 {
     using System;
     using System.Collections.Generic;
     using System.Linq;
     using Mobile.CQRS.Data;
-    using Mobile.CQRS.Data.SQLite;
     using Mobile.CQRS.Serialization;
+    using Mobile.CQRS.Domain;
 
     public class SerializedSnapshotRepository<T> : ISnapshotRepository 
         where T : class, ISnapshot, new()

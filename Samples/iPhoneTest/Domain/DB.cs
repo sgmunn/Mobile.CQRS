@@ -23,8 +23,8 @@ namespace Sample.Domain
 {
     using System;
     using System.IO;
-    using Mobile.CQRS.Data.SQLite;
-    using Mobile.CQRS.Domain.SQLite;
+    using Mobile.CQRS.SQLite;
+    using Mobile.CQRS.SQLite.Domain;
 
     public class EventSourcedDB : SQLiteConnection
     {

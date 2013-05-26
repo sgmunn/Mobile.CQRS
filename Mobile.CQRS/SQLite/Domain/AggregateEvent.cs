@@ -1,6 +1,6 @@
 // --------------------------------------------------------------------------------------------------------------------
-// <copyright file="PendingCommand.cs" company="sgmunn">
-//   (c) sgmunn 2013  
+// <copyright file="AggregateEvent.cs" company="sgmunn">
+//   (c) sgmunn 2012  
 //
 //   Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
 //   documentation files (the "Software"), to deal in the Software without restriction, including without limitation 
@@ -9,7 +9,7 @@
 //
 //   The above copyright notice and this permission notice shall be included in all copies or substantial portions of 
 //   the Software.
-//
+// 
 //   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO 
 //   THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
 //   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
@@ -18,26 +18,28 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace Mobile.CQRS.Domain.SQLite
+namespace Mobile.CQRS.SQLite.Domain
 {
     using System;
-    using Mobile.CQRS.Data.SQLite;
-    
-    public sealed class PendingCommand : IUniqueId
+
+    public sealed class AggregateEvent : IUniqueId
     {
-        // we need this because we want to ensure that commands are read back in the order they were written
-        [AutoIncrement]
+        // TODO: do we still need this?
         [PrimaryKey]
-        public int Key { get; set; }
+        [AutoIncrement]
+        public int GlobalKey { get; set; }
 
         [Indexed]
         public Guid Identity { get; set; }
 
         [Indexed]
         public Guid AggregateId { get; set; }
+  
+        public int Version { get; set; }
 
+        [Indexed]
         public Guid CommandId { get; set; }
-
-        public string CommandData { get; set; }
+  
+        public string EventData { get; set; }
     }
 }

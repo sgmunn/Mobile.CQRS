@@ -18,14 +18,15 @@
 //  </copyright>
 //  --------------------------------------------------------------------------------------------------------------------
 using Mobile.CQRS.Serialization;
+using Mobile.CQRS.SQLite;
 
 namespace Sample.Domain
 {
     using System;
     using System.Reflection;
     using Mobile.CQRS.Domain;
-    using Mobile.CQRS.Domain.SQLite;
-    using Mobile.CQRS.Data.SQLite;
+    using Mobile.CQRS.SQLite.Domain;
+    using Mobile.CQRS.Data;
     using Mobile.CQRS.Reactive;
 
     public static class EventSourceSamples

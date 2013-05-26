@@ -18,10 +18,9 @@
 //  </copyright>
 //  --------------------------------------------------------------------------------------------------------------------
 
-namespace Mobile.CQRS.Domain.SQLite
+namespace Mobile.CQRS.SQLite.Domain
 {
     using System;
-    using Mobile.CQRS.Data.SQLite;
 
     public sealed class AggregateManifest : IUniqueId
     {
