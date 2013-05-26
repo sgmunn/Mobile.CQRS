@@ -89,7 +89,11 @@ namespace Mobile.CQRS.Domain
             var registration = this.registrations.FirstOrDefault(x => x.AggregateType == typeof(T));
 
             var snapshotRepo = registration != null ? registration.Snapshot(this.GetDataConnection()) : null;
-            var readModelBuilders = registration != null ? registration.ReadModels(this.GetDataConnection()) : null;
+            var readModelBuilders = new List<IReadModelBuilder>();
+            if (registration != null)
+            {
+                readModelBuilders.AddRange(registration.ReadModels(this.GetDataConnection()));
+            }
 
             var aggregateRepo = new AggregateRepository<T>(this.EventStore, snapshotRepo);
 

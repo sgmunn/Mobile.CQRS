@@ -18,12 +18,14 @@
 //  </copyright>
 //  --------------------------------------------------------------------------------------------------------------------
 //
+using System.Runtime.Serialization;
 
 namespace Sample.Domain
 {
     using System;
     using Mobile.CQRS.Domain;
     
+    [DataContract(Name="CommandBase", Namespace="urn:SampleDomain")]
     public class CommandBase : IAggregateCommand
     {
         public CommandBase()
@@ -31,20 +33,27 @@ namespace Sample.Domain
             this.Identity = Guid.NewGuid();
         }
 
+        [DataMember]
         public Guid AggregateId { get; set; }
         
+        [DataMember]
         public Guid Identity { get; set; }
     }
 
+    [DataContract(Name="TestCommand1", Namespace="urn:SampleDomain")]
     public class TestCommand1 : CommandBase
     {
+        [DataMember]
         public string Name { get; set; }
     }
 
+    [DataContract(Name="TestCommand2", Namespace="urn:SampleDomain")]
     public class TestCommand2 : CommandBase
     {
+        [DataMember]
         public string Description { get; set; }
  
+        [DataMember]
         public decimal Amount { get; set; }
    }
 }

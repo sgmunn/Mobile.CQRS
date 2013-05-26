@@ -156,5 +156,6 @@
     <Compile Include="SaveResult.cs" />
     <Compile Include="SerializingRepository_TReadModel_TSerialized.cs" />
     <Compile Include="UnitOfWorkRepository_T.cs" />
+    <Compile Include="SQLite\Domain\EventSourcingDomainContext.cs" />
   </ItemGroup>
 </Project>

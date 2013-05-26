@@ -17,6 +17,8 @@
 //   IN THE SOFTWARE.
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Mobile.CQRS.SQLite.Domain
 {
@@ -32,5 +34,52 @@ namespace Mobile.CQRS.SQLite.Domain
         public string AggregateType { get; set; }
 
         public int LastSyncedVersion { get; set; }
+    }
+
+    
+    public class SyncStateRepository : IRepository<ISyncState> 
+    {
+        private readonly SqlRepository<SyncState> repository;
+
+        public SyncStateRepository(SQLiteConnection connection)
+        {
+            this.repository = new SqlRepository<SyncState>(connection);
+            connection.CreateTable<SyncState>();
+        }
+
+        public ISyncState New()
+        {
+            return new SyncState();
+        }
+
+        public ISyncState GetById(Guid id)
+        {
+            return this.repository.GetById(id);
+        }
+
+        public IList<ISyncState> GetAll()
+        {
+            return this.repository.GetAll().Cast<ISyncState>().ToList();
+        }
+
+        public SaveResult Save(ISyncState instance)
+        {
+            return this.repository.Save((SyncState)instance);
+        }
+
+        public void Delete(ISyncState instance)
+        {
+            this.repository.Delete((SyncState)instance);
+        }
+
+        public void DeleteId(Guid id)
+        {
+            this.repository.DeleteId(id);
+        }
+
+        public void Dispose()
+        {
+            this.repository.Dispose();
+        }
     }
 }

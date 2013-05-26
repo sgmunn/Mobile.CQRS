@@ -101,6 +101,7 @@
     <Compile Include="Domain\ReadModel.cs" />
     <Compile Include="Domain\SampleDomain.cs" />
     <Compile Include="Domain\SnapshotSamples.cs" />
+    <Compile Include="Domain\SyncSample.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>

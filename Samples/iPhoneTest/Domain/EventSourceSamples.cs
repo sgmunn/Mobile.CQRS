@@ -26,6 +26,7 @@ namespace Sample.Domain
     using System.Reflection;
     using Mobile.CQRS.Domain;
     using Mobile.CQRS.Reactive;
+    
 
     public static class EventSourceSamples
     {

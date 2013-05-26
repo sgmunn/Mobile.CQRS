@@ -21,21 +21,21 @@ namespace Mobile.CQRS.Domain
          * event store.
          * 
          * Load events up to last sync version.
+         * Check for conflicts with unsynced events and new remote events. << checks our changes against others changes 
          * Add new remote events from sync version (get aggregate up to date with remote).
          * Execute pending commands and catch uncomitted events.
-         * Check for conflicts with uncommitted events and new remote events.
-         * if no conflicts, update eventstore with new events passing last sync version, current version to ensure concurrency
+         * update eventstore with new events passing last sync version, current version to ensure concurrency
          * rebuild read models for aggregate
          * 
          */
 
-        public IEventStore RemoteEventStore { get; private set; }
+        public IEventStore RemoteEventStore { get; set; }
         
-        public IEventStore LocalEventStore { get; private set; }
+        public IEventStore LocalEventStore { get; set; }
 
-        public IRepository<ISyncState> SyncState { get; private set; }
+        public IRepository<ISyncState> SyncState { get; set; }
         
-        public IPendingCommandRepository PendingCommands { get; private set; }
+        public IPendingCommandRepository PendingCommands { get; set; }
 
         // do this in a unit of work
         public bool SyncWithRemote<T>(Guid aggregateId) where T : class, IAggregateRoot, new()
@@ -44,65 +44,88 @@ namespace Mobile.CQRS.Domain
 
             var syncState = this.SyncState.GetById(aggregateId);
 
-            var commonEvents = this.LocalEventStore.GetEventsUpToVersion(aggregateId, syncState.LastSyncedVersion);
-
-            var newRemoteEvents = this.RemoteEventStore.GetEventsAfterVersion(aggregateId, syncState.LastSyncedVersion).ToList();
-
-            if (newRemoteEvents.Count == 0 && currentVersion == syncState.LastSyncedVersion)
+            // if no sync state, then assume that the aggregate originated from here
+            if (syncState == null)
             {
-                // ain't nothin' to merge (in either direction)
+                // TODO: add aggregate type info to syncstate
+                syncState = this.SyncState.New();
+                syncState.Identity = aggregateId;
+            }
+
+            var commonEvents = this.LocalEventStore.GetEventsUpToVersion(aggregateId, syncState.LastSyncedVersion);
+            var newRemoteEvents = this.RemoteEventStore.GetEventsAfterVersion(aggregateId, syncState.LastSyncedVersion);
+            var unsyncedLocalEvents = this.LocalEventStore.GetEventsAfterVersion(aggregateId, syncState.LastSyncedVersion);
+            var newCommonHistory = commonEvents.Concat(newRemoteEvents).ToList();
+
+            var currentRemoteVersion = newRemoteEvents.Count > 0 ? newRemoteEvents.Last().Version : syncState.LastSyncedVersion;
+
+            if (newRemoteEvents.Count == 0 && unsyncedLocalEvents.Count == 0)
+            {
+                // ain't nothin' to merge (in either direction) - all done
                 return false;
             }
 
-            var aggregate = new T();
-            aggregate.Identity = aggregateId;
-            var pendingEvents = new List<IAggregateEvent>();
-
-            var pendingCommands = this.PendingCommands.PendingCommandsForAggregate(aggregateId).ToList();
-            if (pendingCommands.Count > 0)
+            // check for conflicts, anything we have done that conflicts with things that others have done
+            var hasConflicts = unsyncedLocalEvents.Any(local => newRemoteEvents.Any(remote => local.ConflictsWith(remote)));
+            if (hasConflicts)
             {
-                ((IEventSourced)aggregate).LoadFromEvents(commonEvents);
-
-                var exec = new ExecutingCommandExecutor(aggregate);
-                exec.Execute(pendingCommands, 0);
-
-                pendingEvents.AddRange(aggregate.UncommittedEvents.ToList());
-
-                var hasConflicts = pendingEvents.Any(local => newRemoteEvents.Any(remote => local.ConflictsWith(remote)));
-                if (hasConflicts)
-                {
-                    throw new ConflictException("Pending commands conflict with new remote events");
-                }
+                throw new ConflictException("Pending commands conflict with new remote events");
             }
 
-            // TODO: try to update the remote store last, we need our local commit to succeed if it succeeds
-            // otherwise, what state are we in??
+            // get the changes that we have that need to be sent to remote, either from pending commands
+            // or because we've never synced at all
+            var pendingEvents = this.GetPendingEvents<T>(syncState, newCommonHistory);
 
-            if (pendingEvents.Count > 0)
+            this.PendingCommands.RemovePendingCommands(aggregateId);
+
+            // we need to do a full rebuild if we have previously synced with remote and we merged in any remote events
+            var needsFullRebuild = syncState.LastSyncedVersion > 0 && newRemoteEvents.Count != 0;
+
+            var newVersion = pendingEvents.Last().Version;
+
+            // merge remote events into our eventstore - including our pending events
+            if (newRemoteEvents.Count != 0)
             {
-                var currentRemoteVersion = newRemoteEvents.Count > 0 ? newRemoteEvents.Last().Version : syncState.LastSyncedVersion;
+                this.LocalEventStore.MergeEvents(aggregateId, newCommonHistory.Concat(pendingEvents).ToList(), currentVersion, newVersion);
+            }
 
+            // update sync state
+            syncState.LastSyncedVersion = newVersion;
+            this.SyncState.Save(syncState);
+
+            // update remote
+            if (pendingEvents.Count != 0)
+            {
                 this.RemoteEventStore.SaveEvents(aggregateId, pendingEvents, currentRemoteVersion);
             }
 
-            // TODO: can we delete all and rely on the transaction rolling back if concurrency?
-            this.PendingCommands.RemovePendingCommands(aggregateId);
+            return needsFullRebuild;
+        }
 
-            newRemoteEvents.AddRange(pendingEvents);
+        private List<IAggregateEvent> GetPendingEvents<T>(ISyncState syncState, IList<IAggregateEvent> remoteEvents) where T : class, IAggregateRoot, new()
+        {
+            if (syncState.LastSyncedVersion == 0)
+            {
+                // if we've never synced, then this aggregate must have been created locally, any events either in 
+                // the event store or from pending commands are pending
+                return this.LocalEventStore.GetAllEvents(syncState.Identity).ToList();
+            }
 
-            // because the event store doesn't do this for us, we need to 
-            // this is essentially our concurrency check that we haven't added another pending command to the queue
+            // if we have synced the aggregate at least once, then we need to get events from pending commands
+            var pendingCommands = this.PendingCommands.PendingCommandsForAggregate(syncState.Identity).ToList();
+            if (pendingCommands.Count == 0)
+            {
+                return new List<IAggregateEvent>();
+            }
 
-            // merge events back to local event store
-            this.LocalEventStore.MergeEvents(aggregateId, newRemoteEvents, currentVersion, syncState.LastSyncedVersion);
+            var aggregate = new T();
+            aggregate.Identity = syncState.Identity;
+            ((IEventSourced)aggregate).LoadFromEvents(remoteEvents);
 
-            syncState.LastSyncedVersion = newRemoteEvents.Last().Version;
-            this.SyncState.Save(syncState);
+            var exec = new ExecutingCommandExecutor(aggregate);
+            exec.Execute(pendingCommands, 0);
 
-            // rebuild .. if we had no pending commands, then we can simply do a build not a rebuild
-            // return true for full rebuild, false for partial, but from what version
-            // if we have no pending commands then build read models from their current state 
-            return pendingCommands.Count > 0;
+            return aggregate.UncommittedEvents.ToList();
         }
     }
 

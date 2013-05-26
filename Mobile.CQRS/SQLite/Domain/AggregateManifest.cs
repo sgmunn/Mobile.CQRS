@@ -29,8 +29,6 @@ namespace Mobile.CQRS.SQLite.Domain
 
         public int Version { get; set; }
 
-        public int SyncedVersion { get; set; }
-
         public override string ToString()
         {
             return string.Format("[{0}] {1}", Identity.ToString().Substring(0, 8), Version);

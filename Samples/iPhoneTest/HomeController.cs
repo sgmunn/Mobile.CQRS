@@ -1,5 +1,5 @@
 // //  --------------------------------------------------------------------------------------------------------------------
-// //  <copyright file=".cs" company="sgmunn">
+// //  <copyright file="HomeController.cs" company="sgmunn">
 // //    (c) sgmunn 2013  
 // //
 // //    Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
@@ -29,13 +29,25 @@ namespace Sample.Domain
         {
             this.Root.Add
                 (
+                    new Section("Sync Test") 
+                    {
+                    new StringElement("Reset", SyncSample.ResetSample),  
+                    new StringElement("Create (client) 1", SyncSample.CreateRootClient1),  
+                    new StringElement("Edit on client 1", SyncSample.EditClient1),  
+                    new StringElement("Edit on client 1", SyncSample.EditClient2),  
+                    new StringElement("Client 1 sync with remote", SyncSample.Client1SyncWithRemote),  
+                    new StringElement("Client 2 sync with remote", SyncSample.Client2SyncWithRemote),  
+                });
+            
+            this.Root.Add
+                (
                     new Section("Event Sourced") 
                     {
                     new StringElement("Test 1", EventSourceSamples.DoTest1),  
                     new StringElement("Test 2", EventSourceSamples.DoTest2),  
                     new StringElement("Delete Test", EventSourceSamples.DoDeleteTest),  
                 });
-            
+
             this.Root.Add
                 (
                     new Section("Snapshot Sourced") 
