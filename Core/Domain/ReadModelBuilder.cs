@@ -24,7 +24,7 @@ namespace Mobile.CQRS.Domain
     using System.Collections.Generic;
     using Mobile.CQRS.Reactive;
 
-    public abstract class ReadModelBuilder<T> : IReadModelBuilder<T>
+    public abstract class ReadModelBuilder<T> : IReadModelBuilder
         where T : IUniqueId
     {
         private readonly IRepository<T> repository;

@@ -1,4 +1,4 @@
-﻿
+
 Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Samples", "Samples", "{C68E1D6F-636C-4593-B1E0-98D67EC19433}"
@@ -7,7 +7,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "iPhoneTest", "Samples\iPhon
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Core", "Core", "{56BA7A2A-1A7E-4998-823B-2B135E2926FF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mobile.CQRS.iOS", "Mobile.CQRS\Mobile.CQRS.iOS.csproj", "{1B81BE9B-B662-4626-A811-39C479980EFF}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mobile.CQRS.iOS", "Core\Mobile.CQRS.iOS.csproj", "{1B81BE9B-B662-4626-A811-39C479980EFF}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "UnitTests", "UnitTests", "{130253B3-9D27-464E-91C5-0791E6165B2A}"
 EndProject

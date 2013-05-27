@@ -8,29 +8,31 @@ using System.Runtime.CompilerServices;
 // TODO: Mobile.Mvvm view model with support for loading changes while being editing
 
 using System.Reflection;
+using System.Collections.Concurrent;
 
 
 namespace Mobile.CQRS.Domain
 {
     // TODO: unit of work scope, is this correct, should we have to pass it in or what?
+
     // TODO: read model builders need to be queue / pointer based
+
     // TODO: async SQLite
-    // TODO: can we reduce the number of generic classes a little
+
     // TODO: test coverage
+
     // TODO: seal classes where needed
+
+    // TODO: get read model builders to take a list of events instead of one at a time
+
+    // TODO: update snapshot after sync
+
+    // TODO: can we separate out read / writes from repositories
+
     // TODO: that might be all for now
 
-/*
- * We could remove some generic classes
- *  IAggregateRepository<T> can be removed but we will need a TypeMapping / index of aggregate types
- *  - we might want this anyway because of sync support will want to instantiate based on a string value
- *  this could filter thru to the command executor
- * 
- * AggregateRepository only needs a method to instantiate a new aggregate of the type, in fact it doesn't - the command executor does
- * 
- * 
- * 
- */ 
+    // just a note, concurrentqueue blockingcollection for events ??
+
 
 /*
  * unit of work has commit, thus if anything supports rollback it should therefore implement IUnitOfWork
@@ -62,10 +64,10 @@ namespace Mobile.CQRS.Domain
     // that means that we need to support in memory event store uow
     public interface IDomainUnitOfWorkScope : IUnitOfWorkScope
     {
-        IEventStore EventStore { get; }
+        // these are gets to infer that you are getting a new one, not a property which implies that it hangs around??
+        IEventStore GetEventStore();
         // etc
         IRepository<T> GetRepository<T>() where T : IUniqueId;
-
     }
 
 }

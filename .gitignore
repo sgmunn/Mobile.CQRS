@@ -2,3 +2,4 @@ Mobile.CQRS/bin
 UnitTests/Mobile.CQRS.UnitTests.iOS/bin
 UnitTests/UnitTestRunner.iOS/bin
 UnitTests/UnitTestRunner.iOS/obj
+Core/bin

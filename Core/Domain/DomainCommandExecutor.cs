@@ -85,6 +85,8 @@ namespace Mobile.CQRS.Domain
             
                 // execute the commands
 //                var cmd = new CommandExecutor<T>(repo);
+
+                // TODO: group by aggregate id
                 var cmd = new CommandExecutor(this.repository);
                 cmd.Execute(commands.ToList(), expectedVersion);
             

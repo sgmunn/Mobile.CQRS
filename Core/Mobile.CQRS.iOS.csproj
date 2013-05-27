@@ -61,7 +61,6 @@
     <Compile Include="Domain\IDomainContext.cs" />
     <Compile Include="Domain\IEventSourced.cs" />
     <Compile Include="Domain\IReadModelBuilder.cs" />
-    <Compile Include="Domain\IReadModelBuilder_T.cs" />
     <Compile Include="Domain\ISnapshot.cs" />
     <Compile Include="Domain\ISnapshotRepository.cs" />
     <Compile Include="Domain\ISnapshotSupport.cs" />

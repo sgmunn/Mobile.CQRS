@@ -104,6 +104,8 @@ namespace Mobile.CQRS.Domain
                 this.LocalEventStore.MergeEvents(aggregateId, newRemoteEvents.Concat(pendingEvents).ToList(), currentVersion, syncState.LastSyncedVersion);
             }
 
+            // TODO: update snapshot now.
+
             // update sync state
             syncState.LastSyncedVersion = newVersion;
             this.SyncState.Save(syncState);
