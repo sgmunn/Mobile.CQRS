@@ -44,6 +44,7 @@ namespace Mobile.CQRS.Domain
         private AggregateRegistration(AggregateRegistration registration)
         {
             this.aggregateType = registration.aggregateType;
+            this.instantiator = registration.instantiator;
             this.registeredBuilders = new List<Func<IUnitOfWorkScope, IReadModelBuilder>>(registration.registeredBuilders);
             this.snapshotRepository = registration.snapshotRepository;
         }

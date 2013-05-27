@@ -32,6 +32,9 @@ namespace Mobile.CQRS.SQLite
 
         public SqlUnitOfWorkScope(SQLiteConnection connection)
         {
+            if (connection == null)
+                throw new ArgumentNullException("connection");
+
             this.connection = connection;
             this.BeginTransaction();
         }

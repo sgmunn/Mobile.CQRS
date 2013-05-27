@@ -42,6 +42,7 @@
     <Folder Include="Serialization\" />
     <Folder Include="SQLite\" />
     <Folder Include="SQLite\Domain\" />
+    <Folder Include="InMemory\" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>
@@ -64,7 +65,6 @@
     <Compile Include="Domain\ISnapshot.cs" />
     <Compile Include="Domain\ISnapshotRepository.cs" />
     <Compile Include="Domain\ISnapshotSupport.cs" />
-    <Compile Include="Domain\InMemorySnapshotRepository_T.cs" />
     <Compile Include="Domain\ReadModelBuilder.cs" />
     <Compile Include="Domain\UnitOfWorkEventBus.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -85,7 +85,6 @@
     <Compile Include="Reactive\Unit.cs" />
     <Compile Include="MethodExecutor.cs" />
     <Compile Include="IUniqueId.cs" />
-    <Compile Include="Domain\InMemoryUnitOfWorkScope.cs" />
     <Compile Include="Domain\DomainContextBase.cs" />
     <Compile Include="Domain\AggregateRootBase.cs" />
     <Compile Include="Domain\AggregateRootBase_TState.cs" />
@@ -156,9 +155,14 @@
     <Compile Include="Domain\IAggregateRepository.cs" />
     <Compile Include="Domain\AggregateRepository.cs" />
     <Compile Include="Domain\CommandExecutor.cs" />
-    <Compile Include="Domain\InMemoryEventStore.cs" />
     <Compile Include="Domain\DomainCommandExecutor.cs" />
     <Compile Include="Domain\IMergableEventStore.cs" />
     <Compile Include="Domain\UnitOfWorkDisposable.cs" />
+    <Compile Include="SQLite\Domain\SqlDomainScope.cs" />
+    <Compile Include="Domain\IDomainUnitOfWorkScope.cs" />
+    <Compile Include="InMemory\InMemoryUnitOfWorkScope.cs" />
+    <Compile Include="InMemory\InMemorySnapshotRepository_T.cs" />
+    <Compile Include="InMemory\InMemoryDomainScope.cs" />
+    <Compile Include="InMemory\InMemoryEventStore.cs" />
   </ItemGroup>
 </Project>

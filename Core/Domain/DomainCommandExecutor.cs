@@ -35,6 +35,13 @@ namespace Mobile.CQRS.Domain
 
         public DomainCommandExecutor(IDomainUnitOfWorkScope scope, IAggregateRegistration registration, IDomainNotificationBus eventBus)
         {
+            if (eventBus == null)
+                throw new ArgumentNullException("eventBus");
+            if (registration == null)
+                throw new ArgumentNullException("registration");
+            if (scope == null)
+                throw new ArgumentNullException("scope");
+
             this.scope = scope;
             this.registration = registration;
             this.eventBus = eventBus;
@@ -56,11 +63,9 @@ namespace Mobile.CQRS.Domain
                 this.EnqueueCommands(scope.PendingCommands, commands);
             });
 
-
             // subscribe to the changes in the aggregate and publish them to aggregateEvents
             var subscription = aggregateRepo.Changes.Subscribe(aggregateEvents.Publish);
             scope.Add(new UnitOfWorkDisposable(subscription));
-
 
             // add them in this order,
             // on commit of the scope, aggregateRepo will attempt to commit the aggregate's events and will then raise
