@@ -34,46 +34,30 @@ namespace Mobile.CQRS.Domain
             this.registrations = new List<IAggregateRegistration>();
         }
 
-        protected DomainContextBase(IEventStore eventStore)
-        {
-            this.EventBus = new ObservableDomainNotificationBus();
-            this.registrations = new List<IAggregateRegistration>();
-            this.EventStore = eventStore;
-        }
-
-        protected DomainContextBase(IEventStore eventStore, IDomainNotificationBus eventBus)
+        protected DomainContextBase(IDomainNotificationBus eventBus)
         {
             this.registrations = new List<IAggregateRegistration>();
             this.EventBus = eventBus;
-            this.EventStore = eventStore;
         }
         
         public IDomainNotificationBus EventBus { get; protected set; }
 
-        // note, if we change the way our unit of work scopes are handled, then we may need to provide a fn to create these as needed
-        // rather than a property on the context
-        public IEventStore EventStore { get; protected set; }
-
-        public IRepository<ISyncState> SyncState { get; protected set; }
-
-        public IPendingCommandRepository PendingCommands { get; protected set; }
-
-        public void Execute<T>(IAggregateCommand command) where T : class, IAggregateRoot, new()
+        public void Execute<T>(IAggregateCommand command) where T : IAggregateRoot
         {
             this.Execute<T>(new[] { command }, 0);
         }
 
-        public void Execute<T>(IList<IAggregateCommand> commands) where T : class, IAggregateRoot, new()
+        public void Execute<T>(IList<IAggregateCommand> commands) where T : IAggregateRoot
         {
             this.Execute<T>(commands, 0);
         }
 
-        public void Execute<T>(IAggregateCommand command, int expectedVersion) where T : class, IAggregateRoot, new()
+        public void Execute<T>(IAggregateCommand command, int expectedVersion) where T : IAggregateRoot
         {
             this.Execute<T>(new[] { command }, expectedVersion);
         }
 
-        public void Execute<T>(IList<IAggregateCommand> commands, int expectedVersion) where T : class, IAggregateRoot, new()
+        public void Execute<T>(IList<IAggregateCommand> commands, int expectedVersion) where T : IAggregateRoot
         {
             this.InternalExecute<T>(commands, expectedVersion);
         }
@@ -82,57 +66,32 @@ namespace Mobile.CQRS.Domain
         {
             this.registrations.Add(registration);
         }
-        
-        protected abstract object GetDataConnection();
 
-        protected virtual IUnitOfWorkScope BeginUnitOfWork()
+        protected virtual IDomainUnitOfWorkScope BeginUnitOfWork()
         {
-            return new InMemoryUnitOfWorkScope();
+            return new InMemoryDomainScope();
         }
 
-        protected virtual void EnqueueCommands(IList<IAggregateCommand> commands)
-        {
-            if (this.PendingCommands != null)
-            {
-                foreach (var cmd in commands)
-                {
-                    this.PendingCommands.StorePendingCommand(cmd);
-                }
-            }
-        }
-
-        protected virtual void InternalExecute<T>(IList<IAggregateCommand> commands, int expectedVersion) where T : class, IAggregateRoot, new()
+        protected virtual void InternalExecute<T>(IList<IAggregateCommand> commands, int expectedVersion) where T : IAggregateRoot
         {
             var registration = this.registrations.FirstOrDefault(x => x.AggregateType == typeof(T));
-
-            var snapshotRepo = registration != null ? registration.Snapshot(this.GetDataConnection()) : null;
-            var readModelBuilders = new List<IReadModelBuilder>();
-            if (registration != null)
+            if (registration == null)
             {
-                readModelBuilders.AddRange(registration.ReadModels(this.GetDataConnection()));
+                throw new InvalidOperationException(string.Format("Unregistered aggregate type {0}", typeof(T)));
             }
 
-            var aggregateRepo = new AggregateRepository(() => new T(), this.EventStore, snapshotRepo);
-
-
-
-            // create a unit of work eventbus to capture events
-            var busBuffer = new UnitOfWorkEventBus(this.EventBus, () => {
-                // do something with the commands, store in a command queue
-                this.EnqueueCommands(commands);
-            });
-
-            using (busBuffer)
+            // create a unit of work eventbus to capture aggregate events and read model events and publish in one go
+            using (var busBuffer = new UnitOfWorkEventBus(this.EventBus))
             {
-                // TODO: create another bus to capture events and link to commands, when published to, store commands and pass on events
-                // we need a bus that takes an action on publish 
+                using (var scope = this.BeginUnitOfWork())
+                {
+                    var exec = new DomainCommandExecutor(scope, registration, busBuffer);
+                    exec.Execute(commands, expectedVersion);
 
-                // the events that are published to busBuffer are 'Publish'ed during the life of the unit of work
-                // in here we can push the commands that we are given to execute if we want, on first publish this will transactional
+                    scope.Commit();
+                }
 
-                var executor = new DomainCommandExecutor(this.BeginUnitOfWork, aggregateRepo, readModelBuilders, busBuffer);
-                executor.Execute(commands, expectedVersion);
-
+                // finally, publish the events to the real event bus
                 busBuffer.Commit();
             }
         }

@@ -44,7 +44,7 @@ namespace Mobile.CQRS.Domain
 
         public IEventStore RemoteEventStore { get; set; }
 
-        public IEventStore LocalEventStore { get; set; }
+        public IMergableEventStore LocalEventStore { get; set; }
 
         public IRepository<ISyncState> SyncState { get; set; }
 

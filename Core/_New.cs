@@ -9,6 +9,9 @@ using System.Runtime.CompilerServices;
 
 using System.Reflection;
 using System.Collections.Concurrent;
+using Mobile.CQRS.SQLite.Domain;
+using Mobile.CQRS.SQLite;
+using Mobile.CQRS.Serialization;
 
 
 namespace Mobile.CQRS.Domain
@@ -38,7 +41,7 @@ namespace Mobile.CQRS.Domain
  * unit of work has commit, thus if anything supports rollback it should therefore implement IUnitOfWork
  *  - SqlRepository participate in a unit of work scope without having to know about the scope
  * 
- *  - a SQL repository where we pass in the transaction will participate in _that_ scope explicitly
+ *  - a SQL Server repository where we pass in the transaction will participate in _that_ scope explicitly
  *    it could participate in it's own transaction if it so wanted to
  * 
  * if we had the second type of repo, then we must have the scope before we can get the repository
@@ -65,9 +68,91 @@ namespace Mobile.CQRS.Domain
     public interface IDomainUnitOfWorkScope : IUnitOfWorkScope
     {
         // these are gets to infer that you are getting a new one, not a property which implies that it hangs around??
-        IEventStore GetEventStore();
+        IEventStore EventStore { get; }
+        IPendingCommandRepository PendingCommands { get; }
+        IRepository<ISyncState> SyncState { get; }
         // etc
-        IRepository<T> GetRepository<T>() where T : IUniqueId;
+        // TODO: we would need a way to register different repository instances
+        // TODO: we need to register the scope field name for rebuilding read models
+        IRepository<T> GetRepository<T>() where T : IUniqueId, new();
     }
+
+    public class InMemoryDomainScope : InMemoryUnitOfWorkScope, IDomainUnitOfWorkScope
+    {
+        private readonly IEventStore eventStore;
+
+        public InMemoryDomainScope() 
+        {
+            this.eventStore = new InMemoryEventStore();
+        }
+
+        public IEventStore EventStore 
+        {
+            get
+            {
+                return this.eventStore;
+            }
+        }
+
+        public IPendingCommandRepository PendingCommands { get; private set; }
+
+        public IRepository<ISyncState> SyncState { get; private set; }
+
+        public IRepository<T> GetRepository<T>() where T : IUniqueId, new()
+        {
+            throw new NotSupportedException();
+           // return new D<T>(this.Connection);
+        }
+    }
+
+    public class SqlDomainScope : SqlUnitOfWorkScope, IDomainUnitOfWorkScope
+    {
+        public SqlDomainScope(SQLiteConnection connection, ISerializer<IAggregateEvent> eventSerializer, ISerializer<IAggregateCommand> commandSerializer) 
+            : base(connection)
+        {
+            if (eventSerializer == null)
+                throw new ArgumentNullException("eventSerializer");
+
+            this.EventStore = new EventStore(connection, eventSerializer);
+
+            if (commandSerializer != null)
+            {
+                this.PendingCommands = new PendingCommandRepository(connection, commandSerializer);
+                this.SyncState = new SyncStateRepository(connection);
+            }
+        }
+
+        public IEventStore EventStore { get; private set; } 
+
+        public IPendingCommandRepository PendingCommands { get; private set; }
+        
+        public IRepository<ISyncState> SyncState { get; private set; }
+
+        public IRepository<T> GetRepository<T>() where T : IUniqueId, new()
+        {
+            // TODO: we need to register the scope field name for rebuilding read models
+            return new SqlRepository<T>(this.Connection);
+        }
+    }
+
+    public class Test
+    {
+
+        public void X()
+        {
+            var es = new EventStore(null, null);
+
+            // if we passed in a transaction, then it would implicitly be part of the scope
+            // or do we 
+
+
+
+        }
+    }
+
+
+
+
+
 
 }

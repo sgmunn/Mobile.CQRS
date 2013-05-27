@@ -27,7 +27,7 @@ namespace Mobile.CQRS.Domain
     {
         Type AggregateType { get; }
         IAggregateRoot New();
-        IList<IReadModelBuilder> ReadModels(object connection);
-        ISnapshotRepository Snapshot(object connection);
+        IList<IReadModelBuilder> ReadModels(IUnitOfWorkScope scope);
+        ISnapshotRepository Snapshot(IUnitOfWorkScope scope);
     }
 }

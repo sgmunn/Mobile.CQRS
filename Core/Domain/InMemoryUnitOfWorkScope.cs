@@ -23,9 +23,13 @@ namespace Mobile.CQRS.Domain
     using System;
     using System.Collections.Generic;
 
-    public sealed class InMemoryUnitOfWorkScope : IUnitOfWorkScope
+    public class InMemoryUnitOfWorkScope : IUnitOfWorkScope
     {
         private readonly List<IUnitOfWork> scopedWork;
+        
+        private bool committed;
+
+        private bool disposed;
  
         public InMemoryUnitOfWorkScope()
         {
@@ -39,18 +43,69 @@ namespace Mobile.CQRS.Domain
 
         public void Commit()
         {
-            foreach (var uow in this.scopedWork)
+            if (this.committed)
             {
-                uow.Commit();
+                return;
+            }
+
+            try
+            {
+                this.committed = true;
+
+                foreach (var uow in this.scopedWork)
+                {
+                    uow.Commit();
+                }
+
+                this.AfterCommit();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("UnitOfWorkScope Exception \n{0}", ex);
+                throw;
             }
         }
 
         public void Dispose()
         {
+            if (this.disposed)
+            {
+                throw new ObjectDisposedException("UnitOfWorkScope");
+            }
+
+            if (!this.committed)
+            {
+                this.disposed = true;
+                this.DisposeScopedWork();
+            }
             foreach (var uow in this.scopedWork)
             {
                 uow.Dispose();
             }
         }
+
+        protected virtual void AfterCommit()
+        {
+        }
+        
+        protected virtual void FinallyDispose()
+        {
+        }
+
+        private void DisposeScopedWork()
+        {
+            try
+            {
+                foreach (var uow in this.scopedWork)
+                {
+                    uow.Dispose();
+                }
+            }
+            finally
+            {
+                this.FinallyDispose();
+            }
+        }
+
     }
 }

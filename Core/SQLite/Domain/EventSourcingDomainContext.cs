@@ -34,27 +34,25 @@ namespace Mobile.CQRS.SQLite.Domain
         public EventSourcingDomainContext(SQLiteConnection connection, ISerializer<IAggregateEvent> eventSerializer)
         {
             this.Connection = connection;
-            this.EventStore = new EventStore(connection, eventSerializer);
+            this.EventSerializer = eventSerializer;
         }
         
         public EventSourcingDomainContext(SQLiteConnection connection, ISerializer<IAggregateEvent> eventSerializer, ISerializer<IAggregateCommand> commandSerializer)
         {
             this.Connection = connection;
-            this.EventStore = new EventStore(connection, eventSerializer);
-            this.PendingCommands = new PendingCommandRepository(connection, commandSerializer);
-            this.SyncState = new SyncStateRepository(connection);
+            this.EventSerializer = eventSerializer;
+            this.CommandSerializer = commandSerializer;
         }
 
         public SQLiteConnection Connection { get; private set; }
+        
+        protected ISerializer<IAggregateEvent> EventSerializer { get; set; }
 
-        protected override IUnitOfWorkScope BeginUnitOfWork()
+        protected ISerializer<IAggregateCommand> CommandSerializer { get; set; }
+        
+        protected override IDomainUnitOfWorkScope BeginUnitOfWork()
         {
-            return new SqlUnitOfWorkScope(this.Connection);
-        }
-
-        protected override object GetDataConnection()
-        {
-            return this.Connection;
+            return new SqlDomainScope(this.Connection, this.EventSerializer, this.CommandSerializer);
         }
     }
 }

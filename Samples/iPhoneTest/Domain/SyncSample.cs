@@ -127,9 +127,10 @@ namespace Sample.Domain
                 Client1 = new EventSourcingDomainContext(Client1DB.Main, eventSerializer, commandSerializer);
                 Client2 = new EventSourcingDomainContext(Client2DB.Main, eventSerializer, commandSerializer);
 
-                //var registration = AggregateRegistration.ForType<EventSourcedRoot>()
+                var registration = AggregateRegistration.ForType<EventSourcedRoot>();
                 //    .WithImmediateReadModel(c => new TransactionReadModelBuilder(new SqlRepository<TransactionDataContract>(EventSourcedDB.Main, "TestId")));
-                //context.Register(registration);
+                Client1.Register(registration);
+                Client2.Register(registration);
             }
         }
         
@@ -193,26 +194,26 @@ namespace Sample.Domain
         {
             InitSample();
 
-            var mm = new SyncAgent();
-            mm.LocalEventStore = Client1.EventStore;
-            mm.PendingCommands = Client1.PendingCommands;
-            mm.RemoteEventStore = Remote.EventStore;
-            mm.SyncState = Client1.SyncState;
-
-            mm.SyncWithRemote<EventSourcedRoot>(TestId);
+//            var mm = new SyncAgent();
+//            mm.LocalEventStore = (IMergableEventStore)Client1.EventStore;
+//            mm.PendingCommands = Client1.PendingCommands;
+//            mm.RemoteEventStore = Remote.EventStore;
+//            mm.SyncState = Client1.SyncState;
+//
+//            mm.SyncWithRemote<EventSourcedRoot>(TestId);
         }
         
         public static void Client2SyncWithRemote()
         {
             InitSample();
             
-            var mm = new SyncAgent();
-            mm.LocalEventStore = Client2.EventStore;
-            mm.PendingCommands = Client2.PendingCommands;
-            mm.RemoteEventStore = Remote.EventStore;
-            mm.SyncState = Client2.SyncState;
-
-            mm.SyncWithRemote<EventSourcedRoot>(TestId);
+//            var mm = new SyncAgent();
+//            mm.LocalEventStore = (IMergableEventStore)Client2.EventStore;
+//            mm.PendingCommands = Client2.PendingCommands;
+//            mm.RemoteEventStore = Remote.EventStore;
+//            mm.SyncState = Client2.SyncState;
+//
+//            mm.SyncWithRemote<EventSourcedRoot>(TestId);
         }
     }
 }

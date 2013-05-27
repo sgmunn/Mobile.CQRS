@@ -158,5 +158,7 @@
     <Compile Include="Domain\CommandExecutor.cs" />
     <Compile Include="Domain\InMemoryEventStore.cs" />
     <Compile Include="Domain\DomainCommandExecutor.cs" />
+    <Compile Include="Domain\IMergableEventStore.cs" />
+    <Compile Include="Domain\UnitOfWorkDisposable.cs" />
   </ItemGroup>
 </Project>

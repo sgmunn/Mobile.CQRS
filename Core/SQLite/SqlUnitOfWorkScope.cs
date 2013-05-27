@@ -21,85 +21,37 @@
 namespace Mobile.CQRS.SQLite
 {
     using System;
-    using System.Collections.Generic;
     using System.Threading;
+    using Mobile.CQRS.Domain;
 
-    public class SqlUnitOfWorkScope : IUnitOfWorkScope
+    public class SqlUnitOfWorkScope : InMemoryUnitOfWorkScope
     {
         private readonly SQLiteConnection connection;
-        
-        private readonly List<IUnitOfWork> scopedWork;
 
         private bool inTransaction;
-
-        private bool committed;
-
-        private bool disposed;
 
         public SqlUnitOfWorkScope(SQLiteConnection connection)
         {
             this.connection = connection;
-            this.scopedWork = new List<IUnitOfWork>();
             this.BeginTransaction();
         }
 
-        public void Add(IUnitOfWork uow)
+        public SQLiteConnection Connection
         {
-            this.scopedWork.Add(uow);
-        }
-
-        public void Commit()
-        {
-            if (this.committed)
+            get
             {
-                return;
-            }
-
-            try
-            {
-                this.committed = true;
-
-                foreach (var uow in this.scopedWork)
-                {
-                    uow.Commit();
-                }
-
-                this.EndTransaction();
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("SqlUnitOfWork Exception \n{0}", ex);
-                throw;
+                return this.connection;
             }
         }
 
-        public void Dispose()
+        protected override void AfterCommit()
         {
-            if (this.disposed)
-            {
-                throw new ObjectDisposedException("SqlUnitOfWorkScope");
-            }
-
-            if (!this.committed)
-            {
-                this.disposed = true;
-                this.DisposeScopedWork();
-            }
+            this.EndTransaction();
         }
         
-        private void DisposeScopedWork()
+        protected override void FinallyDispose()
         {
-            try
-            {
-                foreach (var uow in this.scopedWork)
-                {
-                    uow.Dispose();
-                }
-            }
-            finally
-            {
-                this.Rollback();
-            }
+            this.Rollback();
         }
 
         private void BeginTransaction()

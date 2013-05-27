@@ -30,21 +30,21 @@ namespace Mobile.CQRS.Domain
         
         private readonly Func<IAggregateRoot> instantiator;
 
-        private readonly List<Func<object, IReadModelBuilder>> registeredBuilders;
+        private readonly List<Func<IUnitOfWorkScope, IReadModelBuilder>> registeredBuilders;
 
-        private Func<object, ISnapshotRepository> snapshotRepository;
+        private Func<IUnitOfWorkScope, ISnapshotRepository> snapshotRepository;
 
         private AggregateRegistration(Type aggregateType, Func<IAggregateRoot> instantiator)
         {
             this.aggregateType = aggregateType;
             this.instantiator = instantiator;
-            this.registeredBuilders = new List<Func<object, IReadModelBuilder>>();
+            this.registeredBuilders = new List<Func<IUnitOfWorkScope, IReadModelBuilder>>();
         }
 
         private AggregateRegistration(AggregateRegistration registration)
         {
             this.aggregateType = registration.aggregateType;
-            this.registeredBuilders = new List<Func<object, IReadModelBuilder>>(registration.registeredBuilders);
+            this.registeredBuilders = new List<Func<IUnitOfWorkScope, IReadModelBuilder>>(registration.registeredBuilders);
             this.snapshotRepository = registration.snapshotRepository;
         }
 
@@ -66,29 +66,29 @@ namespace Mobile.CQRS.Domain
             return this.instantiator();
         }
 
-        public IList<IReadModelBuilder> ReadModels(object connection)
+        public IList<IReadModelBuilder> ReadModels(IUnitOfWorkScope scope)
         {
-            return this.registeredBuilders.Select(r => r(connection)).ToList();
+            return this.registeredBuilders.Select(r => r(scope)).ToList();
         }
 
-        public ISnapshotRepository Snapshot(object connection)
+        public ISnapshotRepository Snapshot(IUnitOfWorkScope scope)
         {
             if (this.snapshotRepository != null)
             {
-                return this.snapshotRepository(connection);
+                return this.snapshotRepository(scope);
             }
 
             return null;
         }
 
-        public AggregateRegistration WithImmediateReadModel(Func<object, IReadModelBuilder> builderFactory)
+        public AggregateRegistration WithImmediateReadModel(Func<IUnitOfWorkScope, IReadModelBuilder> builderFactory)
         {
             var registration = new AggregateRegistration(this);
             registration.registeredBuilders.Add(builderFactory);
             return registration;
         }
 
-        public AggregateRegistration WithSnapshot(Func<object, ISnapshotRepository> snapshotFactory)
+        public AggregateRegistration WithSnapshot(Func<IUnitOfWorkScope, ISnapshotRepository> snapshotFactory)
         {
             var registration = new AggregateRegistration(this);
             registration.snapshotRepository = snapshotFactory;

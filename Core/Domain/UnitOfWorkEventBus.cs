@@ -32,7 +32,7 @@ namespace Mobile.CQRS.Domain
 
         private readonly List<IDomainNotification> events;
 
-        private readonly Action onFirstPublish;
+        private readonly Action<IDomainNotification> onPublish;
         
         private readonly Action onCommit;
 
@@ -45,14 +45,17 @@ namespace Mobile.CQRS.Domain
             this.bus = bus;
         }
         
-        public UnitOfWorkEventBus(IDomainNotificationBus bus, Action onFirstPublish, Action onCommit = null)
+        public UnitOfWorkEventBus(IDomainNotificationBus bus, Action onCommit) : this(bus)
         {
             if (bus == null)
                 throw new ArgumentNullException("bus");
 
-            this.events = new List<IDomainNotification>();
-            this.bus = bus;
-            this.onFirstPublish = onFirstPublish;
+            this.onCommit = onCommit;
+        }
+        
+        public UnitOfWorkEventBus(IDomainNotificationBus bus, Action<IDomainNotification> onPublish, Action onCommit) : this(bus)
+        {
+            this.onPublish = onPublish;
             this.onCommit = onCommit;
         }
 
@@ -74,9 +77,9 @@ namespace Mobile.CQRS.Domain
 
         public virtual void Publish(IDomainNotification evt)
         {
-            if (this.Events.Count == 0 && this.onFirstPublish != null)
+            if (this.onPublish != null)
             {
-                this.onFirstPublish();
+                this.onPublish(evt);
             }
 
             this.Events.Add(evt);

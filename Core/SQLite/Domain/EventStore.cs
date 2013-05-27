@@ -26,7 +26,7 @@ namespace Mobile.CQRS.SQLite.Domain
     using Mobile.CQRS.Serialization;
     using Mobile.CQRS.Domain;
 
-    public sealed class EventStore : SqlRepository<AggregateEvent>, IEventStore
+    public sealed class EventStore : SqlRepository<AggregateEvent>, IMergableEventStore
     {
         private readonly ISerializer<IAggregateEvent> serializer;
 

@@ -27,9 +27,9 @@ namespace Mobile.CQRS.Domain
     {
         IDomainNotificationBus EventBus { get; }
 
-        void Execute<T>(IAggregateCommand command) where T : class, IAggregateRoot, new();
-        void Execute<T>(IList<IAggregateCommand> commands) where T : class, IAggregateRoot, new();
-        void Execute<T>(IAggregateCommand command, int expectedVersion) where T : class, IAggregateRoot, new();
-        void Execute<T>(IList<IAggregateCommand> commands, int expectedVersion) where T : class, IAggregateRoot, new();
+        void Execute<T>(IAggregateCommand command) where T : IAggregateRoot;
+        void Execute<T>(IList<IAggregateCommand> commands) where T : IAggregateRoot;
+        void Execute<T>(IAggregateCommand command, int expectedVersion) where T : IAggregateRoot;
+        void Execute<T>(IList<IAggregateCommand> commands, int expectedVersion) where T : IAggregateRoot;
     }
 }
