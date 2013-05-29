@@ -176,15 +176,15 @@ namespace Mobile.CQRS.Domain
             {
                 var snapshot = ((ISnapshotSupport)instance).GetSnapshot();
 
-                // we have to pass expected version if we don't have an event store, otherwise we need to validate the expected version
+                // we have to pass expected version if we don't have an event store
                 SaveResult saveResult;
                 if (this.eventStore == null)
                 {
-                    saveResult = this.snapshotRepository.Save(snapshot);
+                    saveResult = this.snapshotRepository.Save(snapshot, expectedVersion);
                 }
                 else
                 {
-                    saveResult = this.snapshotRepository.Save(snapshot, expectedVersion);
+                    saveResult = this.snapshotRepository.Save(snapshot);
                 }
 
                 return NotificationExtensions.CreateModelNotification(instance.Identity, snapshot, saveResult == SaveResult.Added ? ModelChangeKind.Added : ModelChangeKind.Changed);

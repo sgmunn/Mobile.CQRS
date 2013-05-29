@@ -26,6 +26,12 @@ namespace Mobile.CQRS.Domain
     {
         Guid AggregateId { get; set; }
 
+        /// <summary>
+        /// Gets or sets the type of the aggregate.
+        /// This must never change.
+        /// </summary>
+        string AggregateType { get; set; }
+
         int Version { get; set; }
         
         DateTime Timestamp { get; set; }

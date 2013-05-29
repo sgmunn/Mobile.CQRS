@@ -27,20 +27,28 @@ namespace Mobile.CQRS.SQLite.Domain
 
     public class SqlDomainScope : SqlUnitOfWorkScope, IDomainUnitOfWorkScope
     {
-        public SqlDomainScope(SQLiteConnection connection, ISerializer<IAggregateEvent> eventSerializer, ISerializer<IAggregateCommand> commandSerializer) 
+        public SqlDomainScope(SQLiteConnection connection, ISerializer<IAggregateEvent> eventSerializer, ISerializer<IAggregateCommand> commandSerializer, ISerializer<ISnapshot> snapshotSerializer) 
             : base(connection)
         {
             if (connection == null)
                 throw new ArgumentNullException("connection");
-            if (eventSerializer == null)
-                throw new ArgumentNullException("eventSerializer");
+            if (eventSerializer == null && snapshotSerializer == null)
+                throw new InvalidOperationException("eventSerializer and snapshotSerializer cannot both be null");
 
-            this.EventStore = new EventStore(connection, eventSerializer);
+            if (eventSerializer != null)
+            {
+                this.EventStore = new EventStore(connection, eventSerializer);
+            }
 
             if (commandSerializer != null)
             {
                 this.PendingCommands = new PendingCommandRepository(connection, commandSerializer);
                 this.SyncState = new SyncStateRepository(connection);
+            }
+
+            if (snapshotSerializer != null)
+            {
+                this.SnapshotRepository = new SnapshotRepository(connection, snapshotSerializer);
             }
         }
 
@@ -49,6 +57,8 @@ namespace Mobile.CQRS.SQLite.Domain
         public IPendingCommandRepository PendingCommands { get; private set; }
         
         public IRepository<ISyncState> SyncState { get; private set; }
+
+        public ISnapshotRepository SnapshotRepository { get; private set; }
 
         public IRepository<T> GetRepository<T>() where T : IUniqueId, new()
         {

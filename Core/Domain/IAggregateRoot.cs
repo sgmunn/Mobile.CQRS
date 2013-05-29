@@ -25,8 +25,6 @@ namespace Mobile.CQRS.Domain
 
     public interface IAggregateRoot : IUniqueId
     {
-        string AggregateType { get; }
-
         int Version { get; }
 
         IEnumerable<IAggregateEvent> UncommittedEvents { get; }

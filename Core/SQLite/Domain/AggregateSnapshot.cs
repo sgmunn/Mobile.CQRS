@@ -30,6 +30,8 @@ namespace Mobile.CQRS.SQLite.Domain
 
         public int Version { get; set; }
 
+        public string SnapshotType { get; set; }
+        
         public string ObjectData { get; set; }
     }
 }

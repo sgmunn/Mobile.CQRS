@@ -106,11 +106,11 @@ namespace Sample.Domain
     
     public static class SyncSample
     {
-        public static EventSourcingDomainContext Remote;
+        public static EventSourcedDomainContext Remote;
 
-        public static EventSourcingDomainContext Client1;
+        public static EventSourcedDomainContext Client1;
 
-        public static EventSourcingDomainContext Client2;
+        public static EventSourcedDomainContext Client2;
         
         public static Guid TestId;
 
@@ -123,9 +123,9 @@ namespace Sample.Domain
                 var eventSerializer = new DataContractSerializer<EventBase>(TypeHelpers.FindSerializableTypes(typeof(EventBase), Assembly.GetCallingAssembly()));
                 var commandSerializer = new DataContractSerializer<CommandBase>(TypeHelpers.FindSerializableTypes(typeof(CommandBase), Assembly.GetCallingAssembly()));
 
-                Remote = new EventSourcingDomainContext(RemoteDB.Main, eventSerializer);
-                Client1 = new EventSourcingDomainContext(Client1DB.Main, eventSerializer, commandSerializer);
-                Client2 = new EventSourcingDomainContext(Client2DB.Main, eventSerializer, commandSerializer);
+                Remote = new EventSourcedDomainContext(RemoteDB.Main, eventSerializer);
+                Client1 = new EventSourcedDomainContext(Client1DB.Main, eventSerializer) { CommandSerializer = commandSerializer };
+                Client2 = new EventSourcedDomainContext(Client2DB.Main, eventSerializer) { CommandSerializer = commandSerializer };
 
                 var registration = AggregateRegistration.ForType<EventSourcedRoot>();
                 //    .WithImmediateReadModel(c => new TransactionReadModelBuilder(new SqlRepository<TransactionDataContract>(EventSourcedDB.Main, "TestId")));
@@ -141,12 +141,14 @@ namespace Sample.Domain
             connection.CreateTable<AggregateSnapshot>();
             connection.CreateTable<PendingCommand>();
             connection.CreateTable<SyncState>();
+            connection.CreateTable<ReadModelWorkItem>();
 
             connection.Execute("delete from AggregateEvent");
             connection.Execute("delete from AggregateManifest");
             connection.Execute("delete from AggregateSnapshot");
             connection.Execute("delete from PendingCommand");
             connection.Execute("delete from SyncState");
+            connection.Execute("delete from ReadModelWorkItem");
         }
 
         public static void ResetSample()

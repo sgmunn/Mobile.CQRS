@@ -40,6 +40,9 @@ namespace Sample.Domain
         public Guid AggregateId { get; set; }
 
         [DataMember]
+        public string AggregateType { get; set; }
+
+        [DataMember]
         public int Version { get; set; }
 
         [DataMember]

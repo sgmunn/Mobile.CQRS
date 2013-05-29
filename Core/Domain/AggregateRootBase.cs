@@ -29,11 +29,8 @@ namespace Mobile.CQRS.Domain
 
         protected AggregateRootBase()
         {
-            this.AggregateType = this.GetType().Name;
             this.uncommittedEvents = new List<IAggregateEvent>();
         }
-
-        public string AggregateType { get; protected set; }
 
         public Guid Identity { get; set; }
 
@@ -77,6 +74,7 @@ namespace Mobile.CQRS.Domain
 
             evt.Identity = Guid.NewGuid();
             evt.AggregateId = this.Identity;
+            evt.AggregateType = this.GetType().Name;
             evt.Version = this.Version;
             evt.Timestamp = DateTime.UtcNow;
             evt.CommandId = commandId;

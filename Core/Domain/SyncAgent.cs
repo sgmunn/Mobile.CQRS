@@ -60,10 +60,9 @@ namespace Mobile.CQRS.Domain
             // if no sync state, then assume that the aggregate originated from here, or other repo and that this is the first sync
             if (syncState == null)
             {
-                var x = new T();
                 syncState = this.SyncState.New();
                 syncState.Identity = aggregateId;
-                syncState.AggregateType = x.AggregateType;
+                syncState.AggregateType = typeof(T).Name;
             }
 
             var commonEvents = this.LocalEventStore.GetEventsUpToVersion(aggregateId, syncState.LastSyncedVersion);

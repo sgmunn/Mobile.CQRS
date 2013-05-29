@@ -29,14 +29,6 @@ namespace Sample.Domain
     using System.Collections.Generic;
     using Mobile.CQRS.Serialization;
 
-    public class TestDomainContext : SqlDomainContext
-    {
-        public TestDomainContext(SQLiteConnection connection, ISerializer<IAggregateEvent> serializer) 
-            : base(connection, serializer)
-        {
-        }
-    }
-
     public class EventSourcedRoot : AggregateRootBase, IEventSourced
     {
         ////private string name;

@@ -34,15 +34,16 @@ namespace Sample.Domain
 
         public static IDomainContext GetDomainContext()
         {
-            var eventSerializer = new DataContractSerializer<EventBase>(TypeHelpers.FindSerializableTypes(typeof(EventBase), Assembly.GetCallingAssembly()));
+            var serializer = new DataContractSerializer<TestSnapshot>(TypeHelpers.FindSerializableTypes(typeof(TestSnapshot), Assembly.GetCallingAssembly()));
 
-            var context = new TestDomainContext(SnapshotSourcedDB.Main, eventSerializer);
- //           context.EventBus.Subscribe((x) => Console.WriteLine("domain bus event {0}", x));
+            var context = new StateSourcedDomainContext(SnapshotSourcedDB.Main, serializer);
+            //context.EventBus.Subscribe((x) => Console.WriteLine("domain bus event {0}", x));
 
 
             var registration = AggregateRegistration.ForType<SnapshotTestRoot>()
                 .WithImmediateReadModel(c => new TransactionReadModelBuilder(new SqlRepository<TransactionDataContract>(SnapshotSourcedDB.Main, "TestId")))
-                .WithSnapshot(c => new SerializedSnapshotRepository<TestSnapshot>(SnapshotSourcedDB.Main, new DataContractSerializer<TestSnapshot>()));
+                //.WithSnapshot(c => new SerializedSnapshotRepository<TestSnapshot>(SnapshotSourcedDB.Main, new DataContractSerializer<TestSnapshot>()))
+                    ;
 
             context.Register(registration);
 

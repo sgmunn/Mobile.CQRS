@@ -54,7 +54,7 @@ namespace Mobile.CQRS.SQLite.Domain
                 AggregateId = aggregateId, 
                 Identity = evt.Identity,
                 Version = evt.Version,
-                CommandId = evt.CommandId,
+                AggregateType = evt.AggregateType,
                 EventData = this.serializer.SerializeToString(evt),
             }).ToList();
 
@@ -76,7 +76,7 @@ namespace Mobile.CQRS.SQLite.Domain
                 AggregateId = aggregateId, 
                 Identity = evt.Identity,
                 Version = evt.Version,
-                CommandId = evt.CommandId,
+                AggregateType = evt.AggregateType,
                 EventData = this.serializer.SerializeToString(evt),
             }).ToList();
 
@@ -139,6 +139,24 @@ namespace Mobile.CQRS.SQLite.Domain
 
                 return result.Select(x => x.Version).FirstOrDefault();
             }
+        }
+
+        public IList<IAggregateEvent> GetFilteredEvents(string aggregateType, Guid afterEvent, int batchSize)
+        {
+            IList<AggregateEvent> events;
+            lock (this.Connection)
+            {
+                int globalIndex = 0;
+                var evt = this.Connection.Table<AggregateEvent>().Where(x => x.Identity == afterEvent).FirstOrDefault();
+                if (evt != null)
+                {
+                    globalIndex = evt.GlobalKey;
+                }
+
+                events = this.Connection.Table<AggregateEvent>().Where(x => x.AggregateType == aggregateType && x.GlobalKey > globalIndex).OrderBy(x => x.GlobalKey).Take(batchSize).ToList();
+            }
+
+            return events.Select(evt => this.serializer.DeserializeFromString(evt.EventData)).ToList();
         }
     }
 }

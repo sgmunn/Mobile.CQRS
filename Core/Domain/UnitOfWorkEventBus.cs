@@ -75,6 +75,11 @@ namespace Mobile.CQRS.Domain
             }
         }
 
+        public List<IDomainNotification> GetEvents()
+        {
+            return new List<IDomainNotification>(this.events);
+        }
+
         public virtual void Publish(IDomainNotification evt)
         {
             if (this.onPublish != null)

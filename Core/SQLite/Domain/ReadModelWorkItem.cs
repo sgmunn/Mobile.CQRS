@@ -1,5 +1,5 @@
 // --------------------------------------------------------------------------------------------------------------------
-// <copyright file="EventSourcingDomainContext.cs" company="sgmunn">
+// <copyright file="ReadModelWorkItem.cs" company="sgmunn">
 //   (c) sgmunn 2013  
 //
 //   Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
@@ -22,37 +22,29 @@ namespace Mobile.CQRS.SQLite.Domain
 {
     using System;
     using Mobile.CQRS.Domain;
-    using Mobile.CQRS.Serialization;
-
-    public class EventSourcingDomainContext : DomainContextBase
+    
+    public sealed class ReadModelWorkItem : IUniqueId, IReadModelWorkItem
     {
-        public EventSourcingDomainContext(SQLiteConnection connection)
-        {
-            this.Connection = connection;
-        }
+        [PrimaryKey]
+        public Guid Identity { get; set; }
 
-        public EventSourcingDomainContext(SQLiteConnection connection, ISerializer<IAggregateEvent> eventSerializer)
-        {
-            this.Connection = connection;
-            this.EventSerializer = eventSerializer;
-        }
-        
-        public EventSourcingDomainContext(SQLiteConnection connection, ISerializer<IAggregateEvent> eventSerializer, ISerializer<IAggregateCommand> commandSerializer)
-        {
-            this.Connection = connection;
-            this.EventSerializer = eventSerializer;
-            this.CommandSerializer = commandSerializer;
-        }
+        [Indexed]
+        public string AggregateType { get; set; }
 
-        public SQLiteConnection Connection { get; private set; }
-        
-        protected ISerializer<IAggregateEvent> EventSerializer { get; set; }
+        public int FromVersion { get; set; }
 
-        protected ISerializer<IAggregateCommand> CommandSerializer { get; set; }
-        
-        protected override IDomainUnitOfWorkScope BeginUnitOfWork()
+        [Ignore]
+        Guid IReadModelWorkItem.AggregateId
         {
-            return new SqlDomainScope(this.Connection, this.EventSerializer, this.CommandSerializer);
+            get
+            {
+                return this.Identity;
+            }
+
+            set
+            {
+                this.Identity = value;
+            }
         }
     }
 }

@@ -22,8 +22,10 @@ namespace Mobile.CQRS.Domain
 {
     using System;
 
-    public interface ISnapshotRepository : IRepository<ISnapshot>
+    public interface ISnapshotRepository : IDisposable//: IRepository<ISnapshot>
     {
+        ISnapshot GetById(Guid id);
+        SaveResult Save(ISnapshot instance);
         SaveResult Save(ISnapshot instance, int expectedVersion);
     }
 }

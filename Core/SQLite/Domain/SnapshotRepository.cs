@@ -1,6 +1,6 @@
 // --------------------------------------------------------------------------------------------------------------------
 // <copyright file="SnapshotRepository.cs" company="sgmunn">
-//   (c) sgmunn 2012  
+//   (c) sgmunn 2013  
 //
 //   Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
 //   documentation files (the "Software"), to deal in the Software without restriction, including without limitation 
@@ -9,7 +9,7 @@
 //
 //   The above copyright notice and this permission notice shall be included in all copies or substantial portions of 
 //   the Software.
-// 
+//
 //   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO 
 //   THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
 //   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
@@ -21,41 +21,35 @@
 namespace Mobile.CQRS.SQLite.Domain
 {
     using System;
-    using System.Collections.Generic;
-    using System.Linq;
+    using Mobile.CQRS.Serialization;
     using Mobile.CQRS.Domain;
-
-    public class SnapshotRepository<T> : ISnapshotRepository 
-        where T : class, ISnapshot, new() 
+    
+    public sealed class SnapshotRepository : SqlRepository<AggregateSnapshot>, ISnapshotRepository
     {
-        private readonly SqlRepository<T> repository;
+        private readonly ISerializer<ISnapshot> serializer;
         
         private readonly IAggregateManifestRepository manifest;
 
-        public SnapshotRepository(SQLiteConnection connection)
+        public SnapshotRepository(SQLiteConnection connection, ISerializer<ISnapshot> serializer) : base(connection)
         {
-            this.repository = new SqlRepository<T>(connection);
+            if (serializer == null)
+                throw new ArgumentNullException("serializer");
+
+            this.serializer = serializer;
             this.manifest = new AggregateManifestRepository(connection);
+            connection.CreateTable<AggregateSnapshot>();
         }
-
-        public ISnapshot New()
-        {
-            return new T();
-        }
-
-        public ISnapshot GetById(Guid id)
-        {
-            return ((T)this.repository.GetById(id));
-        }
-
-        public IList<ISnapshot> GetAll()
-        {
-            return this.repository.GetAll().Cast<ISnapshot>().ToList();
-        }
-
+        
         public SaveResult Save(ISnapshot instance)
         {
-            return this.repository.Save((T)instance);
+            var snapshot = new AggregateSnapshot {
+                Identity = instance.Identity,
+                Version = instance.Version,
+                SnapshotType = instance.GetType().Name,
+                ObjectData = this.serializer.SerializeToString(instance),
+            };
+
+            return base.Save(snapshot);
         }
         
         public SaveResult Save(ISnapshot instance, int expectedVersion)
@@ -64,19 +58,16 @@ namespace Mobile.CQRS.SQLite.Domain
             return this.Save(instance);
         }
 
-        public void Delete(ISnapshot instance)
+        public new ISnapshot GetById(Guid id)
         {
-            this.repository.Delete((T)instance);
-        }
+            var snapshot = base.GetById(id);
 
-        public void DeleteId(Guid id)
-        {
-            this.repository.DeleteId(id);
-        }
+            if (snapshot == null)
+            {
+                return null;
+            }
 
-        public void Dispose()
-        {
-            this.repository.Dispose();
+            return this.serializer.DeserializeFromString(snapshot.ObjectData);;
         }
     }
 }

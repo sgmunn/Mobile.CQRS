@@ -35,6 +35,8 @@ namespace Mobile.CQRS.Domain
 
         public IRepository<ISyncState> SyncState { get; private set; }
 
+        public ISnapshotRepository SnapshotRepository { get; private set; }
+
         public IRepository<T> GetRepository<T>() where T : IUniqueId, new()
         {
             throw new NotSupportedException();

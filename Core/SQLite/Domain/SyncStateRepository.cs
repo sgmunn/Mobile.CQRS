@@ -25,7 +25,7 @@ namespace Mobile.CQRS.SQLite.Domain
     using System.Linq;
     using Mobile.CQRS.Domain;
     
-    public class SyncStateRepository : IRepository<ISyncState> 
+    public sealed class SyncStateRepository : IRepository<ISyncState> 
     {
         private readonly SqlRepository<SyncState> repository;
 

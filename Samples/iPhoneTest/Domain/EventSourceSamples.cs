@@ -19,6 +19,7 @@
 //  --------------------------------------------------------------------------------------------------------------------
 using Mobile.CQRS.Serialization;
 using Mobile.CQRS.SQLite;
+using Mobile.CQRS.SQLite.Domain;
 
 namespace Sample.Domain
 {
@@ -36,7 +37,7 @@ namespace Sample.Domain
         {
             var eventSerializer = new DataContractSerializer<EventBase>(TypeHelpers.FindSerializableTypes(typeof(EventBase), Assembly.GetCallingAssembly()));
 
-            var context = new TestDomainContext(EventSourcedDB.Main, eventSerializer);
+            var context = new EventSourcedDomainContext(EventSourcedDB.Main, eventSerializer);
             context.EventBus.Subscribe((x) => Console.WriteLine("domain bus event {0}", x));
 
             var registration = AggregateRegistration.ForType<EventSourcedRoot>()

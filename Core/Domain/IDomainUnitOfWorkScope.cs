@@ -22,12 +22,24 @@ namespace Mobile.CQRS.Domain
 {
     public interface IDomainUnitOfWorkScope : IUnitOfWorkScope
     {
+
+        // this is almost the context and the context is ??
+
+
         IEventStore EventStore { get; }
         IPendingCommandRepository PendingCommands { get; }
         IRepository<ISyncState> SyncState { get; }
+        ISnapshotRepository SnapshotRepository { get; }
 
         // TODO: we would need a way to register different repository instances
         // TODO: we need to register the scope field name for rebuilding read models
         IRepository<T> GetRepository<T>() where T : IUniqueId, new();
+    }
+
+    public interface IReadModelUnitOfWorkScope : IUnitOfWorkScope
+    {
+        IEventStore EventStore { get; }
+        IReadModelQueue ReadModelQueue { get; }
+        // TODO: IRepository<T> GetRepository<T>() where T : IUniqueId, new();
     }
 }
