@@ -123,11 +123,6 @@ namespace Mobile.CQRS.Domain
 
             return savedEvents.Where(x => x.Version <= version).ToList();
         }
-        
-        public IList<IAggregateEvent> GetFilteredEvents(string aggregateType, Guid afterEvent, int batchSize)
-        {
-            throw new NotSupportedException();
-        }
 
         private List<IAggregateEvent> GetEvents(Guid rootId)
         {

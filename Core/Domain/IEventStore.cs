@@ -32,7 +32,5 @@ namespace Mobile.CQRS.Domain
         IList<IAggregateEvent> GetAllEvents(Guid rootId);
         IList<IAggregateEvent> GetEventsAfterVersion(Guid rootId, int version);
         IList<IAggregateEvent> GetEventsUpToVersion(Guid rootId, int version);
-        // TODO: this could fail with sql event store after a merge, can we loose it
-        IList<IAggregateEvent> GetFilteredEvents(string aggregateType, Guid afterEvent, int batchSize);
     }
 }
