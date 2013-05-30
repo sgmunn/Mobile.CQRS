@@ -1,5 +1,5 @@
 //  --------------------------------------------------------------------------------------------------------------------
-//  <copyright file="AggregateManifest.cs" company="sgmunn">
+//  <copyright file="AggregateIndex.cs" company="sgmunn">
 //    (c) sgmunn 2012  
 //
 //    Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
@@ -22,7 +22,7 @@ namespace Mobile.CQRS.SQLite.Domain
 {
     using System;
 
-    public sealed class AggregateManifest : IUniqueId
+    public sealed class AggregateIndex : IUniqueId
     {
         [PrimaryKey]
         public Guid Identity { get; set; }

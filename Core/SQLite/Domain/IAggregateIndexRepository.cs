@@ -1,5 +1,5 @@
 //  --------------------------------------------------------------------------------------------------------------------
-//  <copyright file="IAggregateManifestRepository.cs" company="sgmunn">
+//  <copyright file="IAggregateIndexRepository.cs" company="sgmunn">
 //    (c) sgmunn 2012  
 //
 //    Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
@@ -22,8 +22,8 @@ namespace Mobile.CQRS.SQLite.Domain
 {
     using System;
 
-    public interface IAggregateManifestRepository
+    public interface IAggregateIndexRepository
     {
-        void UpdateManifest(Guid aggregateId, int currentVersion, int newVersion);
+        void UpdateIndex(Guid aggregateId, int currentVersion, int newVersion);
     }
 }

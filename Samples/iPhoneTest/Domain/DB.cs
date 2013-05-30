@@ -46,7 +46,7 @@ namespace Sample.Domain
 
         protected EventSourcedDB() : base(SampleDatabasePath())
         {
-            this.CreateTable<AggregateManifest>();
+            this.CreateTable<AggregateIndex>();
             this.CreateTable<AggregateEvent>();
             this.CreateTable<AggregateSnapshot>();
             this.CreateTable<TransactionDataContract>();
@@ -72,7 +72,7 @@ namespace Sample.Domain
 
         protected SnapshotSourcedDB() : base(SampleDatabasePath())
         {
-            this.CreateTable<AggregateManifest>();
+            this.CreateTable<AggregateIndex>();
             this.CreateTable<AggregateEvent>();
             this.CreateTable<AggregateSnapshot>();
             this.CreateTable<TestSnapshot>();

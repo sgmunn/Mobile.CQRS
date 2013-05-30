@@ -28,7 +28,7 @@ namespace Mobile.CQRS.SQLite.Domain
     {
         private readonly ISerializer<ISnapshot> serializer;
         
-        private readonly IAggregateManifestRepository manifest;
+        private readonly IAggregateIndexRepository index;
 
         public SnapshotRepository(SQLiteConnection connection, ISerializer<ISnapshot> serializer) : base(connection)
         {
@@ -36,7 +36,7 @@ namespace Mobile.CQRS.SQLite.Domain
                 throw new ArgumentNullException("serializer");
 
             this.serializer = serializer;
-            this.manifest = new AggregateManifestRepository(connection);
+            this.index = new AggregateIndexRepository(connection);
             connection.CreateTable<AggregateSnapshot>();
         }
         
@@ -54,7 +54,7 @@ namespace Mobile.CQRS.SQLite.Domain
         
         public SaveResult Save(ISnapshot instance, int expectedVersion)
         {
-            this.manifest.UpdateManifest(instance.Identity, expectedVersion, instance.Version);
+            this.index.UpdateIndex(instance.Identity, expectedVersion, instance.Version);
             return this.Save(instance);
         }
 

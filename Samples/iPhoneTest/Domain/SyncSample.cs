@@ -137,7 +137,7 @@ namespace Sample.Domain
         public static void Reset(SQLiteConnection connection)
         {
             connection.CreateTable<AggregateEvent>();
-            connection.CreateTable<AggregateManifest>();
+            connection.CreateTable<AggregateIndex>();
             connection.CreateTable<AggregateSnapshot>();
             connection.CreateTable<PendingCommand>();
             connection.CreateTable<SyncState>();

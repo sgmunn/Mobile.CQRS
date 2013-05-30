@@ -23,20 +23,20 @@ namespace Mobile.CQRS.SQLite.Domain
     using System;
     using Mobile.CQRS.Domain;
 
-    public sealed class AggregateManifestRepository : IAggregateManifestRepository
+    public sealed class AggregateIndexRepository : IAggregateIndexRepository
     {
-        ////private const string UpdateSql = "update AggregateManifest set Version = ? where Identity = ? and Version = ?";
-        private const string UpdateSql = "update AggregateManifest set Version = {0} where Identity = '{1}' and Version = {2}";
+        ////private const string UpdateSql = "update AggregateIndex set Version = ? where Identity = ? and Version = ?";
+        private const string UpdateSql = "update AggregateIndex set Version = {0} where Identity = '{1}' and Version = {2}";
 
         private readonly SQLiteConnection connection;
 
-        public AggregateManifestRepository(SQLiteConnection connection)
+        public AggregateIndexRepository(SQLiteConnection connection)
         {
             this.connection = connection;
-            this.connection.CreateTable<AggregateManifest>();
+            this.connection.CreateTable<AggregateIndex>();
         }
 
-        public void UpdateManifest(Guid aggregateId, int currentVersion, int newVersion)
+        public void UpdateIndex(Guid aggregateId, int currentVersion, int newVersion)
         {
             bool updated = false;
 
@@ -49,12 +49,12 @@ namespace Mobile.CQRS.SQLite.Domain
             }
             catch (Exception ex)
             {
-                throw new InvalidOperationException("** Unable to update Aggregate Manifest **", ex);
+                throw new InvalidOperationException("** Unable to update Aggregate Index **", ex);
             }
 
             if (!updated)
             {
-                Console.WriteLine("AggregateManifest FAILED");
+                Console.WriteLine("AggregateIndex FAILED");
                 throw new ConcurrencyException(aggregateId, newVersion, currentVersion);
             }
         }
@@ -63,7 +63,7 @@ namespace Mobile.CQRS.SQLite.Domain
         {
             if (currentVersion == 0)
             {
-                this.connection.Insert(new AggregateManifest { Identity = aggregateId, Version = newVersion, });
+                this.connection.Insert(new AggregateIndex { Identity = aggregateId, Version = newVersion, });
             }
             else
             {

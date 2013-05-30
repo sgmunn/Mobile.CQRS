@@ -108,6 +108,8 @@ namespace Mobile.CQRS.Domain
                     scope.Commit();
                 }
 
+                // get events in the buffer, bundle them up and send them in one go to the background read model builder
+
                 // finally, publish the events to the real event bus
                 busBuffer.Commit();
             }

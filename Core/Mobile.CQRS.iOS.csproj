@@ -118,11 +118,8 @@
     <Compile Include="SQLite\SqlRepository_T.cs" />
     <Compile Include="SQLite\SqlUnitOfWorkScope.cs" />
     <Compile Include="SQLite\Domain\AggregateEvent.cs" />
-    <Compile Include="SQLite\Domain\AggregateManifest.cs" />
-    <Compile Include="SQLite\Domain\AggregateManifestRepository.cs" />
     <Compile Include="SQLite\Domain\AggregateSnapshot.cs" />
     <Compile Include="SQLite\Domain\EventStore.cs" />
-    <Compile Include="SQLite\Domain\IAggregateManifestRepository.cs" />
     <Compile Include="SQLite\Domain\PendingCommand.cs" />
     <Compile Include="SQLite\Domain\PendingCommandRepository.cs" />
     <Compile Include="SQLite\Domain\SyncState.cs" />
@@ -165,5 +162,8 @@
     <Compile Include="SQLite\Domain\EventSourcedDomainContext.cs" />
     <Compile Include="SQLite\Domain\ReadModelBuilderQueue.cs" />
     <Compile Include="SQLite\Domain\ReadModelWorkItem.cs" />
+    <Compile Include="SQLite\Domain\AggregateIndex.cs" />
+    <Compile Include="SQLite\Domain\AggregateIndexRepository.cs" />
+    <Compile Include="SQLite\Domain\IAggregateIndexRepository.cs" />
   </ItemGroup>
 </Project>

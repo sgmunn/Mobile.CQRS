@@ -30,7 +30,7 @@ namespace Mobile.CQRS.SQLite.Domain
     {
         private readonly ISerializer<IAggregateEvent> serializer;
 
-        private readonly IAggregateManifestRepository manifest;
+        private readonly IAggregateIndexRepository index;
 
         public EventStore(SQLiteConnection connection, ISerializer<IAggregateEvent> serializer) : base(connection)
         {
@@ -38,7 +38,7 @@ namespace Mobile.CQRS.SQLite.Domain
                 throw new ArgumentNullException("serializer");
 
             this.serializer = serializer;
-            this.manifest = new AggregateManifestRepository(connection);
+            this.index = new AggregateIndexRepository(connection);
 
             connection.CreateTable<AggregateEvent>();
         }
@@ -61,7 +61,7 @@ namespace Mobile.CQRS.SQLite.Domain
             lock (this.Connection)
             {
                 var newVersion = events[events.Count - 1].Version;
-                this.manifest.UpdateManifest(aggregateId, expectedVersion, newVersion);
+                this.index.UpdateIndex(aggregateId, expectedVersion, newVersion);
 
                 foreach (var evt in serializedEvents)
                 {
@@ -83,7 +83,7 @@ namespace Mobile.CQRS.SQLite.Domain
             lock (this.Connection)
             {
                 var newVersion = events[events.Count - 1].Version;
-                this.manifest.UpdateManifest(aggregateId, expectedVersion, newVersion);
+                this.index.UpdateIndex(aggregateId, expectedVersion, newVersion);
 
                 this.Connection.Execute(string.Format("delete from AggregateEvent where AggregateId = ? and Version > {0}", fromVersion), aggregateId);
 
