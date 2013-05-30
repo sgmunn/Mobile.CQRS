@@ -30,23 +30,24 @@ namespace Mobile.CQRS.Domain
         
         private readonly Func<IAggregateRoot> instantiator;
 
-        private readonly List<Func<IUnitOfWorkScope, IReadModelBuilder>> registeredBuilders;
-
-        private Func<IUnitOfWorkScope, ISnapshotRepository> snapshotRepository;
+        private readonly List<Func<IUnitOfWorkScope, IReadModelBuilder>> immediateBuilders;
+        
+        private readonly List<Func<IUnitOfWorkScope, IReadModelBuilder>> delayedBuilders;
 
         private AggregateRegistration(Type aggregateType, Func<IAggregateRoot> instantiator)
         {
             this.aggregateType = aggregateType;
             this.instantiator = instantiator;
-            this.registeredBuilders = new List<Func<IUnitOfWorkScope, IReadModelBuilder>>();
+            this.immediateBuilders = new List<Func<IUnitOfWorkScope, IReadModelBuilder>>();
+            this.delayedBuilders = new List<Func<IUnitOfWorkScope, IReadModelBuilder>>();
         }
 
         private AggregateRegistration(AggregateRegistration registration)
         {
             this.aggregateType = registration.aggregateType;
             this.instantiator = registration.instantiator;
-            this.registeredBuilders = new List<Func<IUnitOfWorkScope, IReadModelBuilder>>(registration.registeredBuilders);
-            this.snapshotRepository = registration.snapshotRepository;
+            this.immediateBuilders = new List<Func<IUnitOfWorkScope, IReadModelBuilder>>(registration.immediateBuilders);
+            this.delayedBuilders = new List<Func<IUnitOfWorkScope, IReadModelBuilder>>(registration.delayedBuilders);
         }
 
         public Type AggregateType 
@@ -67,32 +68,27 @@ namespace Mobile.CQRS.Domain
             return this.instantiator();
         }
 
-        public IList<IReadModelBuilder> ReadModels(IUnitOfWorkScope scope)
+        public IList<IReadModelBuilder> ImmediateReadModels(IUnitOfWorkScope scope)
         {
-            return this.registeredBuilders.Select(r => r(scope)).ToList();
+            return this.immediateBuilders.Select(r => r(scope)).ToList();
         }
-
-        public ISnapshotRepository Snapshot(IUnitOfWorkScope scope)
+        
+        public IList<IReadModelBuilder> DelayedReadModels(IUnitOfWorkScope scope)
         {
-            if (this.snapshotRepository != null)
-            {
-                return this.snapshotRepository(scope);
-            }
-
-            return null;
+            return this.delayedBuilders.Select(r => r(scope)).ToList();
         }
 
         public AggregateRegistration WithImmediateReadModel(Func<IUnitOfWorkScope, IReadModelBuilder> builderFactory)
         {
             var registration = new AggregateRegistration(this);
-            registration.registeredBuilders.Add(builderFactory);
+            registration.immediateBuilders.Add(builderFactory);
             return registration;
         }
-
-        public AggregateRegistration WithSnapshot(Func<IUnitOfWorkScope, ISnapshotRepository> snapshotFactory)
+        
+        public AggregateRegistration WithDelayedReadModel(Func<IUnitOfWorkScope, IReadModelBuilder> builderFactory)
         {
             var registration = new AggregateRegistration(this);
-            registration.snapshotRepository = snapshotFactory;
+            registration.delayedBuilders.Add(builderFactory);
             return registration;
         }
     }

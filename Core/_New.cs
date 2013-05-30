@@ -59,20 +59,6 @@ namespace Mobile.CQRS.Domain
      */ 
 
 
-    public interface IReadModelWorkItem
-    {
-        Guid AggregateId { get; set; }
-        string AggregateType { get; set; }
-        int FromVersion { get; set; }
-    }
-    
-    public interface IReadModelQueue
-    {
-        void Enqueue(Guid aggregateId, string aggregateType, int fromVersion);
-        void Dequeue(IReadModelWorkItem workItem);
-        IList<IReadModelWorkItem> Peek(int batchSize);
-    }
-
 
 
     public class Test

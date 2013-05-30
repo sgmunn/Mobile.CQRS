@@ -59,7 +59,7 @@ namespace Mobile.CQRS.Domain
 
             // readModelBuilderBus will publish events to a bus that will build read models and then pass events off to
             // the real eventBus
-            var readModelBuilderBus = new ReadModelBuildingEventBus(this.registration.ReadModels(this.scope), this.eventBus);
+            var readModelBuilderBus = new ReadModelBuildingEventBus(this.registration.ImmediateReadModels(this.scope), this.eventBus);
 
             // holds the events that were raised from the aggregate and will push them to the read model building bus
             var aggregateEvents = new UnitOfWorkEventBus(readModelBuilderBus);

@@ -165,5 +165,7 @@
     <Compile Include="SQLite\Domain\AggregateIndex.cs" />
     <Compile Include="SQLite\Domain\AggregateIndexRepository.cs" />
     <Compile Include="SQLite\Domain\IAggregateIndexRepository.cs" />
+    <Compile Include="Domain\IReadModelWorkItem.cs" />
+    <Compile Include="Domain\IReadModelQueue.cs" />
   </ItemGroup>
 </Project>
