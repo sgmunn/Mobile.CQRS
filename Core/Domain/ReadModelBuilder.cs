@@ -22,6 +22,7 @@ namespace Mobile.CQRS.Domain
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using Mobile.CQRS.Reactive;
 
     /// <summary>
@@ -64,18 +65,23 @@ namespace Mobile.CQRS.Domain
             return this.updatedReadModels;
         }
 
-        public IEnumerable<IDomainNotification> Process(IEnumerable<IDomainNotification> events)
+        public IEnumerable<IDomainNotification> Process(IEnumerable<IAggregateEvent> events)
         {
             this.updatedReadModels.Clear();
 
             foreach (var evt in events)
             {
-                MethodExecutor.ExecuteMethod(this, evt.Event);
+                MethodExecutor.ExecuteMethod(this, evt);
             }
 
             return this.updatedReadModels;
         }
         
+        public IEnumerable<IDomainNotification> Process(IEnumerable<IDomainNotification> events)
+        {
+            return this.Process(events.Select(evt => evt.Event).OfType<IAggregateEvent>());
+        }
+
         public virtual void DeleteForAggregate(Guid aggregateId)
         {
             var scoped = this.Repository as IScopedRepository;

@@ -53,7 +53,8 @@ namespace Mobile.CQRS.Domain
         
         private int locker;
 
-        public ReadModelBuilderAgent(IDomainContext context, List<IAggregateRegistration> registrations, Func<IUnitOfWorkScope> scopeFactory, Func<IUnitOfWorkScope, IReadModelQueue> queueFactory)
+        public ReadModelBuilderAgent(IDomainContext context, 
+                                     List<IAggregateRegistration> registrations, Func<IUnitOfWorkScope> scopeFactory, Func<IUnitOfWorkScope, IReadModelQueue> queueFactory)
         {
             this.context = context;
             this.registrations = registrations;
@@ -160,7 +161,7 @@ namespace Mobile.CQRS.Domain
                             try
                             {
 
-                                this.ProcessWorkItem(scope, registration, bus);
+                                this.ProcessWorkItem(scope, registration, bus, workItem);
 
                                 queue.Dequeue(workItem);
                             }
@@ -179,16 +180,27 @@ namespace Mobile.CQRS.Domain
             }
         }
 
-        private void ProcessWorkItem(IUnitOfWorkScope scope, IAggregateRegistration registration, IDomainNotificationBus bus)
+        private void ProcessWorkItem(IUnitOfWorkScope scope, IAggregateRegistration registration, IDomainNotificationBus bus, IReadModelWorkItem workItem)
         {
-            var builders = registration.DelayedReadModels(scope);
-            foreach (var builder in builders)
+            var eventScope = this.context.BeginUnitOfWork();
+            using (eventScope)
             {
-                // we need to get the events from the event store
-                var events = builder.Process(null);
-                foreach (var evt in events)
+                var events = eventScope.EventStore.GetEventsAfterVersion(workItem.Identity, workItem.FromVersion - 1).ToList();
+                var builders = registration.DelayedReadModels(scope);
+                foreach (var builder in builders)
                 {
-                    bus.Publish(evt);
+                    // TODO: if version 0 then do a rebuild
+                    if (workItem.FromVersion == 0)
+                    {
+                        builder.DeleteForAggregate(workItem.Identity);
+                    }
+
+                    // we need to get the events from the event store
+                    var builderEvents = builder.Process(events);
+                    foreach (var evt in builderEvents)
+                    {
+                        bus.Publish(evt);
+                    }
                 }
             }
         }

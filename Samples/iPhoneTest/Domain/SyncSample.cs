@@ -123,13 +123,16 @@ namespace Sample.Domain
                 var eventSerializer = new DataContractSerializer<EventBase>(TypeHelpers.FindSerializableTypes(typeof(EventBase), Assembly.GetCallingAssembly()));
                 var commandSerializer = new DataContractSerializer<CommandBase>(TypeHelpers.FindSerializableTypes(typeof(CommandBase), Assembly.GetCallingAssembly()));
 
-                Remote = new EventSourcedDomainContext(RemoteDB.Main, null, eventSerializer);
+                Remote = new EventSourcedDomainContext(RemoteDB.Main, ReadModelDB.Main, eventSerializer);
                 Client1 = new EventSourcedDomainContext(Client1DB.Main, ReadModelDB.Main, eventSerializer) { CommandSerializer = commandSerializer };
-                Client2 = new EventSourcedDomainContext(Client2DB.Main, null, eventSerializer) { CommandSerializer = commandSerializer };
+                Client2 = new EventSourcedDomainContext(Client2DB.Main, ReadModelDB.Main, eventSerializer) { CommandSerializer = commandSerializer };
 
                 var registration = AggregateRegistration.ForType<EventSourcedRoot>();
                 //    .WithImmediateReadModel(c => new TransactionReadModelBuilder(new SqlRepository<TransactionDataContract>(EventSourcedDB.Main, "TestId")));
-                Client1.Register(registration);
+                Client1.Register(registration.WithDelayedReadModel(
+                    // TODO: pass in read model db as a scope
+                    c => new TransactionReadModelBuilder(new SqlRepository<TransactionDataContract>(ReadModelDB.Main, "TestId"))));
+
                 Client2.Register(registration);
             }
         }
@@ -155,10 +158,6 @@ namespace Sample.Domain
 
         public static void ResetSample()
         {
-            test = new ReadModelBuilderAgent(null, null, null, null);
-            test.Start();
-
-            return;
             TestId = Guid.Empty;
             Remote = null;
             Client1 = null;
@@ -170,9 +169,6 @@ namespace Sample.Domain
 
         public static void CreateRootClient1()
         {
-            test.Stop();
-
-            return;
             InitSample();
             Client1.Execute<EventSourcedRoot>(new TestCommand1 
             { 
@@ -189,10 +185,18 @@ namespace Sample.Domain
                 AggregateId = TestId,
                 Name = "Client 1 Edit " + DateTime.Now.Second.ToString(),
             });
+            Client1.Execute<EventSourcedRoot>(new TestCommand2 
+                                              { 
+                AggregateId = TestId,
+                Amount = 100,
+            });
         }
         
         public static void EditClient2()
         {
+            InitSample();
+            Client1.StartDelayedReadModels();
+            return;
             InitSample();
             Client2.Execute<EventSourcedRoot>(new TestCommand1 
                                               { 

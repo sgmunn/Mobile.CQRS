@@ -47,7 +47,7 @@ namespace Mobile.CQRS.SQLite.Domain
 
         public ISerializer<ISnapshot> SnapshotSerializer { get; private set; }
 
-        protected override IDomainUnitOfWorkScope BeginUnitOfWork()
+        public override IDomainUnitOfWorkScope BeginUnitOfWork()
         {
             return new SqlDomainScope(this.Connection, null, null, this.SnapshotSerializer);
         }

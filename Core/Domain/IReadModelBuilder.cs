@@ -27,6 +27,7 @@ namespace Mobile.CQRS.Domain
     {
         IEnumerable<IDomainNotification> Handle(IDomainNotification evt);
         IEnumerable<IDomainNotification> Process(IEnumerable<IDomainNotification> events);
+        IEnumerable<IDomainNotification> Process(IEnumerable<IAggregateEvent> events);
         void DeleteForAggregate(Guid aggregateId);
     }
 }

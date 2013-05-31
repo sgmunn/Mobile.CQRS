@@ -90,7 +90,7 @@ namespace Mobile.CQRS.Domain
             this.registrations.Add(registration);
         }
 
-        protected virtual IDomainUnitOfWorkScope BeginUnitOfWork()
+        public virtual IDomainUnitOfWorkScope BeginUnitOfWork()
         {
             return new InMemoryDomainScope();
         }
