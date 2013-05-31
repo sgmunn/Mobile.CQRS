@@ -31,9 +31,5 @@ namespace Mobile.CQRS.Domain
         void Execute<T>(IList<IAggregateCommand> commands) where T : IAggregateRoot;
         void Execute<T>(IAggregateCommand command, int expectedVersion) where T : IAggregateRoot;
         void Execute<T>(IList<IAggregateCommand> commands, int expectedVersion) where T : IAggregateRoot;
-
-        IDomainUnitOfWorkScope BeginUnitOfWork();
-
-        IUnitOfWorkScope BeginReadModelUnitOfWork();
     }
 }

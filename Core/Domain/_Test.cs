@@ -23,8 +23,14 @@ namespace Mobile.CQRS.Domain
         Exception Fault { get; }
     }
     
-    public class ReadModelBuilderFaultedEvent : IReadModelBuilderFaulted
+    public sealed class ReadModelBuilderFaultedEvent : IReadModelBuilderFaulted
     {
+        public ReadModelBuilderFaultedEvent(Guid identity, Exception ex)
+        {
+            this.Identity = identity;
+            this.Fault = ex;
+        }
+
         public Guid Identity { get; set; }
         public Exception Fault { get; set; }
     }
@@ -161,7 +167,7 @@ namespace Mobile.CQRS.Domain
                             catch (Exception ex)
                             {
                                 var topic = new DomainTopic(registration.AggregateType, workItem.Identity);
-                                this.context.EventBus.Publish(new DomainNotification(topic, workItem));
+                                this.context.EventBus.Publish(new DomainNotification(topic, new ReadModelBuilderFaultedEvent(workItem.Identity, ex)));
                                 throw;
                             }
                         }

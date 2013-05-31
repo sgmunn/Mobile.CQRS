@@ -57,7 +57,13 @@ namespace Mobile.CQRS.Domain
             }
         }
 
-        protected Lazy<IReadModelQueue> ReadModelQueueConstructor { get; set; }
+        public IEnumerable<IAggregateRegistration> Registrations 
+        {
+            get
+            {
+                return this.registrations;
+            }
+        }
 
         public void Execute<T>(IAggregateCommand command) where T : IAggregateRoot
         {
@@ -84,14 +90,9 @@ namespace Mobile.CQRS.Domain
             this.registrations.Add(registration);
         }
 
-        public virtual IDomainUnitOfWorkScope BeginUnitOfWork()
+        protected virtual IDomainUnitOfWorkScope BeginUnitOfWork()
         {
             return new InMemoryDomainScope();
-        }
-
-        public virtual IUnitOfWorkScope BeginReadModelUnitOfWork()
-        {
-            return null;
         }
 
         protected virtual void InternalExecute<T>(IList<IAggregateCommand> commands, int expectedVersion) where T : IAggregateRoot

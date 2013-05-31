@@ -17,6 +17,7 @@
 //   IN THE SOFTWARE.
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
+using System.Linq;
 
 namespace Mobile.CQRS.SQLite.Domain
 {
@@ -32,6 +33,8 @@ namespace Mobile.CQRS.SQLite.Domain
     /// </summary>
     public sealed class EventSourcedDomainContext : DomainContextBase
     {
+        private ReadModelBuilderAgent readModelBuilder;
+
 //        public EventSourcedDomainContext(SQLiteConnection connection, ISerializer<IAggregateEvent> eventSerializer) 
 //        {
 //            if (connection == null)
@@ -73,14 +76,24 @@ namespace Mobile.CQRS.SQLite.Domain
         
         public ISerializer<ISnapshot> SnapshotSerializer { get; set; }
 
-        public override IDomainUnitOfWorkScope BeginUnitOfWork()
+        protected override IDomainUnitOfWorkScope BeginUnitOfWork()
         {
             return new SqlDomainScope(this.Connection, this.EventSerializer, this.CommandSerializer, this.SnapshotSerializer);
         }
-        
-        public override IUnitOfWorkScope BeginReadModelUnitOfWork()
+
+        public void StartDelayedReadModels()
         {
-            return new SqlUnitOfWorkScope(this.ReadModelConnection);
+            // TODO: we would really like this exposed better, but for now this will do
+            if (this.readModelBuilder == null)
+            {
+                this.readModelBuilder = new ReadModelBuilderAgent(
+                    this, 
+                    this.Registrations.ToList(), 
+                    () => new SqlUnitOfWorkScope(this.ReadModelConnection), 
+                    (scope) => new ReadModelBuilderQueue(scope));
+
+                this.readModelBuilder.Start();
+            }
         }
 
         protected override IReadModelQueueProducer GetReadModelQueue()

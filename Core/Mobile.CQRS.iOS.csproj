@@ -168,5 +168,6 @@
     <Compile Include="Domain\IReadModelQueue.cs" />
     <Compile Include="Domain\_Notes.cs" />
     <Compile Include="Domain\_Test.cs" />
+    <Compile Include="Domain\IReadModelQueueProducer.cs" />
   </ItemGroup>
 </Project>

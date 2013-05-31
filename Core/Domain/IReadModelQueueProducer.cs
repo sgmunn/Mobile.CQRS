@@ -1,5 +1,5 @@
 // --------------------------------------------------------------------------------------------------------------------
-// <copyright file="IReadModelQueue.cs" company="sgmunn">
+// <copyright file="IReadModelQueueProducer.cs" company="sgmunn">
 //   (c) sgmunn 2013  
 //
 //   Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
@@ -21,11 +21,9 @@
 namespace Mobile.CQRS.Domain
 {
     using System;
-    using System.Collections.Generic;
 
-    public interface IReadModelQueue
+    public interface IReadModelQueueProducer
     {
-        void Dequeue(IReadModelWorkItem workItem);
-        IList<IReadModelWorkItem> Peek(int batchSize);
+        IReadModelWorkItem Enqueue(Guid aggregateId, string aggregateType, int fromVersion);
     }
 }

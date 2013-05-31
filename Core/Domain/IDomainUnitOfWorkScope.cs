@@ -31,9 +31,4 @@ namespace Mobile.CQRS.Domain
         // TODO: we need to register the scope field name for rebuilding read models
         IRepository<T> GetRepository<T>() where T : IUniqueId, new();
     }
-
-    public interface IReadModelUnitOfWorkScope : IUnitOfWorkScope
-    {
-        IReadModelQueue ReadModelQueue { get; }
-    }
 }

@@ -35,6 +35,13 @@ namespace Mobile.CQRS.SQLite.Domain
             this.repository = new SqlRepository<ReadModelWorkItem>(connection);
             connection.CreateTable<ReadModelWorkItem>();
         }
+        
+        public ReadModelBuilderQueue(IUnitOfWorkScope scope)
+        {
+            var connection = (SQLiteConnection)scope;
+            this.repository = new SqlRepository<ReadModelWorkItem>(connection);
+            this.repository.Connection.CreateTable<ReadModelWorkItem>();
+        }
 
         public IReadModelWorkItem Enqueue(Guid aggregateId, string aggregateType, int fromVersion)
         {
