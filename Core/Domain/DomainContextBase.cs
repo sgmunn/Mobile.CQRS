@@ -28,7 +28,7 @@ namespace Mobile.CQRS.Domain
     {
         private readonly List<IAggregateRegistration> registrations;
 
-        private IReadModelQueue readModelQueue;
+        private IReadModelQueueProducer readModelQueue;
 
         protected DomainContextBase()
         {
@@ -44,7 +44,7 @@ namespace Mobile.CQRS.Domain
         
         public IDomainNotificationBus EventBus { get; protected set; }
 
-        public IReadModelQueue ReadModelQueue 
+        public IReadModelQueueProducer ReadModelQueue 
         {
             get
             {
@@ -84,9 +84,14 @@ namespace Mobile.CQRS.Domain
             this.registrations.Add(registration);
         }
 
-        protected virtual IDomainUnitOfWorkScope BeginUnitOfWork()
+        public virtual IDomainUnitOfWorkScope BeginUnitOfWork()
         {
             return new InMemoryDomainScope();
+        }
+
+        public virtual IUnitOfWorkScope BeginReadModelUnitOfWork()
+        {
+            return null;
         }
 
         protected virtual void InternalExecute<T>(IList<IAggregateCommand> commands, int expectedVersion) where T : IAggregateRoot
@@ -115,6 +120,6 @@ namespace Mobile.CQRS.Domain
             }
         }
 
-        protected abstract IReadModelQueue GetReadModelQueue();
+        protected abstract IReadModelQueueProducer GetReadModelQueue();
     }
 }

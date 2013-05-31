@@ -24,6 +24,11 @@ namespace Mobile.CQRS.Domain
     using System.Collections.Generic;
     using Mobile.CQRS.Reactive;
 
+    /// <summary>
+    /// *
+    /// * read model builders need to check the version of each event to make sure that they don't double process events
+    /// *
+    /// </summary>
     public abstract class ReadModelBuilder<T> : IReadModelBuilder
         where T : IUniqueId
     {

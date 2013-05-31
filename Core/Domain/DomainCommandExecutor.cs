@@ -33,9 +33,9 @@ namespace Mobile.CQRS.Domain
 
         private readonly IDomainNotificationBus eventBus;
 
-        private readonly IReadModelQueue readModelQueue;
+        private readonly IReadModelQueueProducer readModelQueue;
 
-        public DomainCommandExecutor(IDomainUnitOfWorkScope scope, IAggregateRegistration registration, IDomainNotificationBus eventBus, IReadModelQueue readModelQueue)
+        public DomainCommandExecutor(IDomainUnitOfWorkScope scope, IAggregateRegistration registration, IDomainNotificationBus eventBus, IReadModelQueueProducer readModelQueue)
         {
             if (eventBus == null)
                 throw new ArgumentNullException("eventBus");
@@ -94,7 +94,7 @@ namespace Mobile.CQRS.Domain
             }
         }
         
-        private void EnqueueReadModels(IReadModelQueue queue, string aggregateType, IList<IAggregateEvent> events)
+        private void EnqueueReadModels(IReadModelQueueProducer queue, string aggregateType, IList<IAggregateEvent> events)
         {
             if (queue != null)
             {
@@ -104,7 +104,12 @@ namespace Mobile.CQRS.Domain
 
                 foreach (var g in groupedEvents)
                 {
-                    queue.Enqueue(g.RootId, aggregateType, g.Version);
+                    var workItem = queue.Enqueue(g.RootId, aggregateType, g.Version);
+                    if (workItem != null)
+                    {
+                        var topic = new DomainTopic(this.registration.AggregateType, g.RootId);
+                        this.eventBus.Publish(new DomainNotification(topic, workItem));
+                    }
                 }
             }
         }

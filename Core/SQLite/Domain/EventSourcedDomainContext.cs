@@ -30,20 +30,20 @@ namespace Mobile.CQRS.SQLite.Domain
     /// In order to support sync with a remote event store you will need a command serializer.
     /// In order to support snapshots / momento's you'll need a snapshot serializer.
     /// </summary>
-    public class EventSourcedDomainContext : DomainContextBase
+    public sealed class EventSourcedDomainContext : DomainContextBase
     {
-        public EventSourcedDomainContext(SQLiteConnection connection, ISerializer<IAggregateEvent> eventSerializer) 
-        {
-            if (connection == null)
-                throw new ArgumentNullException("connection");
-            if (eventSerializer == null)
-                throw new ArgumentNullException("eventSerializer");
-
-            this.Connection = connection;
-            this.EventSerializer = eventSerializer;
-            this.ReadModelConnection = connection;
-        }
-
+//        public EventSourcedDomainContext(SQLiteConnection connection, ISerializer<IAggregateEvent> eventSerializer) 
+//        {
+//            if (connection == null)
+//                throw new ArgumentNullException("connection");
+//            if (eventSerializer == null)
+//                throw new ArgumentNullException("eventSerializer");
+//
+//            this.Connection = connection;
+//            this.EventSerializer = eventSerializer;
+//            this.ReadModelConnection = connection;
+//        }
+//
         public EventSourcedDomainContext(SQLiteConnection connection, SQLiteConnection readModelConnection, ISerializer<IAggregateEvent> eventSerializer) 
         {
             if (connection == null)
@@ -52,6 +52,11 @@ namespace Mobile.CQRS.SQLite.Domain
                 throw new ArgumentNullException("readModelConnection");
             if (eventSerializer == null)
                 throw new ArgumentNullException("eventSerializer");
+
+            if (connection == readModelConnection)
+            {
+                throw new InvalidOperationException("The read model database connection should be different to the event store connection");
+            }
 
             this.Connection = connection;
             this.EventSerializer = eventSerializer;
@@ -68,12 +73,17 @@ namespace Mobile.CQRS.SQLite.Domain
         
         public ISerializer<ISnapshot> SnapshotSerializer { get; set; }
 
-        protected override IDomainUnitOfWorkScope BeginUnitOfWork()
+        public override IDomainUnitOfWorkScope BeginUnitOfWork()
         {
             return new SqlDomainScope(this.Connection, this.EventSerializer, this.CommandSerializer, this.SnapshotSerializer);
         }
         
-        protected override IReadModelQueue GetReadModelQueue()
+        public override IUnitOfWorkScope BeginReadModelUnitOfWork()
+        {
+            return new SqlUnitOfWorkScope(this.ReadModelConnection);
+        }
+
+        protected override IReadModelQueueProducer GetReadModelQueue()
         {
             return new ReadModelBuilderQueue(this.ReadModelConnection);
         }

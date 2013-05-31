@@ -26,9 +26,9 @@ namespace Mobile.CQRS.SQLite.Domain
     
     /// <summary>
     /// A domain context set up for typical state sourcing.
-    /// This will not support syncing with a remote event store
+    /// This will not support syncing with a remote event store and will not support delayed read models.
     /// </summary>
-    public class StateSourcedDomainContext : DomainContextBase
+    public sealed class StateSourcedDomainContext : DomainContextBase
     {
         public StateSourcedDomainContext(SQLiteConnection connection, ISerializer<ISnapshot> snapshotSerializer) 
         {
@@ -38,36 +38,21 @@ namespace Mobile.CQRS.SQLite.Domain
                 throw new ArgumentNullException("snapshotSerializer");
 
             this.Connection = connection;
-            this.ReadModelConnection = connection;
             this.SnapshotSerializer = snapshotSerializer;
         }
-        
-        public StateSourcedDomainContext(SQLiteConnection connection, SQLiteConnection readModelConnection, ISerializer<ISnapshot> snapshotSerializer) 
-        {
-            if (connection == null)
-                throw new ArgumentNullException("connection");
-            if (readModelConnection == null)
-                throw new ArgumentNullException("readModelConnection");
-            if (snapshotSerializer == null)
-                throw new ArgumentNullException("snapshotSerializer");
 
-            this.Connection = connection;
-            this.ReadModelConnection = readModelConnection;
-            this.SnapshotSerializer = snapshotSerializer;
-        }
-        
         public SQLiteConnection Connection { get; private set; }
 
         public SQLiteConnection ReadModelConnection { get; private set; }
 
         public ISerializer<ISnapshot> SnapshotSerializer { get; private set; }
 
-        protected override IDomainUnitOfWorkScope BeginUnitOfWork()
+        public override IDomainUnitOfWorkScope BeginUnitOfWork()
         {
             return new SqlDomainScope(this.Connection, null, null, this.SnapshotSerializer);
         }
 
-        protected override IReadModelQueue GetReadModelQueue()
+        protected override IReadModelQueueProducer GetReadModelQueue()
         {
             // state sourced, this won't work
             return null;

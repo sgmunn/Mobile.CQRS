@@ -22,10 +22,6 @@ namespace Mobile.CQRS.Domain
 {
     public interface IDomainUnitOfWorkScope : IUnitOfWorkScope
     {
-
-        // this is almost the context and the context is ??
-
-
         IEventStore EventStore { get; }
         IPendingCommandRepository PendingCommands { get; }
         IRepository<ISyncState> SyncState { get; }
@@ -38,8 +34,6 @@ namespace Mobile.CQRS.Domain
 
     public interface IReadModelUnitOfWorkScope : IUnitOfWorkScope
     {
-        IEventStore EventStore { get; }
         IReadModelQueue ReadModelQueue { get; }
-        // TODO: IRepository<T> GetRepository<T>() where T : IUniqueId, new();
     }
 }

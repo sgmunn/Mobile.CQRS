@@ -23,7 +23,7 @@ namespace Mobile.CQRS.SQLite.Domain
     using System;
     using Mobile.CQRS.Domain;
     
-    public sealed class ReadModelWorkItem : IUniqueId, IReadModelWorkItem
+    public sealed class ReadModelWorkItem : IReadModelWorkItem
     {
         [PrimaryKey]
         public Guid Identity { get; set; }
@@ -32,19 +32,5 @@ namespace Mobile.CQRS.SQLite.Domain
         public string AggregateType { get; set; }
 
         public int FromVersion { get; set; }
-
-        [Ignore]
-        Guid IReadModelWorkItem.AggregateId
-        {
-            get
-            {
-                return this.Identity;
-            }
-
-            set
-            {
-                this.Identity = value;
-            }
-        }
     }
 }

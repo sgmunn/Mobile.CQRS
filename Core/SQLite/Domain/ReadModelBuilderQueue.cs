@@ -26,7 +26,7 @@ namespace Mobile.CQRS.SQLite.Domain
     using System.Threading;
     using Mobile.CQRS.Domain;
     
-    public sealed class ReadModelBuilderQueue : IReadModelQueue 
+    public sealed class ReadModelBuilderQueue : IReadModelQueue, IReadModelQueueProducer 
     {
         private readonly SqlRepository<ReadModelWorkItem> repository;
 
@@ -36,7 +36,7 @@ namespace Mobile.CQRS.SQLite.Domain
             connection.CreateTable<ReadModelWorkItem>();
         }
 
-        public void Enqueue(Guid aggregateId, string aggregateType, int fromVersion)
+        public IReadModelWorkItem Enqueue(Guid aggregateId, string aggregateType, int fromVersion)
         {
             var workItem = new ReadModelWorkItem {
                 AggregateType = aggregateType,
@@ -50,7 +50,7 @@ namespace Mobile.CQRS.SQLite.Domain
                 var existingItem = this.repository.GetById(workItem.Identity);
                 if (existingItem != null && existingItem.FromVersion < workItem.FromVersion)
                 {
-                    return;
+                    return null;
                 }
 
                 this.repository.Save((ReadModelWorkItem)workItem);
@@ -59,6 +59,8 @@ namespace Mobile.CQRS.SQLite.Domain
             {
                 Monitor.Exit(this.repository);
             }
+
+            return workItem;
         }
 
         public void Dequeue(IReadModelWorkItem workItem)
@@ -69,7 +71,7 @@ namespace Mobile.CQRS.SQLite.Domain
                 const string deleteCmd = "delete from ReadModelWorkItem where Identity = ? and FromVersion = {0}";
                 lock (this.repository.Connection)
                 {
-                    this.repository.Connection.Execute(string.Format(deleteCmd, workItem.FromVersion), workItem.AggregateId);
+                    this.repository.Connection.Execute(string.Format(deleteCmd, workItem.FromVersion), workItem.Identity);
                 }
             }
             finally

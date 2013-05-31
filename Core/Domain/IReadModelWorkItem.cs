@@ -21,10 +21,9 @@
 namespace Mobile.CQRS.Domain
 {
     using System;
-    
-    public interface IReadModelWorkItem
+
+    public interface IReadModelWorkItem : IEvent
     {
-        Guid AggregateId { get; set; }
         string AggregateType { get; set; }
         int FromVersion { get; set; }
     }

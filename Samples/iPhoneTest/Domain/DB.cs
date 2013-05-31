@@ -49,6 +49,29 @@ namespace Sample.Domain
             this.CreateTable<AggregateIndex>();
             this.CreateTable<AggregateEvent>();
             this.CreateTable<AggregateSnapshot>();
+        }
+    }
+    
+    public class ReadModelDB : SQLiteConnection
+    {
+        private static ReadModelDB MainDatabase = new ReadModelDB();
+
+        public static string SampleDatabasePath()
+        {
+            var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), "ReadModelSample.db");
+            return path;
+        }
+
+        public static ReadModelDB Main
+        {
+            get
+            {
+                return MainDatabase;
+            }
+        }
+
+        protected ReadModelDB() : base(SampleDatabasePath())
+        {
             this.CreateTable<TransactionDataContract>();
         }
     }

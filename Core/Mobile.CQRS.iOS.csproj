@@ -106,7 +106,6 @@
     <Compile Include="Domain\IEventStore.cs" />
     <Compile Include="Domain\UnsupportedSnapshotException.cs" />
     <Compile Include="Domain\ICommandExecutor.cs" />
-    <Compile Include="_New.cs" />
     <Compile Include="Domain\AggregateRegistration.cs" />
     <Compile Include="Domain\IAggregateRegistration.cs" />
     <Compile Include="Domain\ExecutingCommandExecutor.cs" />
@@ -167,5 +166,7 @@
     <Compile Include="SQLite\Domain\IAggregateIndexRepository.cs" />
     <Compile Include="Domain\IReadModelWorkItem.cs" />
     <Compile Include="Domain\IReadModelQueue.cs" />
+    <Compile Include="Domain\_Notes.cs" />
+    <Compile Include="Domain\_Test.cs" />
   </ItemGroup>
 </Project>
