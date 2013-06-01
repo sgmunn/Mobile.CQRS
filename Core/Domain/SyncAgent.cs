@@ -36,11 +36,6 @@ namespace Mobile.CQRS.Domain
      * 
      */
 
-    public interface ISyncAgent
-    {
-
-    }
-
     public sealed class SyncAgent : ISyncAgent
     {
         private readonly IEventStore remoteEventStore;

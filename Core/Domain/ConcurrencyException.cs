@@ -22,7 +22,7 @@ namespace Mobile.CQRS.Domain
 {
     using System;
 
-    public class ConcurrencyException : Exception
+    public sealed class ConcurrencyException : Exception
     {
         public ConcurrencyException(Guid aggregateId, int expectedVersion, int actualVersion)
         {

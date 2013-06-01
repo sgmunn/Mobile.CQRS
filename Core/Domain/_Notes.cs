@@ -7,7 +7,5 @@
 
 // TODO: make tests work again and increse test coverage and in memory support - must handle uow in event store
 
-// TODO: seal classes where needed
-
 // TODO: that might be all for now
 

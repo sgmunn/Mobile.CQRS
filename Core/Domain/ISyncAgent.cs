@@ -1,5 +1,5 @@
 // --------------------------------------------------------------------------------------------------------------------
-// <copyright file="UnsupportedSnapshotException.cs" company="sgmunn">
+// <copyright file="ISyncAgent.cs" company="sgmunn">
 //   (c) sgmunn 2013  
 //
 //   Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
@@ -21,11 +21,9 @@
 namespace Mobile.CQRS.Domain
 {
     using System;
- 
-    public sealed class UnsupportedSnapshotException : Exception
+
+    public interface ISyncAgent
     {
-        public UnsupportedSnapshotException(string message) : base(message)
-        {
-        }
+        bool SyncWithRemote<T>(Guid aggregateId) where T : class, IAggregateRoot, new();
     }
 }

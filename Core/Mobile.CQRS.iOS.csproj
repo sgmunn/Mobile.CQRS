@@ -172,5 +172,6 @@
     <Compile Include="Domain\ReadModelBuilderFaultedEvent.cs" />
     <Compile Include="Domain\IReadModelBuilderAgent.cs" />
     <Compile Include="Domain\ReadModelBuilderAgent.cs" />
+    <Compile Include="Domain\ISyncAgent.cs" />
   </ItemGroup>
 </Project>
