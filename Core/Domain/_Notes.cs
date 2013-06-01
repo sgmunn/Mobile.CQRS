@@ -9,9 +9,5 @@
 
 // TODO: seal classes where needed
 
-// TODO: get read model builders to take a list of events instead of one at a time
-
-// TODO: update snapshot after sync
-
 // TODO: that might be all for now
 

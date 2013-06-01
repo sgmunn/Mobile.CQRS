@@ -51,15 +51,19 @@ namespace Mobile.CQRS.Domain
 
         private readonly IPendingCommandRepository pendingCommands;
 
+        private readonly ISnapshotRepository snapshotRepository;
+
         public SyncAgent(IMergableEventStore localEventStore, 
                          IEventStore remoteEventStore, 
                          IRepository<ISyncState> syncStateRepository, 
-                         IPendingCommandRepository pendingCommands)
+                         IPendingCommandRepository pendingCommands,
+                         ISnapshotRepository snapshotRepository)
         {
             this.localEventStore = localEventStore;
             this.remoteEventStore = remoteEventStore;
             this.syncStateRepository = syncStateRepository;
             this.pendingCommands = pendingCommands;
+            this.snapshotRepository = snapshotRepository;
         }
 
         public bool SyncWithRemote<T>(Guid aggregateId) where T : class, IAggregateRoot, new()
@@ -114,8 +118,6 @@ namespace Mobile.CQRS.Domain
                 this.localEventStore.MergeEvents(aggregateId, newRemoteEvents.Concat(pendingEvents).ToList(), currentVersion, syncState.LastSyncedVersion);
             }
 
-            // TODO: update snapshot now.
-
             // update sync state
             syncState.LastSyncedVersion = newVersion;
             this.syncStateRepository.Save(syncState);
@@ -139,8 +141,8 @@ namespace Mobile.CQRS.Domain
             }
 
             // if we have synced the aggregate at least once, then we need to get events from pending commands
-            var pendingCommands = this.pendingCommands.PendingCommandsForAggregate(syncState.Identity).ToList();
-            if (pendingCommands.Count == 0)
+            var pendingCommandsToExecute = this.pendingCommands.PendingCommandsForAggregate(syncState.Identity).ToList();
+            if (pendingCommandsToExecute.Count == 0)
             {
                 return new List<IAggregateEvent>();
             }
@@ -150,7 +152,12 @@ namespace Mobile.CQRS.Domain
             ((IEventSourced)aggregate).LoadFromEvents(remoteEvents);
 
             var exec = new ExecutingCommandExecutor(aggregate);
-            exec.Execute(pendingCommands, 0);
+            exec.Execute(pendingCommandsToExecute, 0);
+
+            if (this.snapshotRepository != null && aggregate is ISnapshotSupport)
+            {
+                this.snapshotRepository.Save(((ISnapshotSupport)aggregate).GetSnapshot());
+            }
 
             return aggregate.UncommittedEvents.ToList();
         }

@@ -99,7 +99,7 @@ namespace Mobile.CQRS.SQLite.Domain
             var scope = this.BeginUnitOfWork();
             using (scope)
             {
-                var syncAgent = new SyncAgent((IMergableEventStore)scope.EventStore, remoteEventStore, scope.SyncState, scope.PendingCommands);
+                var syncAgent = new SyncAgent((IMergableEventStore)scope.EventStore, remoteEventStore, scope.SyncState, scope.PendingCommands, scope.SnapshotRepository);
                 if (syncAgent.SyncWithRemote<T>(aggregateId))
                 {
                     this.ReadModelQueue.Enqueue(aggregateId, typeof(T).Name, 0);
