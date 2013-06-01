@@ -62,7 +62,6 @@ namespace Mobile.CQRS.Domain
             this.pendingCommands = pendingCommands;
         }
 
-        // do this in a unit of work
         public bool SyncWithRemote<T>(Guid aggregateId) where T : class, IAggregateRoot, new()
         {
             var currentVersion = this.localEventStore.GetCurrentVersion(aggregateId);

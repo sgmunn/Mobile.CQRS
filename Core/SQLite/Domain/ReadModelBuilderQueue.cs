@@ -30,6 +30,8 @@ namespace Mobile.CQRS.SQLite.Domain
     {
         private readonly SqlRepository<ReadModelWorkItem> repository;
 
+        private readonly object locker = new object();
+
         public ReadModelBuilderQueue(SQLiteConnection connection)
         {
             this.repository = new SqlRepository<ReadModelWorkItem>(connection);
@@ -56,7 +58,7 @@ namespace Mobile.CQRS.SQLite.Domain
                 FromVersion = fromVersion
             };
 
-            Monitor.Enter(this.repository.Connection);
+            Monitor.Enter(this.locker);
             try
             {
                 var existingItem = this.repository.GetById(workItem.Identity);
@@ -69,7 +71,7 @@ namespace Mobile.CQRS.SQLite.Domain
             }
             finally
             {
-                Monitor.Exit(this.repository.Connection);
+                Monitor.Exit(this.locker);
             }
 
             return workItem;
@@ -77,7 +79,7 @@ namespace Mobile.CQRS.SQLite.Domain
 
         public void Dequeue(IReadModelWorkItem workItem)
         {
-            Monitor.Enter(this.repository.Connection);
+            Monitor.Enter(this.locker);
             try
             {
                 const string deleteCmd = "delete from ReadModelWorkItem where Identity = ? and FromVersion = {0}";
@@ -85,13 +87,13 @@ namespace Mobile.CQRS.SQLite.Domain
             }
             finally
             {
-                Monitor.Exit(this.repository.Connection);
+                Monitor.Exit(this.locker);
             }
         }
 
         public IList<IReadModelWorkItem> Peek(int batchSize)
         {
-            if (Monitor.TryEnter(this.repository.Connection))
+            if (Monitor.TryEnter(this.locker))
             {
                 try
                 {
@@ -99,7 +101,7 @@ namespace Mobile.CQRS.SQLite.Domain
                 }
                 finally
                 {
-                    Monitor.Exit(this.repository.Connection);
+                    Monitor.Exit(this.locker);
                 }
             }
 
