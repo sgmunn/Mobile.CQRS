@@ -123,15 +123,17 @@ namespace Sample.Domain
                 var eventSerializer = new DataContractSerializer<EventBase>(TypeHelpers.FindSerializableTypes(typeof(EventBase), Assembly.GetCallingAssembly()));
                 var commandSerializer = new DataContractSerializer<CommandBase>(TypeHelpers.FindSerializableTypes(typeof(CommandBase), Assembly.GetCallingAssembly()));
 
-                Remote = new EventSourcedDomainContext(RemoteDB.Main, ReadModelDB.Main, eventSerializer);
-                Client1 = new EventSourcedDomainContext(Client1DB.Main, ReadModelDB.Main, eventSerializer) { CommandSerializer = commandSerializer };
-                Client2 = new EventSourcedDomainContext(Client2DB.Main, ReadModelDB.Main, eventSerializer) { CommandSerializer = commandSerializer };
+                Remote = new EventSourcedDomainContext(RemoteDB.Main, eventSerializer);
+                Client1 = new EventSourcedDomainContext(Client1DB.Main, ReadModelDB1.Main, eventSerializer) { CommandSerializer = commandSerializer };
+                Client2 = new EventSourcedDomainContext(Client2DB.Main, ReadModelDB2.Main, eventSerializer) { CommandSerializer = commandSerializer };
 
                 var registration = AggregateRegistration.ForType<EventSourcedRoot>();
                 //    .WithImmediateReadModel(c => new TransactionReadModelBuilder(new SqlRepository<TransactionDataContract>(EventSourcedDB.Main, "TestId")));
                 Client1.Register(registration.WithDelayedReadModel(
                     // TODO: pass in read model db as a scope
-                    c => new TransactionReadModelBuilder(new SqlRepository<TransactionDataContract>(ReadModelDB.Main, "TestId"))));
+                    c => new TransactionReadModelBuilder(new SqlRepository<TransactionDataContract>(ReadModelDB1.Main, "TestId"))));
+
+                Client1.StartDelayedReadModels();
 
                 Client2.Register(registration);
             }
@@ -144,16 +146,20 @@ namespace Sample.Domain
             connection.CreateTable<AggregateSnapshot>();
             connection.CreateTable<PendingCommand>();
             connection.CreateTable<SyncState>();
-            readModelConnection.CreateTable<ReadModelWorkItem>();
-            readModelConnection.CreateTable<TransactionDataContract>();
 
             connection.Execute("delete from AggregateEvent");
             connection.Execute("delete from AggregateIndex");
             connection.Execute("delete from AggregateSnapshot");
             connection.Execute("delete from PendingCommand");
             connection.Execute("delete from SyncState");
-            readModelConnection.Execute("delete from ReadModelWorkItem");
-            readModelConnection.Execute("delete from TransactionDataContract");
+
+            if (readModelConnection != null)
+            {
+                readModelConnection.CreateTable<ReadModelWorkItem>();
+                readModelConnection.CreateTable<TransactionDataContract>();
+                readModelConnection.Execute("delete from ReadModelWorkItem");
+                readModelConnection.Execute("delete from TransactionDataContract");
+            }
         }
         
         public static ReadModelBuilderAgent test;
@@ -164,9 +170,9 @@ namespace Sample.Domain
             Remote = null;
             Client1 = null;
             Client2 = null;
-            Reset(RemoteDB.Main, ReadModelDB.Main);
-            Reset(Client1DB.Main, ReadModelDB.Main);
-            Reset(Client2DB.Main, ReadModelDB.Main);
+            Reset(RemoteDB.Main, null);
+            Reset(Client1DB.Main, ReadModelDB1.Main);
+            Reset(Client2DB.Main, ReadModelDB2.Main);
         }
 
         public static void CreateRootClient1()
@@ -197,13 +203,15 @@ namespace Sample.Domain
         public static void EditClient2()
         {
             InitSample();
-            Client1.StartDelayedReadModels();
-            return;
-            InitSample();
             Client2.Execute<EventSourcedRoot>(new TestCommand1 
                                               { 
                 AggregateId = TestId,
                 Name = "Client 2 Edit " + DateTime.Now.Second.ToString(),
+            });
+            Client2.Execute<EventSourcedRoot>(new TestCommand2 
+                                              { 
+                AggregateId = TestId,
+                Amount = 50,
             });
         }
         
@@ -211,26 +219,22 @@ namespace Sample.Domain
         {
             InitSample();
 
-//            var mm = new SyncAgent();
-//            mm.LocalEventStore = (IMergableEventStore)Client1.EventStore;
-//            mm.PendingCommands = Client1.PendingCommands;
-//            mm.RemoteEventStore = Remote.EventStore;
-//            mm.SyncState = Client1.SyncState;
-//
-//            mm.SyncWithRemote<EventSourcedRoot>(TestId);
+            // ordinarily our remote event store wouldn't need a scope around this code
+            using (var scope = Remote.BeginUnitOfWork())
+            {
+                Client1.SyncSomething<EventSourcedRoot>(scope.EventStore, TestId);
+            }
         }
         
         public static void Client2SyncWithRemote()
         {
             InitSample();
             
-//            var mm = new SyncAgent();
-//            mm.LocalEventStore = (IMergableEventStore)Client2.EventStore;
-//            mm.PendingCommands = Client2.PendingCommands;
-//            mm.RemoteEventStore = Remote.EventStore;
-//            mm.SyncState = Client2.SyncState;
-//
-//            mm.SyncWithRemote<EventSourcedRoot>(TestId);
+            // ordinarily our remote event store wouldn't need a scope around this code
+            using (var scope = Remote.BeginUnitOfWork())
+            {
+                Client2.SyncSomething<EventSourcedRoot>(scope.EventStore, TestId);
+            }
         }
     }
 }

@@ -33,18 +33,17 @@ namespace Mobile.CQRS.SQLite.Domain
     /// </summary>
     public sealed class EventSourcedDomainContext : DomainContextBase
     {
-//        public EventSourcedDomainContext(SQLiteConnection connection, ISerializer<IAggregateEvent> eventSerializer) 
-//        {
-//            if (connection == null)
-//                throw new ArgumentNullException("connection");
-//            if (eventSerializer == null)
-//                throw new ArgumentNullException("eventSerializer");
-//
-//            this.Connection = connection;
-//            this.EventSerializer = eventSerializer;
-//            this.ReadModelConnection = connection;
-//        }
-//
+        public EventSourcedDomainContext(SQLiteConnection connection, ISerializer<IAggregateEvent> eventSerializer) 
+        {
+            if (connection == null)
+                throw new ArgumentNullException("connection");
+            if (eventSerializer == null)
+                throw new ArgumentNullException("eventSerializer");
+
+            this.Connection = connection;
+            this.EventSerializer = eventSerializer;
+        }
+
         public EventSourcedDomainContext(SQLiteConnection connection, SQLiteConnection readModelConnection, ISerializer<IAggregateEvent> eventSerializer) 
         {
             if (connection == null)
@@ -83,8 +82,7 @@ namespace Mobile.CQRS.SQLite.Domain
 
         public void StartDelayedReadModels()
         {
-            // TODO: we would really like this exposed better, but for now this will do
-            if (this.BuilderAgent == null)
+            if (this.ReadModelConnection != null && this.BuilderAgent == null)
             {
                 this.BuilderAgent = new ReadModelBuilderAgent(
                     this, 
@@ -95,10 +93,30 @@ namespace Mobile.CQRS.SQLite.Domain
                 this.BuilderAgent.Start();
             }
         }
+        
+        public void SyncSomething<T>(IEventStore remoteEventStore, Guid aggregateId) where T : class, IAggregateRoot, new()
+        {
+            var scope = this.BeginUnitOfWork();
+            using (scope)
+            {
+                var syncAgent = new SyncAgent((IMergableEventStore)scope.EventStore, remoteEventStore, scope.SyncState, scope.PendingCommands);
+                if (syncAgent.SyncWithRemote<T>(aggregateId))
+                {
+                    this.ReadModelQueue.Enqueue(aggregateId, typeof(T).Name, 0);
+                }
+
+                scope.Commit();
+            }
+        }
 
         protected override IReadModelQueueProducer GetReadModelQueue()
         {
-            return new ReadModelBuilderQueue(this.ReadModelConnection);
+            if (this.ReadModelConnection != null)
+            {
+                return new ReadModelBuilderQueue(this.ReadModelConnection);
+            }
+
+            return null;
         }
     }
 }

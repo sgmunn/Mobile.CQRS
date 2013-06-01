@@ -52,17 +52,17 @@ namespace Sample.Domain
         }
     }
     
-    public class ReadModelDB : SQLiteConnection
+    public class ReadModelDB1 : SQLiteConnection
     {
-        private static ReadModelDB MainDatabase = new ReadModelDB();
+        private static ReadModelDB1 MainDatabase = new ReadModelDB1();
 
         public static string SampleDatabasePath()
         {
-            var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), "ReadModelSample.db");
+            var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), "ReadModelSample1.db");
             return path;
         }
 
-        public static ReadModelDB Main
+        public static ReadModelDB1 Main
         {
             get
             {
@@ -70,7 +70,31 @@ namespace Sample.Domain
             }
         }
 
-        protected ReadModelDB() : base(SampleDatabasePath())
+        protected ReadModelDB1() : base(SampleDatabasePath())
+        {
+            this.CreateTable<TransactionDataContract>();
+        }
+    }
+    
+    public class ReadModelDB2 : SQLiteConnection
+    {
+        private static ReadModelDB2 MainDatabase = new ReadModelDB2();
+
+        public static string SampleDatabasePath()
+        {
+            var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), "ReadModelSample1.db");
+            return path;
+        }
+
+        public static ReadModelDB2 Main
+        {
+            get
+            {
+                return MainDatabase;
+            }
+        }
+
+        protected ReadModelDB2() : base(SampleDatabasePath())
         {
             this.CreateTable<TransactionDataContract>();
         }

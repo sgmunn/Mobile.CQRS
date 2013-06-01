@@ -56,7 +56,7 @@ namespace Mobile.CQRS.SQLite.Domain
                 FromVersion = fromVersion
             };
 
-            Monitor.Enter(this.repository);
+            Monitor.Enter(this.repository.Connection);
             try
             {
                 var existingItem = this.repository.GetById(workItem.Identity);
@@ -69,7 +69,7 @@ namespace Mobile.CQRS.SQLite.Domain
             }
             finally
             {
-                Monitor.Exit(this.repository);
+                Monitor.Exit(this.repository.Connection);
             }
 
             return workItem;
@@ -77,35 +77,29 @@ namespace Mobile.CQRS.SQLite.Domain
 
         public void Dequeue(IReadModelWorkItem workItem)
         {
-            Monitor.Enter(this.repository);
+            Monitor.Enter(this.repository.Connection);
             try
             {
                 const string deleteCmd = "delete from ReadModelWorkItem where Identity = ? and FromVersion = {0}";
-                lock (this.repository.Connection)
-                {
-                    this.repository.Connection.Execute(string.Format(deleteCmd, workItem.FromVersion), workItem.Identity);
-                }
+                this.repository.Connection.Execute(string.Format(deleteCmd, workItem.FromVersion), workItem.Identity);
             }
             finally
             {
-                Monitor.Exit(this.repository);
+                Monitor.Exit(this.repository.Connection);
             }
         }
 
         public IList<IReadModelWorkItem> Peek(int batchSize)
         {
-            if (Monitor.TryEnter(this.repository))
+            if (Monitor.TryEnter(this.repository.Connection))
             {
                 try
                 {
-                    lock (this.repository.Connection)
-                    {
-                        return this.repository.Connection.Table<ReadModelWorkItem>().Take(batchSize).Cast<IReadModelWorkItem>().ToList();
-                    }
+                    return this.repository.Connection.Table<ReadModelWorkItem>().Take(batchSize).Cast<IReadModelWorkItem>().ToList();
                 }
                 finally
                 {
-                    Monitor.Exit(this.repository);
+                    Monitor.Exit(this.repository.Connection);
                 }
             }
 

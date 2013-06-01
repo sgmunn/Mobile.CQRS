@@ -36,38 +36,50 @@ namespace Mobile.CQRS.Domain
      * 
      */
 
-    public sealed class SyncAgent
+    public interface ISyncAgent
     {
-        public SyncAgent()
+
+    }
+
+    public sealed class SyncAgent : ISyncAgent
+    {
+        private readonly IEventStore remoteEventStore;
+
+        private readonly IMergableEventStore localEventStore;
+
+        private readonly IRepository<ISyncState> syncState;
+
+        private readonly IPendingCommandRepository pendingCommands;
+
+        public SyncAgent(IMergableEventStore localEventStore, 
+                         IEventStore remoteEventStore, 
+                         IRepository<ISyncState> syncState, 
+                         IPendingCommandRepository pendingCommands)
         {
+            this.localEventStore = localEventStore;
+            this.remoteEventStore = remoteEventStore;
+            this.syncState = syncState;
+            this.pendingCommands = pendingCommands;
         }
-
-        public IEventStore RemoteEventStore { get; set; }
-
-        public IMergableEventStore LocalEventStore { get; set; }
-
-        public IRepository<ISyncState> SyncState { get; set; }
-
-        public IPendingCommandRepository PendingCommands { get; set; }
 
         // do this in a unit of work
         public bool SyncWithRemote<T>(Guid aggregateId) where T : class, IAggregateRoot, new()
         {
-            var currentVersion = this.LocalEventStore.GetCurrentVersion(aggregateId);
+            var currentVersion = this.localEventStore.GetCurrentVersion(aggregateId);
 
-            var syncState = this.SyncState.GetById(aggregateId);
+            var syncState = this.syncState.GetById(aggregateId);
 
             // if no sync state, then assume that the aggregate originated from here, or other repo and that this is the first sync
             if (syncState == null)
             {
-                syncState = this.SyncState.New();
+                syncState = this.syncState.New();
                 syncState.Identity = aggregateId;
                 syncState.AggregateType = typeof(T).Name;
             }
 
-            var commonEvents = this.LocalEventStore.GetEventsUpToVersion(aggregateId, syncState.LastSyncedVersion);
-            var newRemoteEvents = this.RemoteEventStore.GetEventsAfterVersion(aggregateId, syncState.LastSyncedVersion);
-            var unsyncedLocalEvents = this.LocalEventStore.GetEventsAfterVersion(aggregateId, syncState.LastSyncedVersion);
+            var commonEvents = this.localEventStore.GetEventsUpToVersion(aggregateId, syncState.LastSyncedVersion);
+            var newRemoteEvents = this.remoteEventStore.GetEventsAfterVersion(aggregateId, syncState.LastSyncedVersion);
+            var unsyncedLocalEvents = this.localEventStore.GetEventsAfterVersion(aggregateId, syncState.LastSyncedVersion);
             var newCommonHistory = commonEvents.Concat(newRemoteEvents).ToList();
 
             var currentRemoteVersion = newRemoteEvents.Count > 0 ? newRemoteEvents.Last().Version : syncState.LastSyncedVersion;
@@ -89,7 +101,7 @@ namespace Mobile.CQRS.Domain
             // or because we've never synced at all
             var pendingEvents = this.GetPendingEvents<T>(syncState, newCommonHistory);
 
-            this.PendingCommands.RemovePendingCommands(aggregateId);
+            this.pendingCommands.RemovePendingCommands(aggregateId);
 
             // we need to do a full rebuild if we have previously synced with remote and we merged in any remote events
             var needsFullRebuild = syncState.LastSyncedVersion > 0 && newRemoteEvents.Count != 0;
@@ -100,19 +112,19 @@ namespace Mobile.CQRS.Domain
             // merge remote events into our eventstore - including our pending events
             if (newRemoteEvents.Count != 0)
             {
-                this.LocalEventStore.MergeEvents(aggregateId, newRemoteEvents.Concat(pendingEvents).ToList(), currentVersion, syncState.LastSyncedVersion);
+                this.localEventStore.MergeEvents(aggregateId, newRemoteEvents.Concat(pendingEvents).ToList(), currentVersion, syncState.LastSyncedVersion);
             }
 
             // TODO: update snapshot now.
 
             // update sync state
             syncState.LastSyncedVersion = newVersion;
-            this.SyncState.Save(syncState);
+            this.syncState.Save(syncState);
 
             // update remote
             if (pendingEvents.Count != 0)
             {
-                this.RemoteEventStore.SaveEvents(aggregateId, pendingEvents, currentRemoteVersion);
+                this.remoteEventStore.SaveEvents(aggregateId, pendingEvents, currentRemoteVersion);
             }
 
             return needsFullRebuild;
@@ -124,11 +136,11 @@ namespace Mobile.CQRS.Domain
             {
                 // if we've never synced, then this aggregate must have been created locally, any events either in 
                 // the event store or from pending commands are pending
-                return this.LocalEventStore.GetAllEvents(syncState.Identity).ToList();
+                return this.localEventStore.GetAllEvents(syncState.Identity).ToList();
             }
 
             // if we have synced the aggregate at least once, then we need to get events from pending commands
-            var pendingCommands = this.PendingCommands.PendingCommandsForAggregate(syncState.Identity).ToList();
+            var pendingCommands = this.pendingCommands.PendingCommandsForAggregate(syncState.Identity).ToList();
             if (pendingCommands.Count == 0)
             {
                 return new List<IAggregateEvent>();
