@@ -47,18 +47,18 @@ namespace Mobile.CQRS.Domain
 
         private readonly IMergableEventStore localEventStore;
 
-        private readonly IRepository<ISyncState> syncState;
+        private readonly IRepository<ISyncState> syncStateRepository;
 
         private readonly IPendingCommandRepository pendingCommands;
 
         public SyncAgent(IMergableEventStore localEventStore, 
                          IEventStore remoteEventStore, 
-                         IRepository<ISyncState> syncState, 
+                         IRepository<ISyncState> syncStateRepository, 
                          IPendingCommandRepository pendingCommands)
         {
             this.localEventStore = localEventStore;
             this.remoteEventStore = remoteEventStore;
-            this.syncState = syncState;
+            this.syncStateRepository = syncStateRepository;
             this.pendingCommands = pendingCommands;
         }
 
@@ -67,12 +67,12 @@ namespace Mobile.CQRS.Domain
         {
             var currentVersion = this.localEventStore.GetCurrentVersion(aggregateId);
 
-            var syncState = this.syncState.GetById(aggregateId);
+            var syncState = this.syncStateRepository.GetById(aggregateId);
 
             // if no sync state, then assume that the aggregate originated from here, or other repo and that this is the first sync
             if (syncState == null)
             {
-                syncState = this.syncState.New();
+                syncState = this.syncStateRepository.New();
                 syncState.Identity = aggregateId;
                 syncState.AggregateType = typeof(T).Name;
             }
@@ -119,7 +119,7 @@ namespace Mobile.CQRS.Domain
 
             // update sync state
             syncState.LastSyncedVersion = newVersion;
-            this.syncState.Save(syncState);
+            this.syncStateRepository.Save(syncState);
 
             // update remote
             if (pendingEvents.Count != 0)

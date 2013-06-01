@@ -103,6 +103,10 @@ namespace Mobile.CQRS.SQLite.Domain
                 if (syncAgent.SyncWithRemote<T>(aggregateId))
                 {
                     this.ReadModelQueue.Enqueue(aggregateId, typeof(T).Name, 0);
+                    if (this.BuilderAgent.IsStarted)
+                    {
+                        this.BuilderAgent.Trigger();
+                    }
                 }
 
                 scope.Commit();

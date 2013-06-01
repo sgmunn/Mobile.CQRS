@@ -82,7 +82,7 @@ namespace Sample.Domain
 
         public static string SampleDatabasePath()
         {
-            var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), "ReadModelSample1.db");
+            var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), "ReadModelSample2.db");
             return path;
         }
 

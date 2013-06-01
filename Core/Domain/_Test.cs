@@ -175,9 +175,7 @@ namespace Mobile.CQRS.Domain
                         {
                             try
                             {
-
                                 this.ProcessWorkItem(scope, registration, bus, workItem);
-
                                 queue.Dequeue(workItem);
                             }
                             catch (Exception ex)
@@ -204,7 +202,6 @@ namespace Mobile.CQRS.Domain
                 var builders = registration.DelayedReadModels(scope);
                 foreach (var builder in builders)
                 {
-                    // TODO: if version 0 then do a rebuild
                     if (workItem.FromVersion == 0)
                     {
                         builder.DeleteForAggregate(workItem.Identity);

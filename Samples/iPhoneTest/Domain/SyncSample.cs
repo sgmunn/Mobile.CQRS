@@ -223,6 +223,8 @@ namespace Sample.Domain
             using (var scope = Remote.BeginUnitOfWork())
             {
                 Client1.SyncSomething<EventSourcedRoot>(scope.EventStore, TestId);
+
+                scope.Commit();
             }
         }
         
@@ -234,6 +236,8 @@ namespace Sample.Domain
             using (var scope = Remote.BeginUnitOfWork())
             {
                 Client2.SyncSomething<EventSourcedRoot>(scope.EventStore, TestId);
+
+                scope.Commit();
             }
         }
     }
