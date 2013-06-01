@@ -35,6 +35,7 @@ namespace Mobile.CQRS.SQLite.Domain
         [Indexed]
         public string AggregateType { get; set; }
   
+        [MaxLength(int.MaxValue)]
         public string EventData { get; set; }
     }
 }

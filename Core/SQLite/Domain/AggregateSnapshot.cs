@@ -32,6 +32,7 @@ namespace Mobile.CQRS.SQLite.Domain
 
         public string SnapshotType { get; set; }
         
+        [MaxLength(int.MaxValue)]
         public string ObjectData { get; set; }
     }
 }

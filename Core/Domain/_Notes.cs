@@ -1,7 +1,7 @@
 
 // TODO: Mobile.Mvvm view model with support for loading changes while being editing
 
-// TODO: Test sqlite max length of strings, doesn't seem to be 140
+// TODO: last feature is to be able to discover aggregates somehow in order to sync them, and to force rebuild of read models
 
 // TODO: async SQLite
 

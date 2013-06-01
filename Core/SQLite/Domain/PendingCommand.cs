@@ -37,6 +37,7 @@ namespace Mobile.CQRS.SQLite.Domain
 
         public Guid CommandId { get; set; }
 
+        [MaxLength(int.MaxValue)]
         public string CommandData { get; set; }
     }
 }
