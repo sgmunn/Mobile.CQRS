@@ -35,7 +35,22 @@ namespace Mobile.CQRS.Domain
         public Exception Fault { get; set; }
     }
 
-    public sealed class ReadModelBuilderAgent
+    public interface IReadModelBuilderAgent 
+    {
+        bool IsStarted { get; }
+
+        bool IsFaulted { get; }
+
+        Exception Fault { get; }
+
+        void Start();
+
+        void Stop();
+         
+        void Trigger();
+    }
+
+    public sealed class ReadModelBuilderAgent : IReadModelBuilderAgent
     {
         private readonly IDomainContext context;
 

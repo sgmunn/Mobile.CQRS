@@ -50,32 +50,22 @@ namespace Mobile.CQRS.SQLite.Domain
                 CommandData = this.serializer.SerializeToString(command),
             };
 
-            lock (this.Connection)
-            {
-                this.Save(cmd);
-            }
+            this.Save(cmd);
         }
 
         public IList<IAggregateCommand> PendingCommandsForAggregate(Guid id)
         {
-            List<PendingCommand> commands;
-            lock (this.Connection)
-            {
-                commands = this.Connection.Table<PendingCommand>()
+             var commands = this.Connection.Table<PendingCommand>()
                     .Where(x => x.AggregateId == id)
                         .OrderByDescending(x => x.Key)
                         .ToList();
-            }
 
             return commands.Select(cmd => this.serializer.DeserializeFromString(cmd.CommandData)).ToList();
         }
 
         public void RemovePendingCommands(Guid id)
         {
-            lock (this.Connection)
-            {
-                this.DeleteAllInScope(id);
-            }
+            this.DeleteAllInScope(id);
         }
     }
 }

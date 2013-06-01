@@ -137,21 +137,23 @@ namespace Sample.Domain
             }
         }
         
-        public static void Reset(SQLiteConnection connection)
+        public static void Reset(SQLiteConnection connection, SQLiteConnection readModelConnection)
         {
             connection.CreateTable<AggregateEvent>();
             connection.CreateTable<AggregateIndex>();
             connection.CreateTable<AggregateSnapshot>();
             connection.CreateTable<PendingCommand>();
             connection.CreateTable<SyncState>();
-            connection.CreateTable<ReadModelWorkItem>();
+            readModelConnection.CreateTable<ReadModelWorkItem>();
+            readModelConnection.CreateTable<TransactionDataContract>();
 
             connection.Execute("delete from AggregateEvent");
-            connection.Execute("delete from AggregateManifest");
+            connection.Execute("delete from AggregateIndex");
             connection.Execute("delete from AggregateSnapshot");
             connection.Execute("delete from PendingCommand");
             connection.Execute("delete from SyncState");
-            connection.Execute("delete from ReadModelWorkItem");
+            readModelConnection.Execute("delete from ReadModelWorkItem");
+            readModelConnection.Execute("delete from TransactionDataContract");
         }
         
         public static ReadModelBuilderAgent test;
@@ -162,9 +164,9 @@ namespace Sample.Domain
             Remote = null;
             Client1 = null;
             Client2 = null;
-            Reset(RemoteDB.Main);
-            Reset(Client1DB.Main);
-            Reset(Client2DB.Main);
+            Reset(RemoteDB.Main, ReadModelDB.Main);
+            Reset(Client1DB.Main, ReadModelDB.Main);
+            Reset(Client2DB.Main, ReadModelDB.Main);
         }
 
         public static void CreateRootClient1()

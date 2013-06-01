@@ -42,10 +42,7 @@ namespace Mobile.CQRS.SQLite.Domain
 
             try
             {
-                lock (this.connection)
-                {
-                    updated = this.DoUpdate(aggregateId, currentVersion, newVersion);
-                }
+                updated = this.DoUpdate(aggregateId, currentVersion, newVersion);
             }
             catch (Exception ex)
             {

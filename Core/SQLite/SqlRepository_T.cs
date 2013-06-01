@@ -61,7 +61,7 @@ namespace Mobile.CQRS.SQLite
         {
             try
             {
-                lock (this.Connection)
+                //lock (this.Connection)
                 {
                     return this.Connection.Get<T>(id);
                 }
@@ -74,7 +74,7 @@ namespace Mobile.CQRS.SQLite
 
         public virtual IList<T> GetAll()
         {
-            lock (this.Connection)
+            //lock (this.Connection)
             {
                 return this.Connection.Table<T>().ToList();
             }
@@ -84,7 +84,7 @@ namespace Mobile.CQRS.SQLite
         {
             var result = SaveResult.Updated;
 
-            lock (this.Connection)
+            //lock (this.Connection)
             {
                 if (this.Connection.Update(instance) == 0)
                 {
@@ -98,7 +98,7 @@ namespace Mobile.CQRS.SQLite
 
         public virtual void Delete(T instance)
         {
-            lock (this.Connection)
+            //lock (this.Connection)
             {
                 this.Connection.Delete(instance);  
             }
@@ -106,7 +106,7 @@ namespace Mobile.CQRS.SQLite
 
         public virtual void DeleteId(Guid id)
         {
-            lock (this.Connection)
+            //lock (this.Connection)
             {
                 var map = this.Connection.GetMapping(typeof(T));
                 var pk = map.PK;

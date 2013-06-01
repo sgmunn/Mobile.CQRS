@@ -60,9 +60,10 @@ namespace Mobile.CQRS.SQLite
 
         private void BeginTransaction()
         {
+            Monitor.Enter(this.connection);
+
             if (!this.connection.IsInTransaction)
             {
-                Monitor.Enter(this.connection);
                 this.connection.BeginTransaction();
                 this.inTransaction = true;
             }
@@ -70,27 +71,33 @@ namespace Mobile.CQRS.SQLite
 
         private void EndTransaction()
         {
-            if (this.inTransaction)
+            try
             {
-                this.connection.Commit();
-                this.inTransaction = false;
+                if (this.inTransaction)
+                {
+                    this.connection.Commit();
+                    this.inTransaction = false;
+                }
+            }
+            finally
+            {
                 Monitor.Exit(this.connection);
             }
         }
 
         private void Rollback()
         {
-            if (this.inTransaction)
+            try
             {
-                try
+                if (this.inTransaction)
                 {
                     this.connection.Rollback();
                     this.inTransaction = false;
                 }
-                finally
-                {
-                    Monitor.Exit(this.connection);
-                }
+            }
+            finally
+            {
+                Monitor.Exit(this.connection);
             }
         }
     }

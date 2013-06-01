@@ -58,15 +58,12 @@ namespace Mobile.CQRS.SQLite.Domain
                 EventData = this.serializer.SerializeToString(evt),
             }).ToList();
 
-            lock (this.Connection)
-            {
-                var newVersion = events[events.Count - 1].Version;
-                this.index.UpdateIndex(aggregateId, expectedVersion, newVersion);
+            var newVersion = events[events.Count - 1].Version;
+            this.index.UpdateIndex(aggregateId, expectedVersion, newVersion);
 
-                foreach (var evt in serializedEvents)
-                {
-                    this.Connection.Insert(evt);
-                }
+            foreach (var evt in serializedEvents)
+            {
+                this.Connection.Insert(evt);
             }
         }
 
@@ -80,65 +77,43 @@ namespace Mobile.CQRS.SQLite.Domain
                 EventData = this.serializer.SerializeToString(evt),
             }).ToList();
 
-            lock (this.Connection)
+            var newVersion = events[events.Count - 1].Version;
+            this.index.UpdateIndex(aggregateId, expectedVersion, newVersion);
+
+            this.Connection.Execute(string.Format("delete from AggregateEvent where AggregateId = ? and Version > {0}", fromVersion), aggregateId);
+
+            foreach (var evt in serializedEvents)
             {
-                var newVersion = events[events.Count - 1].Version;
-                this.index.UpdateIndex(aggregateId, expectedVersion, newVersion);
-
-                this.Connection.Execute(string.Format("delete from AggregateEvent where AggregateId = ? and Version > {0}", fromVersion), aggregateId);
-
-                foreach (var evt in serializedEvents)
-                {
-                    this.Connection.Insert(evt);
-                }
+                this.Connection.Insert(evt);
             }
         }
 
         public IList<IAggregateEvent> GetAllEvents(Guid rootId)
         {
-            IList<AggregateEvent> events;
-
-            lock (this.Connection)
-            {
-                events = this.Connection.Table<AggregateEvent>().Where(x => x.AggregateId == rootId).OrderBy(x => x.Version).ToList();
-            }
-
+            var events = this.Connection.Table<AggregateEvent>().Where(x => x.AggregateId == rootId).OrderBy(x => x.Version).ToList();
             return events.Select(evt => this.serializer.DeserializeFromString(evt.EventData)).ToList();
         }
 
         public IList<IAggregateEvent> GetEventsAfterVersion(Guid rootId, int version)
         {
-            IList<AggregateEvent> events;
-            lock (this.Connection)
-            {
-                events = this.Connection.Table<AggregateEvent>().Where(x => x.AggregateId == rootId && x.Version > version).OrderBy(x => x.Version).ToList();
-            }
-            
+            var events = this.Connection.Table<AggregateEvent>().Where(x => x.AggregateId == rootId && x.Version > version).OrderBy(x => x.Version).ToList();
             return events.Select(evt => this.serializer.DeserializeFromString(evt.EventData)).ToList();
         }
 
         public IList<IAggregateEvent> GetEventsUpToVersion(Guid rootId, int version)
         {
-            IList<AggregateEvent> events;
-            lock (this.Connection)
-            {
-                events = this.Connection.Table<AggregateEvent>().Where(x => x.AggregateId == rootId && x.Version <= version).OrderBy(x => x.Version).ToList();
-            }
-
+            var events = this.Connection.Table<AggregateEvent>().Where(x => x.AggregateId == rootId && x.Version <= version).OrderBy(x => x.Version).ToList();
             return events.Select(evt => this.serializer.DeserializeFromString(evt.EventData)).ToList();
         }
 
         public int GetCurrentVersion(Guid rootId)
         {
-            lock (this.Connection)
-            {
-                var result = this.Connection.Table<AggregateEvent>()
-                    .Where(x => x.AggregateId == rootId)
-                        .OrderByDescending(x => x.Version)
-                        .Take(1).ToList();
+            var result = this.Connection.Table<AggregateEvent>()
+                .Where(x => x.AggregateId == rootId)
+                    .OrderByDescending(x => x.Version)
+                    .Take(1).ToList();
 
-                return result.Select(x => x.Version).FirstOrDefault();
-            }
+            return result.Select(x => x.Version).FirstOrDefault();
         }
     }
 }
