@@ -61,10 +61,7 @@ namespace Mobile.CQRS.SQLite
         {
             try
             {
-                //lock (this.Connection)
-                {
-                    return this.Connection.Get<T>(id);
-                }
+                return this.Connection.Get<T>(id);
             }
             catch
             {
@@ -74,23 +71,17 @@ namespace Mobile.CQRS.SQLite
 
         public virtual IList<T> GetAll()
         {
-            //lock (this.Connection)
-            {
-                return this.Connection.Table<T>().ToList();
-            }
+            return this.Connection.Table<T>().ToList();
         }
 
         public virtual SaveResult Save(T instance)
         {
             var result = SaveResult.Updated;
 
-            //lock (this.Connection)
+            if (this.Connection.Update(instance) == 0)
             {
-                if (this.Connection.Update(instance) == 0)
-                {
-                    this.Connection.Insert(instance);
-                    result = SaveResult.Added;
-                }
+                this.Connection.Insert(instance);
+                result = SaveResult.Added;
             }
 
             return result;
@@ -98,27 +89,21 @@ namespace Mobile.CQRS.SQLite
 
         public virtual void Delete(T instance)
         {
-            //lock (this.Connection)
-            {
-                this.Connection.Delete(instance);  
-            }
+            this.Connection.Delete(instance);  
         }
 
         public virtual void DeleteId(Guid id)
         {
-            //lock (this.Connection)
+            var map = this.Connection.GetMapping(typeof(T));
+            var pk = map.PK;
+            
+            if (pk == null) 
             {
-                var map = this.Connection.GetMapping(typeof(T));
-                var pk = map.PK;
-                
-                if (pk == null) 
-                {
-                    throw new NotSupportedException ("Cannot delete " + map.TableName + ": it has no PK");
-                }
-                
-                var q = string.Format ("delete from \"{0}\" where \"{1}\" = ?", map.TableName, pk.Name);
-                this.Connection.Execute (q, id);
+                throw new NotSupportedException ("Cannot delete " + map.TableName + ": it has no PK");
             }
+            
+            var q = string.Format ("delete from \"{0}\" where \"{1}\" = ?", map.TableName, pk.Name);
+            this.Connection.Execute (q, id);
         }
 
         public virtual void DeleteAllInScope(Guid scopeId)
