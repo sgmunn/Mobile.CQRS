@@ -173,5 +173,7 @@
     <Compile Include="Domain\IReadModelBuilderAgent.cs" />
     <Compile Include="Domain\ReadModelBuilderAgent.cs" />
     <Compile Include="Domain\ISyncAgent.cs" />
+    <Compile Include="SQLite\SQLiteAsync.cs" />
+    <Compile Include="Domain\_Test.cs" />
   </ItemGroup>
 </Project>
