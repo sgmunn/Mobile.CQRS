@@ -97,7 +97,7 @@ namespace Mobile.CQRS.Domain
 
         private void ProcessQueue()
         {
-            if (this.IsFaulted)
+            if (this.IsFaulted && !this.IsStarted)
             {
                 return;
             }
@@ -147,6 +147,11 @@ namespace Mobile.CQRS.Domain
 
                     foreach (var workItem in workItems)
                     {
+                        if (this.cancel.IsCancellationRequested)
+                        {
+                            return;
+                        }
+
                         var registration = this.registrations.FirstOrDefault(x => x.AggregateType.Name == workItem.AggregateType);
                         if (registration != null)
                         {
