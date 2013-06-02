@@ -37,7 +37,7 @@ namespace Mobile.CQRS.Domain
             {
                 // get the current version 
                 var current = this.GetById(instance.Identity);
-                if (current.Version != expectedVersion)
+                if (current != null && current.Version != expectedVersion)
                 {
                     throw new ConcurrencyException(instance.Identity, expectedVersion, current.Version);
                 }
