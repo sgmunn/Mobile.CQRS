@@ -94,13 +94,13 @@
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
-    <ProjectReference Include="..\..\Mobile.CQRS\Mobile.CQRS.iOS.csproj">
-      <Project>{1B81BE9B-B662-4626-A811-39C479980EFF}</Project>
-      <Name>Mobile.CQRS.iOS</Name>
-    </ProjectReference>
     <ProjectReference Include="..\Mobile.CQRS.UnitTests.iOS\Mobile.CQRS.UnitTests.iOS.csproj">
       <Project>{D51E3F48-C3BB-4507-A763-664817E70F4B}</Project>
       <Name>Mobile.CQRS.UnitTests.iOS</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Core\Mobile.CQRS.iOS.csproj">
+      <Project>{1B81BE9B-B662-4626-A811-39C479980EFF}</Project>
+      <Name>Mobile.CQRS.iOS</Name>
     </ProjectReference>
   </ItemGroup>
 </Project>

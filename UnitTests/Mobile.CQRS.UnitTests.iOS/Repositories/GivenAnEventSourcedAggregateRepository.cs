@@ -5,7 +5,7 @@ namespace Mobile.CQRS.Domain.UnitTests.Repositories
 {
     public class GivenAnEventSourcedAggregateRepository : GivenAnInMemoryEventStoreRepository
     {
-        public IAggregateRepository<TestAggregateRoot> Repository { get; private set; }
+        public IAggregateRepository Repository { get; private set; }
 
         public MockBus Bus { get; private set; }
 
@@ -15,7 +15,8 @@ namespace Mobile.CQRS.Domain.UnitTests.Repositories
 
             this.Bus = new MockBus();
 
-            this.Repository = new AggregateRepository<TestAggregateRoot>(
+            this.Repository = new AggregateRepository(
+                () => new TestAggregateRoot(),
                 this.EventStore, 
                 null);
             //,

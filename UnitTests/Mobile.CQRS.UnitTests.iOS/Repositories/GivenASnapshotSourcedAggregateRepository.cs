@@ -5,7 +5,7 @@ namespace Mobile.CQRS.Domain.UnitTests.Repositories
 {
     public class GivenASnapshotSourcedAggregateRepository : GivenAnInMemorySnapshotRepository
     {
-        public IAggregateRepository<TestAggregateRoot> Repository { get; private set; }
+        public IAggregateRepository Repository { get; private set; }
 
         public MockBus Bus { get; private set; }
         
@@ -15,8 +15,8 @@ namespace Mobile.CQRS.Domain.UnitTests.Repositories
             
             this.Bus = new MockBus();
 
-            this.Repository = new AggregateRepository<TestAggregateRoot>(
-                null, 
+            this.Repository = new AggregateRepository(
+                () => new TestAggregateRoot(),
                 this.SnapshotStore);
                 //,
                 //this.Bus);

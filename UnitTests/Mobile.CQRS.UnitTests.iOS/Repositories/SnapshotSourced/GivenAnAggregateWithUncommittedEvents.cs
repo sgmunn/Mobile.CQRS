@@ -43,7 +43,7 @@ namespace Mobile.CQRS.Domain.UnitTests.Repositories.SnapshotSourced
         {
             this.Repository.Save(this.Aggregate);
 
-            var result = this.Repository.GetById(this.Aggregate.Identity);
+            var result = (TestAggregateRoot)this.Repository.GetById(this.Aggregate.Identity);
             Assert.AreNotEqual(null, result);
 
             Assert.AreEqual(3, result.Version);

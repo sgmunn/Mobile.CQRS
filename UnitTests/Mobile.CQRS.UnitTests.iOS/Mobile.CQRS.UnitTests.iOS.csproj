@@ -89,7 +89,7 @@
     <Compile Include="Data\SerializingRepository\WhenSerializingAReadModel.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Mobile.CQRS\Mobile.CQRS.iOS.csproj">
+    <ProjectReference Include="..\..\Core\Mobile.CQRS.iOS.csproj">
       <Project>{1B81BE9B-B662-4626-A811-39C479980EFF}</Project>
       <Name>Mobile.CQRS.iOS</Name>
     </ProjectReference>

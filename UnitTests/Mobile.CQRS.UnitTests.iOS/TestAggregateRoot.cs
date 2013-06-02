@@ -88,6 +88,8 @@ namespace Mobile.CQRS.Domain.UnitTests
         
         public Guid AggregateId { get; set; }
         
+        public string AggregateType { get; set; }
+
         public int Version { get; set; }
         
         public DateTime Timestamp { get; set; } 
