@@ -21,10 +21,17 @@ using System;
 
 namespace Mobile.CQRS.Domain
 {
-    public class _Test
+    public class Test
     {
-        public _Test()
+
+
+        public async void X()
         {
+//            var conn = new SQLite.SQLiteAsyncConnection("", true);
+//            var xx = conn.Table<IAggregateEvent>().ToListAsync();
+//            var zz = await xx;
+        
+        
         }
     }
 }
