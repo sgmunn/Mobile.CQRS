@@ -26,6 +26,8 @@ namespace Mobile.CQRS.Domain
     public class InMemoryUnitOfWorkScope : IUnitOfWorkScope
     {
         private readonly List<IUnitOfWork> scopedWork;
+
+        private readonly Dictionary<Type, object> registeredObjects;
         
         private bool committed;
 
@@ -34,6 +36,31 @@ namespace Mobile.CQRS.Domain
         public InMemoryUnitOfWorkScope()
         {
             this.scopedWork = new List<IUnitOfWork>();
+            this.registeredObjects = new Dictionary<Type, object>();
+        }
+
+        public void RegisterObject<T>(T instance)
+        {
+            this.registeredObjects[typeof(T)] = instance;
+        }
+
+        public T GetRegisteredObject<T>()
+        {
+            object instance;
+            if (this.registeredObjects.TryGetValue(typeof(T), out instance))
+            {
+                return (T)instance;
+            }
+
+            foreach (var t in this.registeredObjects.Keys)
+            {
+                if (t.IsAssignableFrom(typeof(T)))
+                {
+                    return (T)this.registeredObjects[t];
+                }
+            }
+
+            return default(T);
         }
 
         public void Add(IUnitOfWork uow)

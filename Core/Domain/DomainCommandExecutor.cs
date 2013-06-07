@@ -27,15 +27,13 @@ namespace Mobile.CQRS.Domain
 
     public sealed class DomainCommandExecutor : ICommandExecutor 
     {
-        private readonly IDomainUnitOfWorkScope scope;
+        private readonly IUnitOfWorkScope scope;
 
         private readonly IAggregateRegistration registration;
 
         private readonly IDomainNotificationBus eventBus;
 
-        private readonly IReadModelQueueProducer readModelQueue;
-
-        public DomainCommandExecutor(IDomainUnitOfWorkScope scope, IAggregateRegistration registration, IDomainNotificationBus eventBus, IReadModelQueueProducer readModelQueue)
+        public DomainCommandExecutor(IUnitOfWorkScope scope, IAggregateRegistration registration, IDomainNotificationBus eventBus)
         {
             if (eventBus == null)
                 throw new ArgumentNullException("eventBus");
@@ -47,7 +45,6 @@ namespace Mobile.CQRS.Domain
             this.scope = scope;
             this.registration = registration;
             this.eventBus = eventBus;
-            this.readModelQueue = readModelQueue;
         }
  
         public void Execute(IList<IAggregateCommand> commands, int expectedVersion)
@@ -65,22 +62,22 @@ namespace Mobile.CQRS.Domain
             var aggregateEvents = new UnitOfWorkEventBus(readModelBuilderBus);
 
             // subscribe to the changes in the aggregate and publish them to aggregateEvents
-            var aggregateRepo = new AggregateRepository(registration.New, scope.EventStore, scope.SnapshotRepository);
+            var aggregateRepo = new AggregateRepository(registration.New, this.scope.GetRegisteredObject<IEventStore>(), scope.GetRegisteredObject<ISnapshotRepository>());
             var subscription = aggregateRepo.Changes.Subscribe(aggregateEvents.Publish);
-            scope.Add(new UnitOfWorkDisposable(subscription));
+            this.scope.Add(new UnitOfWorkDisposable(subscription));
 
             // add them in this order so that aggregateEvents >> readModelBuilderBus >> read model builder >> eventBus
-            scope.Add(aggregateEvents);
-            scope.Add(readModelBuilderBus);
+            this.scope.Add(aggregateEvents);
+            this.scope.Add(readModelBuilderBus);
 
             var cmd = new CommandExecutor(aggregateRepo);
             cmd.Execute(commands.ToList(), expectedVersion);
 
             // enqueue pending commands
-            this.EnqueueCommands(scope.PendingCommands, commands);
+            this.EnqueueCommands(this.scope.GetRegisteredObject<IPendingCommandRepository>(), commands);
 
             // enqueue read models to be built - for non-immediate read models
-            this.EnqueueReadModels(this.readModelQueue, registration.AggregateType.Name, aggregateEvents.GetEvents().Select(x => x.Event).OfType<IAggregateEvent>().ToList());
+            this.EnqueueReadModels(this.scope.GetRegisteredObject<IReadModelQueueProducer>(), registration.AggregateType.Name, aggregateEvents.GetEvents().Select(x => x.Event).OfType<IAggregateEvent>().ToList());
         }
         
         private void EnqueueCommands(IPendingCommandRepository commandRepository, IList<IAggregateCommand> commands)

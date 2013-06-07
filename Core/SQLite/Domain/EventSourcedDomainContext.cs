@@ -75,9 +75,30 @@ namespace Mobile.CQRS.SQLite.Domain
 
         public IReadModelBuilderAgent BuilderAgent { get; private set; }
 
-        public override IDomainUnitOfWorkScope BeginUnitOfWork()
+        public override IUnitOfWorkScope BeginUnitOfWork()
         {
-            return new SqlDomainScope(this.Connection, this.EventSerializer, this.CommandSerializer, this.SnapshotSerializer);
+            var scope = new SqlUnitOfWorkScope(this.Connection);
+
+            scope.RegisterObject<SQLiteConnection>(this.Connection);
+            scope.RegisterObject<IEventStore>(new EventStore(this.Connection, this.EventSerializer));
+
+            if (this.CommandSerializer != null)
+            {
+                scope.RegisterObject<IPendingCommandRepository>(new PendingCommandRepository(this.Connection, this.CommandSerializer));
+                scope.RegisterObject<IRepository<ISyncState>>(new SyncStateRepository(this.Connection));
+            }
+            
+            if (this.SnapshotSerializer != null)
+            {
+                scope.RegisterObject<ISnapshotRepository>(new SnapshotRepository(this.Connection, this.SnapshotSerializer));
+            }
+
+            if (this.ReadModelConnection != null)
+            {
+                scope.RegisterObject<IReadModelQueueProducer>(new ReadModelBuilderQueue(this.ReadModelConnection));
+            }
+
+            return scope;
         }
 
         public void StartDelayedReadModels()
@@ -99,10 +120,17 @@ namespace Mobile.CQRS.SQLite.Domain
             var scope = this.BeginUnitOfWork();
             using (scope)
             {
-                var syncAgent = new SyncAgent((IMergableEventStore)scope.EventStore, remoteEventStore, scope.SyncState, scope.PendingCommands, scope.SnapshotRepository);
+                var syncAgent = new SyncAgent(
+                    scope.GetRegisteredObject<IMergableEventStore>(), 
+                    remoteEventStore, 
+                    scope.GetRegisteredObject<IRepository<ISyncState>>(), 
+                    scope.GetRegisteredObject<IPendingCommandRepository>(), 
+                    scope.GetRegisteredObject<ISnapshotRepository>());
+
                 if (syncAgent.SyncWithRemote<T>(aggregateId))
                 {
-                    this.ReadModelQueue.Enqueue(aggregateId, typeof(T).Name, 0);
+                    scope.GetRegisteredObject<IReadModelQueueProducer>().Enqueue(aggregateId, typeof(T).Name, 0);
+
                     if (this.BuilderAgent != null && this.BuilderAgent.IsStarted)
                     {
                         this.BuilderAgent.Trigger();
@@ -111,16 +139,6 @@ namespace Mobile.CQRS.SQLite.Domain
 
                 scope.Commit();
             }
-        }
-
-        protected override IReadModelQueueProducer GetReadModelQueue()
-        {
-            if (this.ReadModelConnection != null)
-            {
-                return new ReadModelBuilderQueue(this.ReadModelConnection);
-            }
-
-            return null;
         }
     }
 }

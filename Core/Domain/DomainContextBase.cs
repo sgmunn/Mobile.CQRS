@@ -28,8 +28,6 @@ namespace Mobile.CQRS.Domain
     {
         private readonly List<IAggregateRegistration> registrations;
 
-        private IReadModelQueueProducer readModelQueue;
-
         protected DomainContextBase()
         {
             this.EventBus = new ObservableDomainNotificationBus();
@@ -43,19 +41,6 @@ namespace Mobile.CQRS.Domain
         }
         
         public IDomainNotificationBus EventBus { get; protected set; }
-
-        public IReadModelQueueProducer ReadModelQueue 
-        {
-            get
-            {
-                if (this.readModelQueue == null)
-                {
-                    this.readModelQueue = this.GetReadModelQueue();
-                }
-
-                return this.readModelQueue;
-            }
-        }
 
         public IEnumerable<IAggregateRegistration> Registrations 
         {
@@ -90,9 +75,9 @@ namespace Mobile.CQRS.Domain
             this.registrations.Add(registration);
         }
 
-        public virtual IDomainUnitOfWorkScope BeginUnitOfWork()
+        public virtual IUnitOfWorkScope BeginUnitOfWork()
         {
-            return new InMemoryDomainScope();
+            return new InMemoryUnitOfWorkScope();
         }
 
         protected virtual void InternalExecute<T>(IList<IAggregateCommand> commands, int expectedVersion) where T : IAggregateRoot
@@ -108,7 +93,7 @@ namespace Mobile.CQRS.Domain
             {
                 using (var scope = this.BeginUnitOfWork())
                 {
-                    var exec = new DomainCommandExecutor(scope, registration, busBuffer, this.ReadModelQueue);
+                    var exec = new DomainCommandExecutor(scope, registration, busBuffer);
                     exec.Execute(commands, expectedVersion);
 
                     scope.Commit();
@@ -120,7 +105,5 @@ namespace Mobile.CQRS.Domain
                 busBuffer.Commit();
             }
         }
-
-        protected abstract IReadModelQueueProducer GetReadModelQueue();
     }
 }

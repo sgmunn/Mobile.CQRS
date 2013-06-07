@@ -180,7 +180,7 @@ namespace Mobile.CQRS.Domain
             var eventScope = this.context.BeginUnitOfWork();
             using (eventScope)
             {
-                var events = eventScope.EventStore.GetEventsAfterVersion(workItem.Identity, workItem.FromVersion - 1).ToList();
+                var events = eventScope.GetRegisteredObject<IEventStore>().GetEventsAfterVersion(workItem.Identity, workItem.FromVersion - 1).ToList();
                 var builders = registration.DelayedReadModels(scope);
                 foreach (var builder in builders)
                 {

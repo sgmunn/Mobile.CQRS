@@ -27,6 +27,8 @@ namespace Mobile.CQRS
     /// </summary>
     public interface IUnitOfWorkScope : IUnitOfWork
     {
+        void RegisterObject<T>(T instance);
+        T GetRegisteredObject<T>();
         void Add(IUnitOfWork uow);
     }
 }

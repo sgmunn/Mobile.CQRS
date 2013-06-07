@@ -40,14 +40,9 @@ namespace Mobile.CQRS.SQLite.Domain
         
         public ReadModelBuilderQueue(IUnitOfWorkScope scope)
         {
-            // TODO: fix this
-            if (scope is SqlUnitOfWorkScope)
-            {
-                var sqlScope = scope as SqlUnitOfWorkScope;
-                var connection = sqlScope.Connection;
-                this.repository = new SqlRepository<ReadModelWorkItem>(connection);
-                this.repository.Connection.CreateTable<ReadModelWorkItem>();
-            }
+            var connection = scope.GetRegisteredObject<SQLiteConnection>();
+            this.repository = new SqlRepository<ReadModelWorkItem>(connection);
+            this.repository.Connection.CreateTable<ReadModelWorkItem>();
         }
 
         public IReadModelWorkItem Enqueue(Guid aggregateId, string aggregateType, int fromVersion)

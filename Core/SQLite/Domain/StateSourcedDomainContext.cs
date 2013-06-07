@@ -47,15 +47,14 @@ namespace Mobile.CQRS.SQLite.Domain
 
         public ISerializer<ISnapshot> SnapshotSerializer { get; private set; }
 
-        public override IDomainUnitOfWorkScope BeginUnitOfWork()
+        public override IUnitOfWorkScope BeginUnitOfWork()
         {
-            return new SqlDomainScope(this.Connection, null, null, this.SnapshotSerializer);
-        }
+            var scope = new SqlUnitOfWorkScope(this.Connection);
 
-        protected override IReadModelQueueProducer GetReadModelQueue()
-        {
-            // state sourced, this won't work
-            return null;
+            scope.RegisterObject<SQLiteConnection>(this.Connection);
+            scope.RegisterObject<ISnapshotRepository>(new SnapshotRepository(this.Connection, this.SnapshotSerializer));
+
+            return scope;
         }
     }
 }

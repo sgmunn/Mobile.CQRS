@@ -23,6 +23,10 @@ using Mobile.CQRS.SQLite;
 using System.IO;
 using Mobile.CQRS.SQLite.Domain;
 using Mobile.CQRS;
+using System.Linq;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using System.Threading;
 
 namespace Sample.Domain
 {
@@ -138,6 +142,30 @@ namespace Sample.Domain
                 Client2.Register(registration);
             }
         }
+
+        public static async void SomeOtherTest()
+        {
+            var id = new Guid("d834d9bc-12f9-47a2-80c1-58c65eddfa14");
+
+            var c1 = new SQLiteAsyncConnection(Client1DB.SampleDatabasePath(), true);
+            var c2 = new SQLiteAsyncConnection(Client1DB.SampleDatabasePath(), true);
+
+            var a = await c1.Table<AggregateEvent>().Where(x => x.Identity == id).FirstAsync();
+            var b = await c1.Table<AggregateEvent>().Where(x => x.Identity == id).FirstAsync();
+
+//            a.Version = 1;
+//            var t1 = c1.UpdateAsync(a);
+//            a.Version = 2;
+//            var t2 = c1.UpdateAsync(a);
+
+            var t1 = c1.Table<AggregateEvent>().ToListAsync();
+            var t2 = c1.Table<AggregateEvent>().ToListAsync();
+
+
+
+            await Task.WhenAll(t1, t2);
+            Console.WriteLine("{0} on thread {1}", t1.Result.Count + t2.Result.Count, Thread.CurrentThread.ManagedThreadId);
+        }
         
         public static void Reset(SQLiteConnection connection, SQLiteConnection readModelConnection)
         {
@@ -166,6 +194,9 @@ namespace Sample.Domain
 
         public static void ResetSample()
         {
+            //SomeOtherTest();
+            //return;
+
             TestId = Guid.Empty;
             Remote = null;
             Client1 = null;
@@ -222,7 +253,7 @@ namespace Sample.Domain
             // ordinarily our remote event store wouldn't need a scope around this code
             using (var scope = Remote.BeginUnitOfWork())
             {
-                Client1.SyncSomething<EventSourcedRoot>(scope.EventStore, TestId);
+                Client1.SyncSomething<EventSourcedRoot>(scope.GetRegisteredObject<IEventStore>(), TestId);
 
                 scope.Commit();
             }
@@ -235,7 +266,7 @@ namespace Sample.Domain
             // ordinarily our remote event store wouldn't need a scope around this code
             using (var scope = Remote.BeginUnitOfWork())
             {
-                Client2.SyncSomething<EventSourcedRoot>(scope.EventStore, TestId);
+                Client2.SyncSomething<EventSourcedRoot>(scope.GetRegisteredObject<IEventStore>(), TestId);
 
                 scope.Commit();
             }

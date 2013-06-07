@@ -150,11 +150,8 @@
     <Compile Include="Domain\DomainCommandExecutor.cs" />
     <Compile Include="Domain\IMergableEventStore.cs" />
     <Compile Include="Domain\UnitOfWorkDisposable.cs" />
-    <Compile Include="SQLite\Domain\SqlDomainScope.cs" />
-    <Compile Include="Domain\IDomainUnitOfWorkScope.cs" />
     <Compile Include="InMemory\InMemoryUnitOfWorkScope.cs" />
     <Compile Include="InMemory\InMemorySnapshotRepository_T.cs" />
-    <Compile Include="InMemory\InMemoryDomainScope.cs" />
     <Compile Include="InMemory\InMemoryEventStore.cs" />
     <Compile Include="SQLite\Domain\SnapshotRepository.cs" />
     <Compile Include="SQLite\Domain\StateSourcedDomainContext.cs" />
