@@ -30,29 +30,28 @@ namespace Mobile.CQRS.SQLite.Domain
     /// </summary>
     public sealed class StateSourcedDomainContext : DomainContextBase
     {
-        public StateSourcedDomainContext(SQLiteConnection connection, ISerializer<ISnapshot> snapshotSerializer) 
+        public StateSourcedDomainContext(string connectionString, ISerializer<ISnapshot> snapshotSerializer) 
         {
-            if (connection == null)
-                throw new ArgumentNullException("connection");
+            if (connectionString == null)
+                throw new ArgumentNullException("connectionString");
             if (snapshotSerializer == null)
                 throw new ArgumentNullException("snapshotSerializer");
 
-            this.Connection = connection;
+            this.ConnectionString = connectionString;
             this.SnapshotSerializer = snapshotSerializer;
         }
 
-        public SQLiteConnection Connection { get; private set; }
-
-        public SQLiteConnection ReadModelConnection { get; private set; }
+        public string ConnectionString { get; private set; }
 
         public ISerializer<ISnapshot> SnapshotSerializer { get; private set; }
 
         public override IUnitOfWorkScope BeginUnitOfWork()
         {
-            var scope = new SqlUnitOfWorkScope(this.Connection);
+            var connection = new SQLiteConnection(this.ConnectionString, true);
+            var scope = new SqlUnitOfWorkScope(connection);
 
-            scope.RegisterObject<SQLiteConnection>(this.Connection);
-            scope.RegisterObject<ISnapshotRepository>(new SnapshotRepository(this.Connection, this.SnapshotSerializer));
+            scope.RegisterObject<SQLiteConnection>(connection);
+            scope.RegisterObject<ISnapshotRepository>(new SnapshotRepository(connection, this.SnapshotSerializer));
 
             return scope;
         }

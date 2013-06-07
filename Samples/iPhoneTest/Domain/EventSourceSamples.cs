@@ -37,7 +37,7 @@ namespace Sample.Domain
         {
             var eventSerializer = new DataContractSerializer<EventBase>(TypeHelpers.FindSerializableTypes(typeof(EventBase), Assembly.GetCallingAssembly()));
 
-            var context = new EventSourcedDomainContext(EventSourcedDB.Main, ReadModelDB1.Main, eventSerializer);
+            var context = new EventSourcedDomainContext(EventSourcedDB.SampleDatabasePath(), ReadModelDB1.SampleDatabasePath(), eventSerializer);
             context.EventBus.Subscribe((x) => Console.WriteLine("domain bus event {0}", x));
 
             var registration = AggregateRegistration.ForType<EventSourcedRoot>()

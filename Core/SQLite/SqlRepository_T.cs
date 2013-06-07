@@ -35,6 +35,13 @@ namespace Mobile.CQRS.SQLite
             this.ScopeFieldName = scopeFieldName;
             this.TableName = typeof(T).Name;
         }
+        
+        public SqlRepository(IUnitOfWorkScope scope, string scopeFieldName = "")
+        {
+            this.connection = scope.GetRegisteredObject<SQLiteConnection>();
+            this.ScopeFieldName = scopeFieldName;
+            this.TableName = typeof(T).Name;
+        }
 
         public SQLiteConnection Connection
         {

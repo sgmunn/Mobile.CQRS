@@ -127,15 +127,15 @@ namespace Sample.Domain
                 var eventSerializer = new DataContractSerializer<EventBase>(TypeHelpers.FindSerializableTypes(typeof(EventBase), Assembly.GetCallingAssembly()));
                 var commandSerializer = new DataContractSerializer<CommandBase>(TypeHelpers.FindSerializableTypes(typeof(CommandBase), Assembly.GetCallingAssembly()));
 
-                Remote = new EventSourcedDomainContext(RemoteDB.Main, eventSerializer);
-                Client1 = new EventSourcedDomainContext(Client1DB.Main, ReadModelDB1.Main, eventSerializer) { CommandSerializer = commandSerializer };
-                Client2 = new EventSourcedDomainContext(Client2DB.Main, ReadModelDB2.Main, eventSerializer) { CommandSerializer = commandSerializer };
+                Remote = new EventSourcedDomainContext(RemoteDB.SampleDatabasePath(), eventSerializer);
+                Client1 = new EventSourcedDomainContext(Client1DB.SampleDatabasePath(), ReadModelDB1.SampleDatabasePath(), eventSerializer) { CommandSerializer = commandSerializer };
+                Client2 = new EventSourcedDomainContext(Client2DB.SampleDatabasePath(), ReadModelDB2.SampleDatabasePath(), eventSerializer) { CommandSerializer = commandSerializer };
 
                 var registration = AggregateRegistration.ForType<EventSourcedRoot>();
                 //    .WithImmediateReadModel(c => new TransactionReadModelBuilder(new SqlRepository<TransactionDataContract>(EventSourcedDB.Main, "TestId")));
                 Client1.Register(registration.WithDelayedReadModel(
                     // TODO: pass in read model db as a scope
-                    c => new TransactionReadModelBuilder(new SqlRepository<TransactionDataContract>(ReadModelDB1.Main, "TestId"))));
+                    scope => new TransactionReadModelBuilder(new SqlRepository<TransactionDataContract>(scope, "TestId"))));
 
                 Client1.StartDelayedReadModels();
 

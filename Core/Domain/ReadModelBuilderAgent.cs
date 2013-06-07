@@ -162,6 +162,7 @@ namespace Mobile.CQRS.Domain
                             }
                             catch (Exception ex)
                             {
+                                // TODO: handle sqlite busy exceptions
                                 var topic = new DomainTopic(registration.AggregateType, workItem.Identity);
                                 this.context.EventBus.Publish(new DomainNotification(topic, new ReadModelBuilderFaultedEvent(workItem.Identity, ex)));
                                 throw;

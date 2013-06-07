@@ -33,39 +33,43 @@ namespace Mobile.CQRS.SQLite.Domain
     /// </summary>
     public sealed class EventSourcedDomainContext : DomainContextBase
     {
-        public EventSourcedDomainContext(SQLiteConnection connection, ISerializer<IAggregateEvent> eventSerializer) 
+        private readonly SQLiteConnection readModelConnection;
+
+        private ReadModelBuilderQueue readModelQueue;
+
+        public EventSourcedDomainContext(string connectionString, ISerializer<IAggregateEvent> eventSerializer) 
         {
-            if (connection == null)
-                throw new ArgumentNullException("connection");
+            if (connectionString == null)
+                throw new ArgumentNullException("connectionString");
             if (eventSerializer == null)
                 throw new ArgumentNullException("eventSerializer");
 
-            this.Connection = connection;
+            this.ConnectionString = connectionString;
             this.EventSerializer = eventSerializer;
         }
 
-        public EventSourcedDomainContext(SQLiteConnection connection, SQLiteConnection readModelConnection, ISerializer<IAggregateEvent> eventSerializer) 
+        public EventSourcedDomainContext(string connectionString, string readModelConnectionString, ISerializer<IAggregateEvent> eventSerializer) 
         {
-            if (connection == null)
-                throw new ArgumentNullException("connection");
-            if (readModelConnection == null)
-                throw new ArgumentNullException("readModelConnection");
+            if (connectionString == null)
+                throw new ArgumentNullException("connectionString");
+            if (readModelConnectionString == null)
+                throw new ArgumentNullException("readModelConnectionString");
             if (eventSerializer == null)
                 throw new ArgumentNullException("eventSerializer");
 
-            if (connection == readModelConnection)
-            {
-                throw new InvalidOperationException("The read model database connection should be different to the event store connection");
-            }
-
-            this.Connection = connection;
+            this.ConnectionString = connectionString;
             this.EventSerializer = eventSerializer;
-            this.ReadModelConnection = readModelConnection;
+            this.ReadModelConnectionString = readModelConnectionString;
+
+            // we need a single read model connection because SQLite gives Busy exceptions is we try to write from 2 connections
+            // at the same time - which we do (1 thread enqueues read models and the other updates the read models)
+            // if our queue were a different connection then we should not need to do this
+            this.readModelConnection = new SQLiteConnection(ReadModelConnectionString, true);
         }
 
-        public SQLiteConnection Connection { get; private set; }
+        public string ConnectionString { get; private set; }
         
-        public SQLiteConnection ReadModelConnection { get; private set; }
+        public string ReadModelConnectionString { get; private set; }
 
         public ISerializer<IAggregateEvent> EventSerializer { get; private set; }
 
@@ -77,25 +81,30 @@ namespace Mobile.CQRS.SQLite.Domain
 
         public override IUnitOfWorkScope BeginUnitOfWork()
         {
-            var scope = new SqlUnitOfWorkScope(this.Connection);
+            var connection = new SQLiteConnection(this.ConnectionString, true);
+            var scope = new SqlUnitOfWorkScope(connection);
 
-            scope.RegisterObject<SQLiteConnection>(this.Connection);
-            scope.RegisterObject<IEventStore>(new EventStore(this.Connection, this.EventSerializer));
+            scope.RegisterObject<IEventStore>(new EventStore(connection, this.EventSerializer));
 
             if (this.CommandSerializer != null)
             {
-                scope.RegisterObject<IPendingCommandRepository>(new PendingCommandRepository(this.Connection, this.CommandSerializer));
-                scope.RegisterObject<IRepository<ISyncState>>(new SyncStateRepository(this.Connection));
+                scope.RegisterObject<IPendingCommandRepository>(new PendingCommandRepository(connection, this.CommandSerializer));
+                scope.RegisterObject<IRepository<ISyncState>>(new SyncStateRepository(connection));
             }
             
             if (this.SnapshotSerializer != null)
             {
-                scope.RegisterObject<ISnapshotRepository>(new SnapshotRepository(this.Connection, this.SnapshotSerializer));
+                scope.RegisterObject<ISnapshotRepository>(new SnapshotRepository(connection, this.SnapshotSerializer));
             }
 
-            if (this.ReadModelConnection != null)
+            if (!string.IsNullOrWhiteSpace(this.ReadModelConnectionString))
             {
-                scope.RegisterObject<IReadModelQueueProducer>(new ReadModelBuilderQueue(this.ReadModelConnection));
+                if (this.readModelQueue == null)
+                {
+                    this.readModelQueue = new ReadModelBuilderQueue(this.readModelConnection);
+                }
+
+                scope.RegisterObject<IReadModelQueueProducer>(this.readModelQueue);
             }
 
             return scope;
@@ -103,13 +112,18 @@ namespace Mobile.CQRS.SQLite.Domain
 
         public void StartDelayedReadModels()
         {
-            if (this.ReadModelConnection != null && this.BuilderAgent == null)
+            if (!string.IsNullOrWhiteSpace(this.ReadModelConnectionString) && this.BuilderAgent == null)
             {
+                if (this.readModelQueue == null)
+                {
+                    this.readModelQueue = new ReadModelBuilderQueue(this.readModelConnection);
+                }
+
                 this.BuilderAgent = new ReadModelBuilderAgent(
                     this, 
                     this.Registrations.ToList(), 
-                    () => new SqlUnitOfWorkScope(this.ReadModelConnection), 
-                    (scope) => new ReadModelBuilderQueue(scope));
+                    () => new SqlUnitOfWorkScope(this.readModelConnection), 
+                    (scope) => this.readModelQueue);
 
                 this.BuilderAgent.Start();
             }

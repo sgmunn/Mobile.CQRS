@@ -36,7 +36,7 @@ namespace Sample.Domain
         {
             var serializer = new DataContractSerializer<TestSnapshot>(TypeHelpers.FindSerializableTypes(typeof(TestSnapshot), Assembly.GetCallingAssembly()));
 
-            var context = new StateSourcedDomainContext(SnapshotSourcedDB.Main, serializer);
+            var context = new StateSourcedDomainContext(SnapshotSourcedDB.SampleDatabasePath(), serializer);
             //context.EventBus.Subscribe((x) => Console.WriteLine("domain bus event {0}", x));
 
 

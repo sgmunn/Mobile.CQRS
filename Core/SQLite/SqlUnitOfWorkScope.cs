@@ -35,6 +35,8 @@ namespace Mobile.CQRS.SQLite
             if (connection == null)
                 throw new ArgumentNullException("connection");
 
+            this.RegisterObject<SQLiteConnection>(connection);
+
             // TODO: do a lock here, and loose all the other locks
             this.connection = connection;
             this.BeginTransaction();
