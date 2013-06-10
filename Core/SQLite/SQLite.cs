@@ -2435,6 +2435,18 @@ namespace Mobile.CQRS.SQLite
 			}
 		}
 
+        private SQLiteCommand GenerateDeleteCommand ()
+        {
+            var cmdText = "delete from \"" + Table.TableName + "\"";
+            var args = new List<object> ();
+            if (_where != null) {
+                var w = CompileExpr (_where, args);
+                cmdText += " where " + w.CommandText;
+            }
+
+            return Connection.CreateCommand (cmdText, args.ToArray ());
+        }
+
 		class CompileResult
 		{
 			public string CommandText { get; set; }
@@ -2664,6 +2676,11 @@ namespace Mobile.CQRS.SQLite
 		{
 			return Where (predExpr).Count ();
 		}
+        
+        public int Delete ()
+        {
+            return GenerateDeleteCommand().ExecuteNonQuery();           
+        }
 
 		public IEnumerator<T> GetEnumerator ()
 		{
