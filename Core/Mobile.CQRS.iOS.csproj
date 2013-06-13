@@ -172,5 +172,6 @@
     <Compile Include="Domain\ISyncAgent.cs" />
     <Compile Include="SQLite\SQLiteAsync.cs" />
     <Compile Include="Domain\_Test.cs" />
+    <Compile Include="Domain\AggregateTypeAttribute.cs" />
   </ItemGroup>
 </Project>

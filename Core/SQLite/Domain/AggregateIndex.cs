@@ -25,6 +25,10 @@ namespace Mobile.CQRS.SQLite.Domain
     public sealed class AggregateIndex : IUniqueId
     {
         [PrimaryKey]
+        [AutoIncrement]
+        public int Id { get; set; }
+
+        [Unique]
         public Guid Identity { get; set; }
 
         public int Version { get; set; }

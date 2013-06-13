@@ -29,6 +29,7 @@ namespace Sample.Domain
     using System.Collections.Generic;
     using Mobile.CQRS.Serialization;
 
+    ////[AggregateType("some unique id")]
     public class EventSourcedRoot : AggregateRootBase, IEventSourced
     {
         ////private string name;

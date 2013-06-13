@@ -152,7 +152,7 @@ namespace Mobile.CQRS.Domain
                             return;
                         }
 
-                        var registration = this.registrations.FirstOrDefault(x => x.AggregateType.Name == workItem.AggregateType);
+                        var registration = this.registrations.FirstOrDefault(x => AggregateRootBase.GetAggregateTypeDescriptor(x.AggregateType) == workItem.AggregateType);
                         if (registration != null)
                         {
                             try

@@ -27,6 +27,22 @@ namespace Mobile.CQRS.Domain
     {
         private readonly List<IAggregateEvent> uncommittedEvents;
 
+        public static string GetAggregateTypeDescriptor<T>() 
+        {
+            return GetAggregateTypeDescriptor(typeof(T));
+        }
+        
+        public static string GetAggregateTypeDescriptor(Type type) 
+        {
+            var attrs = type.GetCustomAttributes(typeof(AggregateTypeAttribute), false);
+            if (attrs.Length == 1)
+            {
+                return ((AggregateTypeAttribute)attrs[0]).TypeDescriptor;
+            }
+
+            return type.FullName;
+        }
+
         protected AggregateRootBase()
         {
             this.uncommittedEvents = new List<IAggregateEvent>();
@@ -74,7 +90,7 @@ namespace Mobile.CQRS.Domain
 
             evt.Identity = Guid.NewGuid();
             evt.AggregateId = this.Identity;
-            evt.AggregateType = this.GetType().Name;
+            evt.AggregateType = GetAggregateTypeDescriptor(this.GetType());
             evt.Version = this.Version;
             evt.Timestamp = DateTime.UtcNow;
             evt.CommandId = commandId;

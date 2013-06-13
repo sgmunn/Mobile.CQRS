@@ -72,7 +72,7 @@ namespace Mobile.CQRS.Domain
             {
                 syncState = this.syncStateRepository.New();
                 syncState.Identity = aggregateId;
-                syncState.AggregateType = typeof(T).Name;
+                syncState.AggregateType = AggregateRootBase.GetAggregateTypeDescriptor<T>();
             }
 
             var commonEvents = this.localEventStore.GetEventsUpToVersion(aggregateId, syncState.LastSyncedVersion);

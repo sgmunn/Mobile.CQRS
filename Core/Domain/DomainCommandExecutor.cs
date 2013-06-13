@@ -77,7 +77,8 @@ namespace Mobile.CQRS.Domain
             this.EnqueueCommands(this.scope.GetRegisteredObject<IPendingCommandRepository>(), commands);
 
             // enqueue read models to be built - for non-immediate read models
-            this.EnqueueReadModels(this.scope.GetRegisteredObject<IReadModelQueueProducer>(), registration.AggregateType.Name, aggregateEvents.GetEvents().Select(x => x.Event).OfType<IAggregateEvent>().ToList());
+            var typeName = AggregateRootBase.GetAggregateTypeDescriptor(registration.AggregateType);
+            this.EnqueueReadModels(this.scope.GetRegisteredObject<IReadModelQueueProducer>(), typeName, aggregateEvents.GetEvents().Select(x => x.Event).OfType<IAggregateEvent>().ToList());
         }
         
         private void EnqueueCommands(IPendingCommandRepository commandRepository, IList<IAggregateCommand> commands)

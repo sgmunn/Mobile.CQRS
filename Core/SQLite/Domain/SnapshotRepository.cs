@@ -45,7 +45,7 @@ namespace Mobile.CQRS.SQLite.Domain
             var snapshot = new AggregateSnapshot {
                 Identity = instance.Identity,
                 Version = instance.Version,
-                SnapshotType = instance.GetType().Name,
+                SnapshotType = AggregateRootBase.GetAggregateTypeDescriptor(instance.GetType()),
                 ObjectData = this.serializer.SerializeToString(instance),
             };
 

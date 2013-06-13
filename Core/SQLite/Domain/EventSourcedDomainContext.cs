@@ -143,7 +143,7 @@ namespace Mobile.CQRS.SQLite.Domain
 
                 if (syncAgent.SyncWithRemote<T>(aggregateId))
                 {
-                    scope.GetRegisteredObject<IReadModelQueueProducer>().Enqueue(aggregateId, typeof(T).Name, 0);
+                    scope.GetRegisteredObject<IReadModelQueueProducer>().Enqueue(aggregateId, AggregateRootBase.GetAggregateTypeDescriptor<T>(), 0);
 
                     if (this.BuilderAgent != null && this.BuilderAgent.IsStarted)
                     {
