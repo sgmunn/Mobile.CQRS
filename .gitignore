@@ -6,3 +6,5 @@ Core/bin
 Core/Mobile.CQRS.Portable/bin
 Core/Mobile.CQRS.Portable/obj
 Platform/Mobile.CQRS.iOS/bin
+Platform/Mobile.CQRS.Droid/bin
+Platform/Mobile.CQRS.Droid/obj

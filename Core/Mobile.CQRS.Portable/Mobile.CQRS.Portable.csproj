@@ -41,7 +41,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Domain\_Notes.cs" />
     <Compile Include="Domain\AggregateRegistration.cs" />
     <Compile Include="Domain\AggregateRepository.cs" />
     <Compile Include="Domain\AggregateRootBase.cs" />
@@ -139,6 +138,7 @@
     <Compile Include="Domain\MissingMethodException.cs" />
     <Compile Include="ConcurrentCache.cs" />
     <Compile Include="IdLock.cs" />
+    <Compile Include="_Notes.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
   <ItemGroup>

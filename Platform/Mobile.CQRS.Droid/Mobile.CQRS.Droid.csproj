@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>10.0.0</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{B3DF75B1-5844-4066-9A1D-810D54A55B16}</ProjectGuid>
+    <ProjectTypeGuids>{EFBA0AD7-5A72-4C68-AF49-83D382785DCF};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <OutputType>Library</OutputType>
+    <RootNamespace>Mobile.CQRS</RootNamespace>
+    <AndroidResgenFile>Resources\Resource.designer.cs</AndroidResgenFile>
+    <AndroidResgenClass>Resource</AndroidResgenClass>
+    <MonoAndroidResourcePrefix>Resources</MonoAndroidResourcePrefix>
+    <MonoAndroidAssetsPrefix>Assets</MonoAndroidAssetsPrefix>
+    <AndroidUseLatestPlatformSdk>False</AndroidUseLatestPlatformSdk>
+    <AssemblyName>Mobile.CQRS.Droid</AssemblyName>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug</OutputPath>
+    <DefineConstants>DEBUG;__MOBILE__;__ANDROID__;</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <AndroidLinkMode>None</AndroidLinkMode>
+    <ConsolePause>false</ConsolePause>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>full</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release</OutputPath>
+    <DefineConstants>__MOBILE__;__ANDROID__;</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <ConsolePause>false</ConsolePause>
+    <AndroidUseSharedRuntime>false</AndroidUseSharedRuntime>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Core" />
+    <Reference Include="Mono.Android" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Resources\Resource.designer.cs" />
+    <Compile Include="..\Mobile.CQRS.iOS\Serialization\TypeHelpers.cs">
+      <Link>Serialization\TypeHelpers.cs</Link>
+    </Compile>
+    <Compile Include="..\Mobile.CQRS.iOS\SQLite\SQLite.cs">
+      <Link>SQLite\SQLite.cs</Link>
+    </Compile>
+    <Compile Include="..\Mobile.CQRS.iOS\SQLite\SQLiteAsync.cs">
+      <Link>SQLite\SQLiteAsync.cs</Link>
+    </Compile>
+    <Compile Include="..\Mobile.CQRS.iOS\SQLite\SqlQuery_T.cs">
+      <Link>SQLite\SqlQuery_T.cs</Link>
+    </Compile>
+    <Compile Include="..\Mobile.CQRS.iOS\SQLite\SqlRepository_T.cs">
+      <Link>SQLite\SqlRepository_T.cs</Link>
+    </Compile>
+    <Compile Include="..\Mobile.CQRS.iOS\SQLite\SqlUnitOfWorkScope.cs">
+      <Link>SQLite\SqlUnitOfWorkScope.cs</Link>
+    </Compile>
+    <Compile Include="..\Mobile.CQRS.iOS\SQLite\Domain\AggregateEvent.cs">
+      <Link>SQLite\Domain\AggregateEvent.cs</Link>
+    </Compile>
+    <Compile Include="..\Mobile.CQRS.iOS\SQLite\Domain\AggregateIndex.cs">
+      <Link>SQLite\Domain\AggregateIndex.cs</Link>
+    </Compile>
+    <Compile Include="..\Mobile.CQRS.iOS\SQLite\Domain\AggregateIndexRepository.cs">
+      <Link>SQLite\Domain\AggregateIndexRepository.cs</Link>
+    </Compile>
+    <Compile Include="..\Mobile.CQRS.iOS\SQLite\Domain\AggregateSnapshot.cs">
+      <Link>SQLite\Domain\AggregateSnapshot.cs</Link>
+    </Compile>
+    <Compile Include="..\Mobile.CQRS.iOS\SQLite\Domain\EventSourcedDomainContext.cs">
+      <Link>SQLite\Domain\EventSourcedDomainContext.cs</Link>
+    </Compile>
+    <Compile Include="..\Mobile.CQRS.iOS\SQLite\Domain\EventStore.cs">
+      <Link>SQLite\Domain\EventStore.cs</Link>
+    </Compile>
+    <Compile Include="..\Mobile.CQRS.iOS\SQLite\Domain\IAggregateIndexRepository.cs">
+      <Link>SQLite\Domain\IAggregateIndexRepository.cs</Link>
+    </Compile>
+    <Compile Include="..\Mobile.CQRS.iOS\SQLite\Domain\PendingCommand.cs">
+      <Link>SQLite\Domain\PendingCommand.cs</Link>
+    </Compile>
+    <Compile Include="..\Mobile.CQRS.iOS\SQLite\Domain\PendingCommandRepository.cs">
+      <Link>SQLite\Domain\PendingCommandRepository.cs</Link>
+    </Compile>
+    <Compile Include="..\Mobile.CQRS.iOS\SQLite\Domain\ReadModelBuilderQueue.cs">
+      <Link>SQLite\Domain\ReadModelBuilderQueue.cs</Link>
+    </Compile>
+    <Compile Include="..\Mobile.CQRS.iOS\SQLite\Domain\ReadModelWorkItem.cs">
+      <Link>SQLite\Domain\ReadModelWorkItem.cs</Link>
+    </Compile>
+    <Compile Include="..\Mobile.CQRS.iOS\SQLite\Domain\SnapshotRepository.cs">
+      <Link>SQLite\Domain\SnapshotRepository.cs</Link>
+    </Compile>
+    <Compile Include="..\Mobile.CQRS.iOS\SQLite\Domain\StateSourcedDomainContext.cs">
+      <Link>SQLite\Domain\StateSourcedDomainContext.cs</Link>
+    </Compile>
+    <Compile Include="..\Mobile.CQRS.iOS\SQLite\Domain\SyncState.cs">
+      <Link>SQLite\Domain\SyncState.cs</Link>
+    </Compile>
+    <Compile Include="..\Mobile.CQRS.iOS\SQLite\Domain\SyncStateRepository.cs">
+      <Link>SQLite\Domain\SyncStateRepository.cs</Link>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\AboutResources.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <AndroidResource Include="Resources\values\Strings.xml" />
+  </ItemGroup>
+  <Import Project="$(MSBuildExtensionsPath)\Novell\Novell.MonoDroid.CSharp.targets" />
+  <ItemGroup>
+    <Folder Include="Serialization\" />
+    <Folder Include="SQLite\" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Core\Mobile.CQRS.Portable\Mobile.CQRS.Portable.csproj">
+      <Project>{30F895BE-4EAD-49FC-96DE-9810BBD61793}</Project>
+      <Name>Mobile.CQRS.Portable</Name>
+    </ProjectReference>
+  </ItemGroup>
+</Project>
