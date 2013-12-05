@@ -89,7 +89,7 @@ namespace Mobile.CQRS.Domain
             }
             catch (Exception ex)
             {
-                // TODO: Console.WriteLine("UnitOfWorkScope Exception \n{0}", ex);
+                // TODO: Console.WriteLine("UnitOfWorkScope Exception \n{0}", ex); -- need logging
                 throw;
             }
         }

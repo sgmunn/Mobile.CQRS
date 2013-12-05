@@ -113,7 +113,6 @@
     <Compile Include="Serialization\TypeHelpers.cs" />
     <Compile Include="DictionaryRepositoryBase_T.cs" />
     <Compile Include="IdDictionaryRepository_T.cs" />
-    <Compile Include="IdLock.cs" />
     <Compile Include="IEvent.cs" />
     <Compile Include="IModelChangeEvent.cs" />
     <Compile Include="INotification.cs" />
@@ -138,6 +137,8 @@
     <Compile Include="InMemory\InMemorySnapshotRepository_T.cs" />
     <Compile Include="InMemory\InMemoryUnitOfWorkScope.cs" />
     <Compile Include="Domain\MissingMethodException.cs" />
+    <Compile Include="ConcurrentCache.cs" />
+    <Compile Include="IdLock.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
   <ItemGroup>
