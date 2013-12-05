@@ -1,5 +1,5 @@
 // --------------------------------------------------------------------------------------------------------------------
-// <copyright file=".cs" company="sgmunn">
+// <copyright file="TypeHelpers.cs" company="sgmunn">
 //   (c) sgmunn 2013  
 //
 //   Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
@@ -17,22 +17,24 @@
 //   IN THE SOFTWARE.
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
-using System;
 
-namespace Mobile.CQRS.Domain
+namespace Mobile.CQRS.Serialization
 {
-    public class Test
-    {
+    using System;
+    using System.Collections.Generic;
+    using System.Reflection;
+    using System.Linq;
 
-
-        public async void X()
-        {
-//            var conn = new SQLite.SQLiteAsyncConnection("", true);
-//            var xx = conn.Table<IAggregateEvent>().ToListAsync();
-//            var zz = await xx;
-        
-        
-        }
-    }
+//    public static class TypeHelpers
+//    {
+//        // this has issues when we pass it to a data contract serializer - there is something different between the Type returned 
+//        // from this method and from just doing typeof(X)
+//        public static IList<Type> FindSerializableTypes(Type interfaceType, Assembly assembly)
+//        {
+//            var assemblyTypes = assembly.DefinedTypes.ToList();
+//            var types = assemblyTypes.Where(t => interfaceType.GetTypeInfo().IsAssignableFrom(t)).Select(t => t.AsType()).ToList();
+//
+//            return types;
+//        }
+//    }
 }
-

@@ -22,6 +22,8 @@ namespace Mobile.CQRS.Domain
 {
     using System;
     using System.Collections.Generic;
+    using System.Reflection;
+    using System.Linq;
 
     public abstract class AggregateRootBase : IAggregateRoot, IEventSourced
     {
@@ -34,7 +36,7 @@ namespace Mobile.CQRS.Domain
         
         public static string GetAggregateTypeDescriptor(Type type) 
         {
-            var attrs = type.GetCustomAttributes(typeof(AggregateTypeAttribute), false);
+            var attrs = type.GetTypeInfo().GetCustomAttributes(typeof(AggregateTypeAttribute), false).ToArray();
             if (attrs.Length == 1)
             {
                 return ((AggregateTypeAttribute)attrs[0]).TypeDescriptor;

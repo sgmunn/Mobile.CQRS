@@ -21,7 +21,6 @@
 namespace Mobile.CQRS
 {
     using System;
-    using System.Collections.Concurrent;
     using System.Reflection;
     using System.Linq;
 
@@ -31,7 +30,7 @@ namespace Mobile.CQRS
     /// </summary>
     public static class MethodExecutor
     {
-        private static ConcurrentDictionary<Type, ConcurrentDictionary<Type, MethodInfo>> methodCache = new ConcurrentDictionary<Type, ConcurrentDictionary<Type, MethodInfo>>();
+        private readonly static ConcurrentCache<Type, ConcurrentCache<Type, MethodInfo>> methodCache = new ConcurrentCache<Type, ConcurrentCache<Type, MethodInfo>>();
 
         public static bool ExecuteMethod(object instance, object param)
         {
@@ -76,7 +75,7 @@ namespace Mobile.CQRS
 
         private static MethodInfo GetFromCache(object instance, object param)
         {
-            ConcurrentDictionary<Type, MethodInfo> instanceCache;
+            ConcurrentCache<Type, MethodInfo> instanceCache;
 
             if (methodCache.TryGetValue(instance.GetType(), out instanceCache))
             {
@@ -92,7 +91,7 @@ namespace Mobile.CQRS
 
         private static void AddToCache(object instance, object param, MethodInfo methodInfo)
         {
-            ConcurrentDictionary<Type, MethodInfo> instanceCache;
+            ConcurrentCache<Type, MethodInfo> instanceCache;
             
             if (methodCache.TryGetValue(instance.GetType(), out instanceCache))
             {
@@ -100,7 +99,7 @@ namespace Mobile.CQRS
             }
             else
             {
-                instanceCache = new ConcurrentDictionary<Type, MethodInfo>();
+                instanceCache = new ConcurrentCache<Type, MethodInfo>();
                 instanceCache.TryAdd(param.GetType(), methodInfo);
                 methodCache.TryAdd(instance.GetType(), instanceCache);
             }
@@ -108,13 +107,13 @@ namespace Mobile.CQRS
 
         private static MethodInfo GetMethodForParams(object instance, params object[] args)
         {
-            foreach (var method in instance.GetType().GetMethods(BindingFlags.Public | BindingFlags.Instance))
+            foreach (var method in instance.GetType().GetTypeInfo().DeclaredMethods.Where(x => x.IsPublic || !x.IsStatic))
             {
                 var methodParams = method.GetParameters();
-                if (methodParams.Count() == args.Count())
+                if (methodParams.Length == args.Length)
                 {
                     bool matches = true;
-                    for (int i = 0; i < args.Count(); i++)
+                    for (int i = 0; i < args.Length; i++)
                     {
                         var p1 = methodParams [i];
 

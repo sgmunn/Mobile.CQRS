@@ -3,3 +3,6 @@ UnitTests/Mobile.CQRS.UnitTests.iOS/bin
 UnitTests/UnitTestRunner.iOS/bin
 UnitTests/UnitTestRunner.iOS/obj
 Core/bin
+Core/Mobile.CQRS.Portable/bin
+Core/Mobile.CQRS.Portable/obj
+Platform/Mobile.CQRS.iOS/bin

@@ -115,11 +115,12 @@ namespace Mobile.CQRS
 
         protected virtual void Flatten(TReadModel readModel, TSerialized serialized)
         {
-            var props = readModel.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance);
-            var serializedProps = serialized.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance);
+            var props = readModel.GetType().GetTypeInfo().DeclaredProperties.ToList();////(BindingFlags.Public | BindingFlags.Instance);
+            var serializedProps = serialized.GetType().GetTypeInfo().DeclaredProperties.ToList();//(BindingFlags.Public | BindingFlags.Instance);
 
-            foreach (var prop in props)
+            foreach (var p in props)
             {
+                var prop = p;
                 var serializedProp = serializedProps.FirstOrDefault(sp => sp.Name == prop.Name);
                 if (serializedProp != null && prop.Name != "Identity" && prop.Name != "ObjectData" && prop.PropertyType == serializedProp.PropertyType)
                 {

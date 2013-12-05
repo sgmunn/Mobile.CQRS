@@ -17,6 +17,7 @@
 //   IN THE SOFTWARE.
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
+using System.Reflection;
 
 namespace Mobile.CQRS.Domain
 {
@@ -54,7 +55,7 @@ namespace Mobile.CQRS.Domain
 
             foreach (var t in this.registeredObjects.Keys)
             {
-                if (t.IsAssignableFrom(typeof(T)))
+                if (t.GetTypeInfo().IsAssignableFrom(typeof(T).GetTypeInfo()))
                 {
                     return (T)this.registeredObjects[t];
                 }
@@ -88,7 +89,7 @@ namespace Mobile.CQRS.Domain
             }
             catch (Exception ex)
             {
-                Console.WriteLine("UnitOfWorkScope Exception \n{0}", ex);
+                // TODO: Console.WriteLine("UnitOfWorkScope Exception \n{0}", ex);
                 throw;
             }
         }

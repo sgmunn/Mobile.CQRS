@@ -17,6 +17,7 @@
 //    IN THE SOFTWARE.
 //  </copyright>
 //  --------------------------------------------------------------------------------------------------------------------
+using System.Reflection;
 
 namespace Mobile.CQRS.Reactive
 {
@@ -178,7 +179,7 @@ namespace Mobile.CQRS.Reactive
 
         public static IObservable<T> OfType<T>(this IObservable<object> source)
         {
-            return source.Where (x => x != null && typeof(T).IsAssignableFrom(x.GetType())).Select(x => (T)x);
+            return source.Where (x => x != null && typeof(T).GetTypeInfo().IsAssignableFrom(x.GetType().GetTypeInfo())).Select(x => (T)x);
         }
 
         public static IObservable<TResult> Select<T, TResult>(this IObservable<T> source, Func<T, TResult> selector)

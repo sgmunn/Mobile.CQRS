@@ -21,6 +21,7 @@
 namespace Mobile.CQRS.Domain
 {
     using System;
+    using System.Reflection;
     using Mobile.CQRS.Reactive;
 
     public static class DomainNotificationBusExtensions
@@ -30,7 +31,7 @@ namespace Mobile.CQRS.Domain
         /// </summary>            
         public static IObservable<IDomainNotification> ForType<T>(this IObservable<IDomainNotification> source)
         {
-            return source.Where(x => typeof(T).IsAssignableFrom(x.Topic.ModelType));
+            return source.Where(x => typeof(T).GetTypeInfo().IsAssignableFrom(x.Topic.ModelType.GetTypeInfo()));
         }
 
         /// <summary>
@@ -39,7 +40,7 @@ namespace Mobile.CQRS.Domain
         public static IObservable<IDomainNotification> DataChangesForType<T>(this IObservable<IDomainNotification> source)
         {
             return source.ForType<T>()
-                .Where(x => typeof(IDomainNotification).IsAssignableFrom(x.Event.GetType()))
+                    .Where(x => typeof(IDomainNotification).GetTypeInfo().IsAssignableFrom(x.Event.GetType().GetTypeInfo()))
                     .Select(x => x.Event)
                     .Cast<IDomainNotification>();
         }
@@ -51,7 +52,7 @@ namespace Mobile.CQRS.Domain
             where T : IAggregateRoot
         {
             return source.ForType<T>()
-                .Where(x => typeof(IAggregateEvent).IsAssignableFrom(x.Event.GetType()))
+                    .Where(x => typeof(IAggregateEvent).GetTypeInfo().IsAssignableFrom(x.Event.GetType().GetTypeInfo()))
                     .Select(x => x.Event)
                     .Cast<IAggregateEvent>();
         }

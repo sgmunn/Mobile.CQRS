@@ -88,12 +88,6 @@
     <Compile Include="Data\SerializingRepository\ReadModel.cs" />
     <Compile Include="Data\SerializingRepository\WhenSerializingAReadModel.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\Core\Mobile.CQRS.iOS.csproj">
-      <Project>{1B81BE9B-B662-4626-A811-39C479980EFF}</Project>
-      <Name>Mobile.CQRS.iOS</Name>
-    </ProjectReference>
-  </ItemGroup>
   <ProjectExtensions>
     <MonoDevelop>
       <Properties>
@@ -103,4 +97,14 @@
       </Properties>
     </MonoDevelop>
   </ProjectExtensions>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Platform\Mobile.CQRS.iOS\Mobile.CQRS.iOS.csproj">
+      <Project>{1B81BE9B-B662-4626-A811-39C479980EFF}</Project>
+      <Name>Mobile.CQRS.iOS</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Core\Mobile.CQRS.Portable\Mobile.CQRS.Portable.csproj">
+      <Project>{30F895BE-4EAD-49FC-96DE-9810BBD61793}</Project>
+      <Name>Mobile.CQRS.Portable</Name>
+    </ProjectReference>
+  </ItemGroup>
 </Project>
