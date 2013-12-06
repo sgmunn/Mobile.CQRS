@@ -134,7 +134,7 @@ namespace Mobile.CQRS.EventStore
             var client = new HttpClient();
             using (client)
             {
-                var response = client.GetStringAsync("http://helloservicestack.apphb.com/events/1?VersionOnly=1&format=json").Result;
+                var response = client.GetStringAsync(string.Format("http://helloservicestack.apphb.com/events/{0}?VersionOnly=1&format=json", rootId)).Result;
                 Console.WriteLine(response);
                 var stream = JsonConvert.DeserializeObject<RemoteEventStream>(response);
 
@@ -148,7 +148,7 @@ namespace Mobile.CQRS.EventStore
             var client = new HttpClient();
             using (client)
             {
-                var response = client.GetStringAsync("http://helloservicestack.apphb.com/events/1?format=json").Result;
+                var response = client.GetStringAsync(string.Format("http://helloservicestack.apphb.com/events/{0}?format=json", rootId)).Result;
                 Console.WriteLine(response);
                 var stream = JsonConvert.DeserializeObject<RemoteEventStream>(response);
 
@@ -161,7 +161,7 @@ namespace Mobile.CQRS.EventStore
             var client = new HttpClient();
             using (client)
             {
-                var response = client.GetStringAsync(string.Format("http://helloservicestack.apphb.com/events/1?Skip={0}&format=json", version)).Result;
+                var response = client.GetStringAsync(string.Format("http://helloservicestack.apphb.com/events/{0}?Skip={1}&format=json", rootId, version)).Result;
                 Console.WriteLine(response);
                 var stream = JsonConvert.DeserializeObject<RemoteEventStream>(response);
 
@@ -174,7 +174,7 @@ namespace Mobile.CQRS.EventStore
             var client = new HttpClient();
             using (client)
             {
-                var response = client.GetStringAsync(string.Format("http://helloservicestack.apphb.com/events/1?Skip=0&Take={0}&format=json", version)).Result;
+                var response = client.GetStringAsync(string.Format("http://helloservicestack.apphb.com/events/{0}?Skip=0&Take={1}&format=json", rootId, version)).Result;
                 Console.WriteLine(response);
                 var stream = JsonConvert.DeserializeObject<RemoteEventStream>(response);
 
