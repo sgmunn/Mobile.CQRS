@@ -90,7 +90,7 @@ namespace Mobile.CQRS.Domain
         {
             var snapshot = this.GetSnapshot(id);
             var version = snapshot != null ? snapshot.Version : 0;
-            var eventsAfterSnapshot = this.GetEventsAfterVersion(id, version);
+            var eventsAfterSnapshot = await this.GetEventsAfterVersionAsync(id, version).ConfigureAwait(false);
 
             if (version == 0 && eventsAfterSnapshot.Count == 0)
             {
@@ -248,14 +248,14 @@ namespace Mobile.CQRS.Domain
             return false;
         }
 
-        private IList<IAggregateEvent> GetEventsAfterVersion(Guid id, int version)
+        private Task<IList<IAggregateEvent>> GetEventsAfterVersionAsync(Guid id, int version)
         {
             if (this.eventStore != null)
             {
-                return this.eventStore.GetEventsAfterVersion(id, version);
+                return this.eventStore.GetEventsAfterVersionAsync(id, version);
             }
 
-            return new List<IAggregateEvent>();
+            return Task.FromResult<IList<IAggregateEvent>>(new List<IAggregateEvent>());
         }
 
         private ISnapshot GetSnapshot(Guid id)

@@ -103,7 +103,7 @@ namespace Mobile.CQRS.Domain
             return Task.FromResult<IList<IAggregateEvent>>(savedEvents);
         }
 
-        public IList<IAggregateEvent> GetEventsAfterVersion(Guid rootId, int version)
+        public Task<IList<IAggregateEvent>> GetEventsAfterVersionAsync(Guid rootId, int version)
         {
             List<IAggregateEvent> savedEvents;
             lock(this.storage)
@@ -111,10 +111,10 @@ namespace Mobile.CQRS.Domain
                 savedEvents = this.GetEvents(rootId);
             }
 
-            return savedEvents.Where(x => x.Version > version).ToList();
+            return Task.FromResult<IList<IAggregateEvent>>(savedEvents.Where(x => x.Version > version).ToList());
         }
         
-        public IList<IAggregateEvent> GetEventsUpToVersion(Guid rootId, int version)
+        public Task<IList<IAggregateEvent>> GetEventsUpToVersionAsync(Guid rootId, int version)
         {
             List<IAggregateEvent> savedEvents;
             lock(this.storage)
@@ -122,7 +122,7 @@ namespace Mobile.CQRS.Domain
                 savedEvents = this.GetEvents(rootId);
             }
 
-            return savedEvents.Where(x => x.Version <= version).ToList();
+            return Task.FromResult<IList<IAggregateEvent>>(savedEvents.Where(x => x.Version <= version).ToList());
         }
 
         private List<IAggregateEvent> GetEvents(Guid rootId)

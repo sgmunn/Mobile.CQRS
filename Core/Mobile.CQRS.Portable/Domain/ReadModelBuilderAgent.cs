@@ -68,7 +68,7 @@ namespace Mobile.CQRS.Domain
                 this.IsStarted = true;
                 this.cancel = new CancellationTokenSource();
                 this.eventBusSubscription = this.context.EventBus.Subscribe(this.HandleDomainEvent);
-                this.ProcessQueue();
+                this.ProcessQueueAsync();
             }
         }
 
@@ -84,30 +84,32 @@ namespace Mobile.CQRS.Domain
 
         public void Trigger()
         {
-            this.ProcessQueue();
+            // TODO: test whether this needs to be awaited
+            this.ProcessQueueAsync();
         }
 
         private void HandleDomainEvent(INotification notification)
         {
+            // TODO: we have a threading issue here - not awaited!
             if (notification.Event is IReadModelWorkItem)
             {
-                this.ProcessQueue();
+                this.ProcessQueueAsync();
             }
         }
 
-        private void ProcessQueue()
+        private async Task ProcessQueueAsync()
         {
             if (this.IsFaulted && !this.IsStarted)
             {
                 return;
             }
 
-            Task.Factory.StartNew(() => {
+            Task.Factory.StartNew(async () => {
                 if (Interlocked.Exchange(ref this.locker, 1) == 0)
                 {
                     try
                     {
-                        this.DoProcessQueue();
+                        await this.DoProcessQueueAsync().ConfigureAwait(false);
                     }
                     catch (Exception ex)
                     {
@@ -122,7 +124,7 @@ namespace Mobile.CQRS.Domain
             });
         }
 
-        private void DoProcessQueue()
+        private async Task DoProcessQueueAsync()
         {
             // begin read model transaction scope
             // get events for workitem.AggregateId
@@ -157,7 +159,7 @@ namespace Mobile.CQRS.Domain
                         {
                             try
                             {
-                                this.ProcessWorkItem(scope, registration, bus, workItem);
+                                await this.ProcessWorkItemAsync(scope, registration, bus, workItem).ConfigureAwait(false);
                                 queue.Dequeue(workItem);
                             }
                             catch (Exception ex)
@@ -176,12 +178,12 @@ namespace Mobile.CQRS.Domain
             }
         }
 
-        private void ProcessWorkItem(IUnitOfWorkScope scope, IAggregateRegistration registration, IDomainNotificationBus bus, IReadModelWorkItem workItem)
+        private async Task ProcessWorkItemAsync(IUnitOfWorkScope scope, IAggregateRegistration registration, IDomainNotificationBus bus, IReadModelWorkItem workItem)
         {
             var eventScope = this.context.BeginUnitOfWork();
             using (eventScope)
             {
-                var events = eventScope.GetRegisteredObject<IEventStore>().GetEventsAfterVersion(workItem.Identity, workItem.FromVersion - 1).ToList();
+                var events = (await eventScope.GetRegisteredObject<IEventStore>().GetEventsAfterVersionAsync(workItem.Identity, workItem.FromVersion - 1).ConfigureAwait(false)).ToList();
                 var builders = registration.DelayedReadModels(scope);
                 foreach (var builder in builders)
                 {

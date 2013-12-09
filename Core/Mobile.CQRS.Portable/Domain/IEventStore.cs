@@ -31,7 +31,7 @@ namespace Mobile.CQRS.Domain
         //
         int GetCurrentVersion(Guid rootId);
         Task<IList<IAggregateEvent>> GetAllEventsAsync(Guid rootId);
-        IList<IAggregateEvent> GetEventsAfterVersion(Guid rootId, int version);
-        IList<IAggregateEvent> GetEventsUpToVersion(Guid rootId, int version);
+        Task<IList<IAggregateEvent>> GetEventsAfterVersionAsync(Guid rootId, int version);
+        Task<IList<IAggregateEvent>> GetEventsUpToVersionAsync(Guid rootId, int version);
     }
 }
