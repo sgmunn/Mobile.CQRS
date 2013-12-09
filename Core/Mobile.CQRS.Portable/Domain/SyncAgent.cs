@@ -64,7 +64,7 @@ namespace Mobile.CQRS.Domain
 
         public async Task<bool> SyncWithRemoteAsync<T>(Guid aggregateId) where T : class, IAggregateRoot, new()
         {
-            var currentVersion = this.localEventStore.GetCurrentVersion(aggregateId);
+            var currentVersion = await this.localEventStore.GetCurrentVersionAsync(aggregateId).ConfigureAwait(false);
 
             var syncState = this.syncStateRepository.GetById(aggregateId);
 
@@ -122,7 +122,7 @@ namespace Mobile.CQRS.Domain
             // update remote
             if (pendingEvents.Count != 0)
             {
-                this.remoteEventStore.SaveEvents(aggregateId, pendingEvents, currentRemoteVersion);
+                await this.remoteEventStore.SaveEventsAsync(aggregateId, pendingEvents, currentRemoteVersion).ConfigureAwait(false);
             }
 
             return needsFullRebuild;

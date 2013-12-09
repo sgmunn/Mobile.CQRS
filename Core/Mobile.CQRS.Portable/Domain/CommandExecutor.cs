@@ -79,7 +79,7 @@ namespace Mobile.CQRS.Domain
             var exec = new ExecutingCommandExecutor(root);
             await exec.ExecuteAsync(commands, expectedVersion).ConfigureAwait(false);
 
-            this.repository.Save(root);
+            await this.repository.SaveAsync(root).ConfigureAwait(false);
 
             if (expectedVersion != 0 && !this.versions.ContainsKey(root.Identity))
             {

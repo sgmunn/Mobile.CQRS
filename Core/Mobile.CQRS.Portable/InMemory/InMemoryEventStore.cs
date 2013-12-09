@@ -38,11 +38,12 @@ namespace Mobile.CQRS.Domain
         {
         }
 
-        public void SaveEvents(Guid aggregateId, IList<IAggregateEvent> events, int expectedVersion)
+        public async Task SaveEventsAsync(Guid aggregateId, IList<IAggregateEvent> events, int expectedVersion)
         {
             lock(this.storage)
             {
-                var currentVersion = this.GetCurrentVersion(aggregateId);
+                // TODO: need to refactor this
+                var currentVersion = this.GetCurrentVersionAsync(aggregateId).Result;
                 if (currentVersion != expectedVersion)
                 {
                     throw new ConcurrencyException(aggregateId, expectedVersion, currentVersion);
@@ -54,11 +55,12 @@ namespace Mobile.CQRS.Domain
             }
         }
 
-        public void MergeEvents(Guid aggregateId, IList<IAggregateEvent> events, int expectedVersion, int afterVersion)
+        public async Task MergeEvents(Guid aggregateId, IList<IAggregateEvent> events, int expectedVersion, int afterVersion)
         {
             lock(this.storage)
             {
-                var currentVersion = this.GetCurrentVersion(aggregateId);
+                // TODO: need to refactor this
+                var currentVersion = this.GetCurrentVersionAsync(aggregateId).Result;
                 if (currentVersion != expectedVersion)
                 {
                     throw new ConcurrencyException(aggregateId, expectedVersion, currentVersion);
@@ -76,7 +78,7 @@ namespace Mobile.CQRS.Domain
             }
         }
         
-        public int GetCurrentVersion(Guid rootId)
+        public Task<int> GetCurrentVersionAsync(Guid rootId)
         {
             List<IAggregateEvent> savedEvents;
             lock(this.storage)
@@ -86,10 +88,10 @@ namespace Mobile.CQRS.Domain
 
             if (savedEvents.Count == 0)
             {
-                return 0;
+                return Task.FromResult<int>(0);
             }
 
-            return savedEvents[savedEvents.Count - 1].Version;
+            return Task.FromResult<int>(savedEvents[savedEvents.Count - 1].Version);
         }
 
         public Task<IList<IAggregateEvent>> GetAllEventsAsync(Guid rootId)

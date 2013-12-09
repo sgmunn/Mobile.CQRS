@@ -27,9 +27,9 @@ namespace Mobile.CQRS.Domain
     public interface IEventStore : IDisposable
     {
         // 
-        void SaveEvents(Guid aggregateId, IList<IAggregateEvent> events, int expectedVersion);
+        Task SaveEventsAsync(Guid aggregateId, IList<IAggregateEvent> events, int expectedVersion);
         //
-        int GetCurrentVersion(Guid rootId);
+        Task<int> GetCurrentVersionAsync(Guid rootId);
         Task<IList<IAggregateEvent>> GetAllEventsAsync(Guid rootId);
         Task<IList<IAggregateEvent>> GetEventsAfterVersionAsync(Guid rootId, int version);
         Task<IList<IAggregateEvent>> GetEventsUpToVersionAsync(Guid rootId, int version);

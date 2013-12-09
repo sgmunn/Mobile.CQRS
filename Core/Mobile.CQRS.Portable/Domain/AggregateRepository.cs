@@ -26,7 +26,7 @@ namespace Mobile.CQRS.Domain
     using System.Threading.Tasks;
     using Mobile.CQRS.Reactive;
 
-    public sealed class AggregateRepository : IAggregateRepository, IObservableRepository
+    public sealed class AggregateRepository : IAggregateRepository, IObservableRepository, IDisposable
     {
         private readonly Func<IAggregateRoot> factory;
 
@@ -115,7 +115,7 @@ namespace Mobile.CQRS.Domain
             return result;
         }
 
-        public SaveResult Save(IAggregateRoot instance)
+        public async Task<SaveResult> SaveAsync(IAggregateRoot instance)
         {
             if (!instance.UncommittedEvents.Any())
             {
@@ -128,7 +128,7 @@ namespace Mobile.CQRS.Domain
             var newVersion = instance.UncommittedEvents.Last().Version;
 
             var snapshotChange = this.SaveSnapshot(instance, expectedVersion);
-            this.SaveEvents(instance, expectedVersion);
+            await this.SaveEventsAsync(instance, expectedVersion).ConfigureAwait(false);
 
             this.PublishEvents(instance, snapshotChange);
             instance.Commit();
@@ -163,12 +163,9 @@ namespace Mobile.CQRS.Domain
             }
         }
 
-        private void SaveEvents(IAggregateRoot instance, int expectedVersion)
+        private Task SaveEventsAsync(IAggregateRoot instance, int expectedVersion)
         {
-            if (this.eventStore != null)
-            {
-                this.eventStore.SaveEvents(instance.Identity, instance.UncommittedEvents.ToList(), expectedVersion);
-            }
+            return this.eventStore.SaveEventsAsync(instance.Identity, instance.UncommittedEvents.ToList(), expectedVersion);
         }
 
         private IDomainNotification SaveSnapshot(IAggregateRoot instance, int expectedVersion)

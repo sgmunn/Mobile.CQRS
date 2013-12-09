@@ -27,6 +27,6 @@ namespace Mobile.CQRS.Domain
     {
         IAggregateRoot New();
         Task<IAggregateRoot> GetByIdAsync(Guid id);
-        SaveResult Save(IAggregateRoot instance);
+        Task<SaveResult> SaveAsync(IAggregateRoot instance);
     }
 }
