@@ -1,4 +1,8 @@
 /*
+ * TODO: async support for remote and local stores.
+ * 
+ * 
+ * 
  * remote event store
  * just an in memory one for now
  * sample to use a fixed root id, or discovery
