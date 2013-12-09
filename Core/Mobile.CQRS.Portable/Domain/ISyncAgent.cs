@@ -21,9 +21,10 @@
 namespace Mobile.CQRS.Domain
 {
     using System;
+    using System.Threading.Tasks;
 
     public interface ISyncAgent
     {
-        bool SyncWithRemote<T>(Guid aggregateId) where T : class, IAggregateRoot, new();
+        Task<bool> SyncWithRemoteAsync<T>(Guid aggregateId) where T : class, IAggregateRoot, new();
     }
 }

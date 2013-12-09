@@ -17,6 +17,7 @@
 //   IN THE SOFTWARE.
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
+using System.Threading.Tasks;
 
 namespace Mobile.CQRS.Domain
 {
@@ -36,7 +37,7 @@ namespace Mobile.CQRS.Domain
             this.versions = new Dictionary<Guid, int>();
         }
 
-        public void Execute(IList<IAggregateCommand> commands, int expectedVersion)
+        public async Task ExecuteAsync(IList<IAggregateCommand> commands, int expectedVersion)
         {
             if (!commands.Any())
             {
@@ -50,7 +51,7 @@ namespace Mobile.CQRS.Domain
                 throw new InvalidOperationException("Can only execute commands for a single aggregate at a time");
             }
 
-            var root = this.repository.GetById(rootId);
+            var root = await this.repository.GetByIdAsync(rootId).ConfigureAwait(false);
             if (root == null)
             {
                 root = this.repository.New();
@@ -76,7 +77,7 @@ namespace Mobile.CQRS.Domain
             }
 
             var exec = new ExecutingCommandExecutor(root);
-            exec.Execute(commands, expectedVersion);
+            await exec.ExecuteAsync(commands, expectedVersion).ConfigureAwait(false);
 
             this.repository.Save(root);
 

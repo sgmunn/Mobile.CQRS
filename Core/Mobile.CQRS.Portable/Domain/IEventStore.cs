@@ -22,6 +22,7 @@ namespace Mobile.CQRS.Domain
 {
     using System;
     using System.Collections.Generic;
+    using System.Threading.Tasks;
 
     public interface IEventStore : IDisposable
     {
@@ -29,7 +30,7 @@ namespace Mobile.CQRS.Domain
         void SaveEvents(Guid aggregateId, IList<IAggregateEvent> events, int expectedVersion);
         //
         int GetCurrentVersion(Guid rootId);
-        IList<IAggregateEvent> GetAllEvents(Guid rootId);
+        Task<IList<IAggregateEvent>> GetAllEventsAsync(Guid rootId);
         IList<IAggregateEvent> GetEventsAfterVersion(Guid rootId, int version);
         IList<IAggregateEvent> GetEventsUpToVersion(Guid rootId, int version);
     }

@@ -22,15 +22,16 @@ namespace Mobile.CQRS.Domain
 {
     using System;
     using System.Collections.Generic;
+    using System.Threading.Tasks;
 
     public interface IDomainContext
     {
         IDomainNotificationBus EventBus { get; }
 
-        void Execute<T>(IAggregateCommand command) where T : IAggregateRoot;
-        void Execute<T>(IList<IAggregateCommand> commands) where T : IAggregateRoot;
-        void Execute<T>(IAggregateCommand command, int expectedVersion) where T : IAggregateRoot;
-        void Execute<T>(IList<IAggregateCommand> commands, int expectedVersion) where T : IAggregateRoot;
+        Task ExecuteAsync<T>(IAggregateCommand command) where T : IAggregateRoot;
+        Task ExecuteAsync<T>(IList<IAggregateCommand> commands) where T : IAggregateRoot;
+        Task ExecuteAsync<T>(IAggregateCommand command, int expectedVersion) where T : IAggregateRoot;
+        Task ExecuteAsync<T>(IList<IAggregateCommand> commands, int expectedVersion) where T : IAggregateRoot;
 
         IUnitOfWorkScope BeginUnitOfWork();
     }

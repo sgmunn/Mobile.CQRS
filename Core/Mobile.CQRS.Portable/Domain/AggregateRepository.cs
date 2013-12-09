@@ -23,6 +23,7 @@ namespace Mobile.CQRS.Domain
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Threading.Tasks;
     using Mobile.CQRS.Reactive;
 
     public sealed class AggregateRepository : IAggregateRepository, IObservableRepository
@@ -85,7 +86,7 @@ namespace Mobile.CQRS.Domain
             return this.factory();
         }
 
-        public IAggregateRoot GetById(Guid id)
+        public async Task<IAggregateRoot> GetByIdAsync(Guid id)
         {
             var snapshot = this.GetSnapshot(id);
             var version = snapshot != null ? snapshot.Version : 0;
@@ -105,7 +106,7 @@ namespace Mobile.CQRS.Domain
                 if (snapshot != null)
                 {
                     // a little bit inefficient, but we have to go back and get all the events
-                    eventsAfterSnapshot = this.eventStore.GetAllEvents(id);
+                    eventsAfterSnapshot = await this.eventStore.GetAllEventsAsync(id).ConfigureAwait(false);
                 }
             }
 

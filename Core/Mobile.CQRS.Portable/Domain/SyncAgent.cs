@@ -23,7 +23,8 @@ namespace Mobile.CQRS.Domain
     using System;
     using System.Linq;
     using System.Collections.Generic;
-    
+    using System.Threading.Tasks;
+
     /* This class is repsonsible for merging changes from _the_ remote event store into our 
      * event store.
      * 
@@ -61,7 +62,7 @@ namespace Mobile.CQRS.Domain
             this.snapshotRepository = snapshotRepository;
         }
 
-        public bool SyncWithRemote<T>(Guid aggregateId) where T : class, IAggregateRoot, new()
+        public async Task<bool> SyncWithRemoteAsync<T>(Guid aggregateId) where T : class, IAggregateRoot, new()
         {
             var currentVersion = this.localEventStore.GetCurrentVersion(aggregateId);
 
@@ -97,7 +98,7 @@ namespace Mobile.CQRS.Domain
 
             // get the changes that we have that need to be sent to remote, either from pending commands
             // or because we've never synced at all
-            var pendingEvents = this.GetPendingEvents<T>(syncState, newCommonHistory);
+            var pendingEvents = await this.GetPendingEventsAsync<T>(syncState, newCommonHistory).ConfigureAwait(false);
 
             this.pendingCommands.RemovePendingCommands(aggregateId);
 
@@ -126,13 +127,13 @@ namespace Mobile.CQRS.Domain
             return needsFullRebuild;
         }
 
-        private List<IAggregateEvent> GetPendingEvents<T>(ISyncState syncState, IList<IAggregateEvent> remoteEvents) where T : class, IAggregateRoot, new()
+        private async Task<List<IAggregateEvent>> GetPendingEventsAsync<T>(ISyncState syncState, IList<IAggregateEvent> remoteEvents) where T : class, IAggregateRoot, new()
         {
             if (syncState.LastSyncedVersion == 0)
             {
                 // if we've never synced, then this aggregate must have been created locally, any events either in 
                 // the event store or from pending commands are pending
-                return this.localEventStore.GetAllEvents(syncState.Identity).ToList();
+                return (await this.localEventStore.GetAllEventsAsync(syncState.Identity).ConfigureAwait(false)).ToList();
             }
 
             // if we have synced the aggregate at least once, then we need to get events from pending commands
@@ -147,7 +148,7 @@ namespace Mobile.CQRS.Domain
             ((IEventSourced)aggregate).LoadFromEvents(remoteEvents);
 
             var exec = new ExecutingCommandExecutor(aggregate);
-            exec.Execute(pendingCommandsToExecute, 0);
+            await exec.ExecuteAsync(pendingCommandsToExecute, 0).ConfigureAwait(false);
 
             if (this.snapshotRepository != null && aggregate is ISnapshotSupport)
             {

@@ -23,6 +23,7 @@ namespace Mobile.CQRS
     using System;
     using System.Reflection;
     using System.Linq;
+    using System.Threading.Tasks;
 
     /// <summary>
     /// Provides a way to execute an unnamed method that accepts a single parameter of a specific type
@@ -58,6 +59,37 @@ namespace Mobile.CQRS
             }
 
             return false;
+        }
+
+        public static Task<bool> ExecuteMethodAsync(object instance, object param)
+        {
+            if (instance == null)
+            {
+                throw new ArgumentNullException("instance");
+            }
+
+            if (param == null)
+            {
+                throw new ArgumentNullException("param");
+            }
+
+            var methodInfo = GetFromCache(instance, param);
+            if (methodInfo == null)
+            {
+                methodInfo = GetMethodForParams(instance, param);
+                AddToCache(instance, param, methodInfo);
+            }
+
+            if (methodInfo != null)
+            {
+                // TODO: we need to invoke this async!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                methodInfo.Invoke(instance, new[] { param });
+
+
+                return Task.FromResult<bool>(true);
+            }
+
+            return Task.FromResult<bool>(false);
         }
 
         private static bool ExecuteMethodForParams(object instance, params object[] args)

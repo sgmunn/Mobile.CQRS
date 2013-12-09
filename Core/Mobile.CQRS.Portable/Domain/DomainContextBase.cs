@@ -23,6 +23,7 @@ namespace Mobile.CQRS.Domain
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Threading.Tasks;
 
     public abstract class DomainContextBase : IDomainContext
     {
@@ -50,24 +51,24 @@ namespace Mobile.CQRS.Domain
             }
         }
 
-        public void Execute<T>(IAggregateCommand command) where T : IAggregateRoot
+        public Task ExecuteAsync<T>(IAggregateCommand command) where T : IAggregateRoot
         {
-            this.Execute<T>(new[] { command }, 0);
+            return this.ExecuteAsync<T>(new[] { command }, 0);
         }
 
-        public void Execute<T>(IList<IAggregateCommand> commands) where T : IAggregateRoot
+        public Task ExecuteAsync<T>(IList<IAggregateCommand> commands) where T : IAggregateRoot
         {
-            this.Execute<T>(commands, 0);
+            return this.ExecuteAsync<T>(commands, 0);
         }
 
-        public void Execute<T>(IAggregateCommand command, int expectedVersion) where T : IAggregateRoot
+        public Task ExecuteAsync<T>(IAggregateCommand command, int expectedVersion) where T : IAggregateRoot
         {
-            this.Execute<T>(new[] { command }, expectedVersion);
+            return this.ExecuteAsync<T>(new[] { command }, expectedVersion);
         }
 
-        public void Execute<T>(IList<IAggregateCommand> commands, int expectedVersion) where T : IAggregateRoot
+        public Task ExecuteAsync<T>(IList<IAggregateCommand> commands, int expectedVersion) where T : IAggregateRoot
         {
-            this.InternalExecute<T>(commands, expectedVersion);
+            return this.InternalExecuteAsync<T>(commands, expectedVersion);
         }
 
         public void Register(IAggregateRegistration registration)
@@ -80,7 +81,7 @@ namespace Mobile.CQRS.Domain
             return new InMemoryUnitOfWorkScope();
         }
 
-        protected virtual void InternalExecute<T>(IList<IAggregateCommand> commands, int expectedVersion) where T : IAggregateRoot
+        protected async virtual Task InternalExecuteAsync<T>(IList<IAggregateCommand> commands, int expectedVersion) where T : IAggregateRoot
         {
             var registration = this.registrations.FirstOrDefault(x => x.AggregateType == typeof(T));
             if (registration == null)
@@ -94,7 +95,7 @@ namespace Mobile.CQRS.Domain
                 using (var scope = this.BeginUnitOfWork())
                 {
                     var exec = new DomainCommandExecutor(scope, registration, busBuffer);
-                    exec.Execute(commands, expectedVersion);
+                    await exec.ExecuteAsync(commands, expectedVersion).ConfigureAwait(false);
 
                     scope.Commit();
                 }

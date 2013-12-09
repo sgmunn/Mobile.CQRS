@@ -23,6 +23,7 @@ namespace Mobile.CQRS.Domain
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
+    using System.Threading.Tasks;
 
     public sealed class ExecutingCommandExecutor : ICommandExecutor
     {
@@ -33,19 +34,19 @@ namespace Mobile.CQRS.Domain
             this.root = root;
         }
 
-        public void Execute(IList<IAggregateCommand> commands, int expectedVersion)
+        public async Task ExecuteAsync(IList<IAggregateCommand> commands, int expectedVersion)
         {
             foreach (var cmd in commands)
             {
-                this.Execute(this.root, cmd);
+                await this.ExecuteAsync(this.root, cmd).ConfigureAwait(false);
             }
         }
 
-        private void Execute(object aggregate, object command)
+        private async Task ExecuteAsync(object aggregate, object command)
         {
             try
             {
-                if (!MethodExecutor.ExecuteMethod(aggregate, command))
+                if (!(await MethodExecutor.ExecuteMethodAsync(aggregate, command).ConfigureAwait(false)))
                 {
                     throw new MissingMethodException(string.Format("Aggregate {0} does not support a method that can be called with {1}", aggregate, command));
                 }

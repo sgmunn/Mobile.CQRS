@@ -21,11 +21,12 @@
 namespace Mobile.CQRS.Domain
 {
     using System;
+    using System.Threading.Tasks;
 
     public interface IAggregateRepository
     {
         IAggregateRoot New();
-        IAggregateRoot GetById(Guid id);
+        Task<IAggregateRoot> GetByIdAsync(Guid id);
         SaveResult Save(IAggregateRoot instance);
     }
 }

@@ -23,7 +23,8 @@ namespace Mobile.CQRS.Domain
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    
+    using System.Threading.Tasks;
+
     public sealed class InMemoryEventStore : IEventStore
     {
         private readonly Dictionary<Guid, List<IAggregateEvent>> storage;
@@ -91,7 +92,7 @@ namespace Mobile.CQRS.Domain
             return savedEvents[savedEvents.Count - 1].Version;
         }
 
-        public IList<IAggregateEvent> GetAllEvents(Guid rootId)
+        public Task<IList<IAggregateEvent>> GetAllEventsAsync(Guid rootId)
         {
             List<IAggregateEvent> savedEvents;
             lock(this.storage)
@@ -99,7 +100,7 @@ namespace Mobile.CQRS.Domain
                 savedEvents = this.GetEvents(rootId);
             }
 
-            return savedEvents;
+            return Task.FromResult<IList<IAggregateEvent>>(savedEvents);
         }
 
         public IList<IAggregateEvent> GetEventsAfterVersion(Guid rootId, int version)

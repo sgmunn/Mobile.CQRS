@@ -23,6 +23,7 @@ namespace Mobile.CQRS.Domain
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Threading.Tasks;
     using Mobile.CQRS.Reactive;
 
     public sealed class DomainCommandExecutor : ICommandExecutor 
@@ -47,7 +48,7 @@ namespace Mobile.CQRS.Domain
             this.eventBus = eventBus;
         }
  
-        public void Execute(IList<IAggregateCommand> commands, int expectedVersion)
+        public async Task ExecuteAsync(IList<IAggregateCommand> commands, int expectedVersion)
         {
             if (commands.Count == 0)
             {
@@ -71,7 +72,7 @@ namespace Mobile.CQRS.Domain
             this.scope.Add(readModelBuilderBus);
 
             var cmd = new CommandExecutor(aggregateRepo);
-            cmd.Execute(commands.ToList(), expectedVersion);
+            await cmd.ExecuteAsync(commands.ToList(), expectedVersion).ConfigureAwait(false);
 
             // enqueue pending commands
             this.EnqueueCommands(this.scope.GetRegisteredObject<IPendingCommandRepository>(), commands);

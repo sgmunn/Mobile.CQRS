@@ -22,9 +22,10 @@ namespace Mobile.CQRS.Domain
 {
     using System;
     using System.Collections.Generic;
-    
+    using System.Threading.Tasks;
+
     public interface ICommandExecutor 
     {
-        void Execute(IList<IAggregateCommand> commands, int expectedVersion);
+        Task ExecuteAsync(IList<IAggregateCommand> commands, int expectedVersion);
     }
 }
