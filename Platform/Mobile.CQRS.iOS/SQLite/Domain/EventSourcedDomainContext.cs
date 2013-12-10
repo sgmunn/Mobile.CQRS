@@ -160,7 +160,8 @@ namespace Mobile.CQRS.SQLite.Domain
 
                 if (await syncAgent.SyncWithRemoteAsync<T>(aggregateId).ConfigureAwait(false))
                 {
-                    await scope.GetRegisteredObject<IReadModelQueueProducer>().EnqueueAsync(aggregateId, AggregateRootBase.GetAggregateTypeDescriptor<T>(), 0).ConfigureAwait(false);
+                    var queue = scope.GetRegisteredObject<IReadModelQueueProducer>();
+                    await queue.EnqueueAsync(aggregateId, AggregateRootBase.GetAggregateTypeDescriptor<T>(), 0).ConfigureAwait(false);
 
                     if (this.BuilderAgent != null && this.BuilderAgent.IsStarted)
                     {

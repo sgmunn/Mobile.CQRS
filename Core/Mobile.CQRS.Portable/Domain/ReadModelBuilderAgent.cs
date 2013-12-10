@@ -168,7 +168,6 @@ namespace Mobile.CQRS.Domain
                             catch (Exception ex)
                             {
                                 error = ex;
-                                // TODO: handle sqlite busy exceptions
                             }
 
                             if (error != null)

@@ -27,9 +27,10 @@ namespace Mobile.CQRS.SQLite.Domain
     using System.Threading.Tasks;
     using Mobile.CQRS.Domain;
 
-
-    // split this into two classes, then we can refactor to have a separate queue connection
-
+    /// <summary>
+    /// Implements enqueing and dequeing a read model builder queue. It uses a lock to ensure that enqueing and dequeing don't 
+    /// cause a sqlite busy exception.
+    /// </summary>
     public sealed class ReadModelBuilderQueue : IReadModelQueue, IReadModelQueueProducer 
     {
         private readonly SqlRepository<ReadModelWorkItem> repository;

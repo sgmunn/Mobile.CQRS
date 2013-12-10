@@ -11,11 +11,8 @@
  * this appears to allow multiple threads to update the DB, but only one instance / process if you will.
  * 
  * 
- * Sooo, when we call BeginUnitOfWork, we get a connection from the pool for the event store.  this will block other threads that
- * are trying to start a unit of work
- * -- read model builder agent starts a unit of work to get the event store (read only)
- * -- sync does the same, but for write as well.
- * 
+ * read models are enqueued during sync and during command execution, both cases have a lock on the event store connection
+ * so we know that enqueues do not collide with each other. they may be impacted by the read model builder though
  * 
  * 
  * 
