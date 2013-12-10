@@ -310,8 +310,8 @@ namespace Sample.Domain
             InitSample();
 
             // test http remote
-            //Client1.SyncSomething<EventSourcedRoot>(new HttpEventStore(Remote.EventSerializer), TestId);
-            //return;
+            await Client1.SyncSomethingAsync<EventSourcedRoot>(new HttpEventStore(Remote.EventSerializer), TestId);
+            return;
 
             // ordinarily our remote event store wouldn't need a scope around this code
             using (var scope = Remote.BeginUnitOfWork())
@@ -327,8 +327,8 @@ namespace Sample.Domain
             InitSample();
 
             // test http remote
-            //Client2.SyncSomething<EventSourcedRoot>(new HttpEventStore(Remote.EventSerializer), TestId);
-            //return;
+            await Client2.SyncSomethingAsync<EventSourcedRoot>(new HttpEventStore(Remote.EventSerializer), TestId);
+            return;
 
             // ordinarily our remote event store wouldn't need a scope around this code
             using (var scope = Remote.BeginUnitOfWork())
