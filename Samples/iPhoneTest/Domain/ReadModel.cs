@@ -104,8 +104,7 @@ namespace Sample.Domain
             transaction.Amount = evt.Amount;
             transaction.Description = evt.Description;
 
-            // TODO: need to await 
-            await this.Repository.SaveAsync(transaction);
+            await this.Repository.SaveAsync(transaction).ConfigureAwait(false);
         }
     }
 }

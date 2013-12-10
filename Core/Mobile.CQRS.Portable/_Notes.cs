@@ -1,6 +1,8 @@
 /*
  * TODO: async support for remote and local stores.
  * 
+ * I have an idea for handling the locking of the sqlite connections, similar to sqlite-net with its connection pool.
+ * 
  * 
  * 
  * remote event store

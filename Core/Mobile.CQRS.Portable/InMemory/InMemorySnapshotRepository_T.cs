@@ -112,14 +112,15 @@ namespace Mobile.CQRS.InMemory
             return (await base.GetAllAsync()).Cast<ISnapshot>().ToList();
         }
 
-        public async Task<SaveResult> SaveAsync(ISnapshot snapshot)
+        public Task<SaveResult> SaveAsync(ISnapshot snapshot)
         {
-            return this.InternalSave((T)snapshot);
+            return Task.FromResult<SaveResult>(this.InternalSave((T)snapshot));
         }
 
-        public async Task DeleteAsync(ISnapshot snapshot)
+        public Task DeleteAsync(ISnapshot snapshot)
         {
             this.InternalDelete((T)snapshot);
+            return TaskHelpers.Empty;
         }
     }
 }
