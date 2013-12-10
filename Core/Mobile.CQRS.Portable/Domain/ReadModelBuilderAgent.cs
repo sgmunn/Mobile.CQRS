@@ -84,20 +84,18 @@ namespace Mobile.CQRS.Domain
 
         public void Trigger()
         {
-            // TODO: test whether this needs to be awaited
             this.ProcessQueueAsync();
         }
 
         private void HandleDomainEvent(INotification notification)
         {
-            // TODO: we have a threading issue here - not awaited!
             if (notification.Event is IReadModelWorkItem)
             {
                 this.ProcessQueueAsync();
             }
         }
 
-        private async Task ProcessQueueAsync()
+        private void ProcessQueueAsync()
         {
             if (this.IsFaulted && !this.IsStarted)
             {
