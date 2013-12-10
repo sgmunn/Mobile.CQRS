@@ -19,6 +19,7 @@
 //  --------------------------------------------------------------------------------------------------------------------
 using System.Collections.Generic;
 using Mobile.CQRS.SQLite.Domain;
+using System.Threading.Tasks;
 
 namespace Sample.Domain
 {
@@ -49,9 +50,10 @@ namespace Sample.Domain
             Console.WriteLine("Builder TestEvent2 {0}", @event.Identity);
         }
 
-        public override void DeleteForAggregate(Guid aggregateId)
+        public override Task DeleteForAggregateAsync(Guid aggregateId)
         {
             Console.WriteLine("Delete {0}", aggregateId);
+            return base.DeleteForAggregateAsync(aggregateId);
         }
     }
 
@@ -102,7 +104,8 @@ namespace Sample.Domain
             transaction.Amount = evt.Amount;
             transaction.Description = evt.Description;
 
-            this.Repository.Save(transaction);
+            // TODO: need to await 
+            this.Repository.SaveAsync(transaction).Wait();
         }
     }
 }

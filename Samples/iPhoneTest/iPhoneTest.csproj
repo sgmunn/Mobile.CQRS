@@ -82,6 +82,7 @@
     <Reference Include="monotouch" />
     <Reference Include="MonoTouch.Dialog-1" />
     <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Net.Http" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Resources\" />
@@ -112,6 +113,10 @@
     <ProjectReference Include="..\..\Core\Mobile.CQRS.Portable\Mobile.CQRS.Portable.csproj">
       <Project>{30F895BE-4EAD-49FC-96DE-9810BBD61793}</Project>
       <Name>Mobile.CQRS.Portable</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Extensions\Mobile.CQRS.Extensions.iOS.csproj">
+      <Project>{E1D76261-B116-4B5F-9494-D02D26694DEF}</Project>
+      <Name>Mobile.CQRS.Extensions.iOS</Name>
     </ProjectReference>
   </ItemGroup>
 </Project>

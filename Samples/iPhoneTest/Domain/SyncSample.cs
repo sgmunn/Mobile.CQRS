@@ -27,6 +27,8 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Threading;
+using System.Net.Http;
+using Mobile.CQRS.EventStore;
 
 namespace Sample.Domain
 {
@@ -107,7 +109,55 @@ namespace Sample.Domain
         }
     }
 
-    
+    public interface IBusinessEntity
+    {
+        int ID { get; set; }
+    }
+
+    public class PanelLog : IBusinessEntity
+    {
+        public PanelLog()
+        {
+
+        }
+
+        [PrimaryKey, AutoIncrement]
+        public int ID { get; set; }
+
+        public uint Sequence { get; set; }
+        public DateTime Time { get; set; }
+        public string Message { get; set; }
+        public bool Alarm { get; set; }
+    }
+
+    public class CCC : PanelLog
+    {
+
+    }
+
+    public class TestMe : SQLiteConnection
+    {
+        public TestMe(string connectionstr) : base(connectionstr, true)
+        {
+
+
+        }
+
+        object locker = new object();
+        public IEnumerable<T> GetItemsDescending<T>() where T : IBusinessEntity, new()
+        {
+            lock (locker) 
+            {
+                var xxx = Table<T>().Select(i => i).OrderByDescending(xx => xx.ID).ToList();
+                return xxx;
+            }
+        }
+
+    }
+
+
+
+    [MonoTouch.Foundation.Preserve()]
     public static class SyncSample
     {
         public static EventSourcedDomainContext Remote;
@@ -142,29 +192,16 @@ namespace Sample.Domain
                 Client2.Register(registration);
             }
         }
-
-        public static async void SomeOtherTest()
+        public static void SomeOtherTest()
         {
-            var id = new Guid("d834d9bc-12f9-47a2-80c1-58c65eddfa14");
+            //HttpClient x = null;
 
-            var c1 = new SQLiteAsyncConnection(Client1DB.SampleDatabasePath(), true);
-            var c2 = new SQLiteAsyncConnection(Client1DB.SampleDatabasePath(), true);
+            //var id = new Guid("d834d9bc-12f9-47a2-80c1-58c65eddfa14");
 
-            var a = await c1.Table<AggregateEvent>().Where(x => x.Identity == id).FirstAsync();
-            var b = await c1.Table<AggregateEvent>().Where(x => x.Identity == id).FirstAsync();
+            //var es = new HttpEventStore();
 
-//            a.Version = 1;
-//            var t1 = c1.UpdateAsync(a);
-//            a.Version = 2;
-//            var t2 = c1.UpdateAsync(a);
+            //es.GetAllEvents(id);
 
-            var t1 = c1.Table<AggregateEvent>().ToListAsync();
-            var t2 = c1.Table<AggregateEvent>().ToListAsync();
-
-
-
-            await Task.WhenAll(t1, t2);
-            Console.WriteLine("{0} on thread {1}", t1.Result.Count + t2.Result.Count, Thread.CurrentThread.ManagedThreadId);
         }
         
         public static void Reset(SQLiteConnection connection, SQLiteConnection readModelConnection)
@@ -195,6 +232,7 @@ namespace Sample.Domain
         public static void ResetSample()
         {
             //SomeOtherTest();
+            //Client1DB.Main.Table<AggregateIndex>().Where(x => x.Version == 23).Delete();
             //return;
 
             TestId = Guid.Empty;
@@ -206,69 +244,79 @@ namespace Sample.Domain
             Reset(Client2DB.Main, ReadModelDB2.Main);
         }
 
-        public static void CreateRootClient1()
+        public static async void CreateRootClient1()
         {
             InitSample();
-            Client1.Execute<EventSourcedRoot>(new TestCommand1 
+            await Client1.ExecuteAsync<EventSourcedRoot>(new TestCommand1 
             { 
                 AggregateId = TestId,
                 Name = "Name",
             });
         }
         
-        public static void EditClient1()
+        public static async void EditClient1()
         {
             InitSample();
-            Client1.Execute<EventSourcedRoot>(new TestCommand1 
+            await Client1.ExecuteAsync<EventSourcedRoot>(new TestCommand1 
                                               { 
                 AggregateId = TestId,
                 Name = "Client 1 Edit " + DateTime.Now.Second.ToString(),
             });
-            Client1.Execute<EventSourcedRoot>(new TestCommand2 
+
+            await Client1.ExecuteAsync<EventSourcedRoot>(new TestCommand2 
                                               { 
                 AggregateId = TestId,
                 Amount = 100,
             });
         }
         
-        public static void EditClient2()
+        public static async void EditClient2()
         {
             InitSample();
-            Client2.Execute<EventSourcedRoot>(new TestCommand1 
+            await Client2.ExecuteAsync<EventSourcedRoot>(new TestCommand1 
                                               { 
                 AggregateId = TestId,
                 Name = "Client 2 Edit " + DateTime.Now.Second.ToString(),
             });
-            Client2.Execute<EventSourcedRoot>(new TestCommand2 
+
+            await Client2.ExecuteAsync<EventSourcedRoot>(new TestCommand2 
                                               { 
                 AggregateId = TestId,
                 Amount = 50,
             });
         }
         
-        public static void Client1SyncWithRemote()
+        public static async void Client1SyncWithRemote()
         {
             InitSample();
+
+            // test http remote
+            //Client1.SyncSomething<EventSourcedRoot>(new HttpEventStore(Remote.EventSerializer), TestId);
+            //return;
 
             // ordinarily our remote event store wouldn't need a scope around this code
             using (var scope = Remote.BeginUnitOfWork())
             {
-                Client1.SyncSomething<EventSourcedRoot>(scope.GetRegisteredObject<IEventStore>(), TestId);
+                await Client1.SyncSomethingAsync<EventSourcedRoot>(scope.GetRegisteredObject<IEventStore>(), TestId);
 
-                scope.Commit();
+                await scope.CommitAsync();
             }
         }
         
-        public static void Client2SyncWithRemote()
+        public static async void Client2SyncWithRemote()
         {
             InitSample();
-            
+
+            // test http remote
+            //Client2.SyncSomething<EventSourcedRoot>(new HttpEventStore(Remote.EventSerializer), TestId);
+            //return;
+
             // ordinarily our remote event store wouldn't need a scope around this code
             using (var scope = Remote.BeginUnitOfWork())
             {
-                Client2.SyncSomething<EventSourcedRoot>(scope.GetRegisteredObject<IEventStore>(), TestId);
+                await Client2.SyncSomethingAsync<EventSourcedRoot>(scope.GetRegisteredObject<IEventStore>(), TestId);
 
-                scope.Commit();
+                await scope.CommitAsync();
             }
         }
     }

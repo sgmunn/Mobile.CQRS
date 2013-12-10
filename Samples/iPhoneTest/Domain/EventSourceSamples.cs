@@ -20,6 +20,9 @@
 using Mobile.CQRS.Serialization;
 using Mobile.CQRS.SQLite;
 using Mobile.CQRS.SQLite.Domain;
+using System.Runtime.Serialization;
+using System.Collections.Generic;
+using System.IO;
 
 namespace Sample.Domain
 {
@@ -27,7 +30,7 @@ namespace Sample.Domain
     using System.Reflection;
     using Mobile.CQRS.Domain;
     using Mobile.CQRS.Reactive;
-    
+
 
     public static class EventSourceSamples
     {
@@ -47,26 +50,26 @@ namespace Sample.Domain
             return context;
         }
 
-        public static void DoTest1()
+        public static async void DoTest1()
         {
             var context = GetDomainContext();
 
             var id = TestId;
 
-            context.Execute<EventSourcedRoot>(new TestCommand1 
+            await context.ExecuteAsync<EventSourcedRoot>(new TestCommand1 
                 { 
                     AggregateId = id,
                     Name = Guid.NewGuid().ToString().Substring(0, 8),
                 });
         }
 
-        public static void DoTest2()
+        public static async void DoTest2()
         {
             var context = GetDomainContext();
 
             var id = TestId;
 
-            context.Execute<EventSourcedRoot>(new TestCommand2 
+            await context.ExecuteAsync<EventSourcedRoot>(new TestCommand2 
                 { 
                     AggregateId = id,
                     Description = Guid.NewGuid().ToString().Substring(0, 8),
@@ -74,11 +77,11 @@ namespace Sample.Domain
                 });
         }
 
-        public static void DoDeleteTest()
+        public static async void DoDeleteTest()
         {
             //var context = GetDomainContext();
 
-            new TransactionReadModelBuilder(new SqlRepository<TransactionDataContract>(EventSourcedDB.Main, "TestId")).DeleteForAggregate(TestId);
+            await (new TransactionReadModelBuilder(new SqlRepository<TransactionDataContract>(EventSourcedDB.Main, "TestId"))).DeleteForAggregateAsync(TestId);
         }
     }
 }

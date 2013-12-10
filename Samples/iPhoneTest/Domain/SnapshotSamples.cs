@@ -50,26 +50,26 @@ namespace Sample.Domain
             return context;
         }
 
-        public static void DoTest1()
+        public static async void DoTest1()
         {
             var context = GetDomainContext();
 
             var id = TestId;
 
-            context.Execute<SnapshotTestRoot>(new TestCommand1 
+            await context.ExecuteAsync<SnapshotTestRoot>(new TestCommand1 
                 { 
                     AggregateId = id,
                     Name = Guid.NewGuid().ToString().Substring(0, 8),
                 });
         }
 
-        public static void DoTest2()
+        public static async void DoTest2()
         {
             var context = GetDomainContext();
 
             var id = TestId;
 
-            context.Execute<SnapshotTestRoot>(new TestCommand2 
+            await context.ExecuteAsync<SnapshotTestRoot>(new TestCommand2 
                 { 
                     AggregateId = id,
                     Description = Guid.NewGuid().ToString().Substring(0, 8),

@@ -80,111 +80,111 @@ namespace Mobile.CQRS.EventStore
         public List<RemoteEvent> Events { get; set; }
     }
 
-    public class HttpEventStore : IEventStore
-    {
-        private readonly ISerializer<IAggregateEvent> serializer;
-
-        public HttpEventStore(ISerializer<IAggregateEvent> serializer)
-        {
-            this.serializer = serializer;
-        }
-
-        public void SaveEvents(Guid aggregateId, IList<IAggregateEvent> events, int expectedVersion)
-        {
-            if (events.Count == 0)
-            {
-                return;
-            }
-
-            Console.WriteLine(aggregateId);
-
-            var serializedEvents = events.Select(evt => new RemoteEvent{
-                Version = evt.Version,
-                Data = this.serializer.SerializeToString(evt),
-            }).ToList();
-
-            //var newVersion = events[events.Count - 1].Version;
-            //this.index.UpdateIndex(aggregateId, expectedVersion, newVersion);
-
-            var x = new RemoteEventSaveRequest();
-            x.Id = aggregateId.ToString();
-            x.ExpectedVersion = expectedVersion;
-            x.Events = serializedEvents;
-
-            var client = new HttpClient();
-            using (client)
-            {
-                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-
-                var dataToSend = JsonConvert.SerializeObject(x);
-                using (var content = new StringContent(dataToSend, Encoding.UTF8, "application/json"))
-                {
-                    var response = client.PostAsync(string.Format("http://helloservicestack.apphb.com/eventsx/{0}", aggregateId), content).Result;
-
-                    if (!response.IsSuccessStatusCode)
-                    {
-                        throw new HttpRequestException(response.StatusCode.ToString());
-                    }
-                }
-            }
-        }
-
-        public int GetCurrentVersion(Guid rootId)
-        {
-            var client = new HttpClient();
-            using (client)
-            {
-                var response = client.GetStringAsync(string.Format("http://helloservicestack.apphb.com/events/{0}?VersionOnly=1&format=json", rootId)).Result;
-                Console.WriteLine(response);
-                var stream = JsonConvert.DeserializeObject<RemoteEventStream>(response);
-
-                return stream.Version;
-            }
-        }
-
-        public IList<IAggregateEvent> GetAllEvents(Guid rootId)
-        {
-            // yes, really bad code here...
-            var client = new HttpClient();
-            using (client)
-            {
-                var response = client.GetStringAsync(string.Format("http://helloservicestack.apphb.com/events/{0}?format=json", rootId)).Result;
-                Console.WriteLine(response);
-                var stream = JsonConvert.DeserializeObject<RemoteEventStream>(response);
-
-                return stream.Events.Select(evt => this.serializer.DeserializeFromString(evt.Data)).ToList();
-            }
-        }
-
-        public IList<IAggregateEvent> GetEventsAfterVersion(Guid rootId, int version)
-        {
-            var client = new HttpClient();
-            using (client)
-            {
-                var response = client.GetStringAsync(string.Format("http://helloservicestack.apphb.com/events/{0}?Skip={1}&format=json", rootId, version)).Result;
-                Console.WriteLine(response);
-                var stream = JsonConvert.DeserializeObject<RemoteEventStream>(response);
-
-                return stream.Events.Select(evt => this.serializer.DeserializeFromString(evt.Data)).ToList();
-            }
-        }
-
-        public IList<IAggregateEvent> GetEventsUpToVersion(Guid rootId, int version)
-        {
-            var client = new HttpClient();
-            using (client)
-            {
-                var response = client.GetStringAsync(string.Format("http://helloservicestack.apphb.com/events/{0}?Skip=0&Take={1}&format=json", rootId, version)).Result;
-                Console.WriteLine(response);
-                var stream = JsonConvert.DeserializeObject<RemoteEventStream>(response);
-
-                return stream.Events.Select(evt => this.serializer.DeserializeFromString(evt.Data)).ToList();
-            }
-        }
-
-        public void Dispose()
-        {
-        }
-    }
+//    public class HttpEventStore : IEventStore
+//    {
+//        private readonly ISerializer<IAggregateEvent> serializer;
+//
+//        public HttpEventStore(ISerializer<IAggregateEvent> serializer)
+//        {
+//            this.serializer = serializer;
+//        }
+//
+//        public void SaveEvents(Guid aggregateId, IList<IAggregateEvent> events, int expectedVersion)
+//        {
+//            if (events.Count == 0)
+//            {
+//                return;
+//            }
+//
+//            Console.WriteLine(aggregateId);
+//
+//            var serializedEvents = events.Select(evt => new RemoteEvent{
+//                Version = evt.Version,
+//                Data = this.serializer.SerializeToString(evt),
+//            }).ToList();
+//
+//            //var newVersion = events[events.Count - 1].Version;
+//            //this.index.UpdateIndex(aggregateId, expectedVersion, newVersion);
+//
+//            var x = new RemoteEventSaveRequest();
+//            x.Id = aggregateId.ToString();
+//            x.ExpectedVersion = expectedVersion;
+//            x.Events = serializedEvents;
+//
+//            var client = new HttpClient();
+//            using (client)
+//            {
+//                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+//
+//                var dataToSend = JsonConvert.SerializeObject(x);
+//                using (var content = new StringContent(dataToSend, Encoding.UTF8, "application/json"))
+//                {
+//                    var response = client.PostAsync(string.Format("http://helloservicestack.apphb.com/eventsx/{0}", aggregateId), content).Result;
+//
+//                    if (!response.IsSuccessStatusCode)
+//                    {
+//                        throw new HttpRequestException(response.StatusCode.ToString());
+//                    }
+//                }
+//            }
+//        }
+//
+//        public int GetCurrentVersion(Guid rootId)
+//        {
+//            var client = new HttpClient();
+//            using (client)
+//            {
+//                var response = client.GetStringAsync(string.Format("http://helloservicestack.apphb.com/events/{0}?VersionOnly=1&format=json", rootId)).Result;
+//                Console.WriteLine(response);
+//                var stream = JsonConvert.DeserializeObject<RemoteEventStream>(response);
+//
+//                return stream.Version;
+//            }
+//        }
+//
+//        public IList<IAggregateEvent> GetAllEvents(Guid rootId)
+//        {
+//            // yes, really bad code here...
+//            var client = new HttpClient();
+//            using (client)
+//            {
+//                var response = client.GetStringAsync(string.Format("http://helloservicestack.apphb.com/events/{0}?format=json", rootId)).Result;
+//                Console.WriteLine(response);
+//                var stream = JsonConvert.DeserializeObject<RemoteEventStream>(response);
+//
+//                return stream.Events.Select(evt => this.serializer.DeserializeFromString(evt.Data)).ToList();
+//            }
+//        }
+//
+//        public IList<IAggregateEvent> GetEventsAfterVersion(Guid rootId, int version)
+//        {
+//            var client = new HttpClient();
+//            using (client)
+//            {
+//                var response = client.GetStringAsync(string.Format("http://helloservicestack.apphb.com/events/{0}?Skip={1}&format=json", rootId, version)).Result;
+//                Console.WriteLine(response);
+//                var stream = JsonConvert.DeserializeObject<RemoteEventStream>(response);
+//
+//                return stream.Events.Select(evt => this.serializer.DeserializeFromString(evt.Data)).ToList();
+//            }
+//        }
+//
+//        public IList<IAggregateEvent> GetEventsUpToVersion(Guid rootId, int version)
+//        {
+//            var client = new HttpClient();
+//            using (client)
+//            {
+//                var response = client.GetStringAsync(string.Format("http://helloservicestack.apphb.com/events/{0}?Skip=0&Take={1}&format=json", rootId, version)).Result;
+//                Console.WriteLine(response);
+//                var stream = JsonConvert.DeserializeObject<RemoteEventStream>(response);
+//
+//                return stream.Events.Select(evt => this.serializer.DeserializeFromString(evt.Data)).ToList();
+//            }
+//        }
+//
+//        public void Dispose()
+//        {
+//        }
+//    }
 }
 

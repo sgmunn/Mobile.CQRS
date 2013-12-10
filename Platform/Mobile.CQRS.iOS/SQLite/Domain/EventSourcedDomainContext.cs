@@ -130,7 +130,7 @@ namespace Mobile.CQRS.SQLite.Domain
             }
         }
         
-        public async Task SyncSomething<T>(IEventStore remoteEventStore, Guid aggregateId) where T : class, IAggregateRoot, new()
+        public async Task SyncSomethingAsync<T>(IEventStore remoteEventStore, Guid aggregateId) where T : class, IAggregateRoot, new()
         {
             var scope = this.BeginUnitOfWork();
             using (scope)
