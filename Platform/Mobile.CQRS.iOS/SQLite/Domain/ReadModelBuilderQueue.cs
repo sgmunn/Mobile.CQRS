@@ -27,6 +27,7 @@ namespace Mobile.CQRS.SQLite.Domain
     using System.Threading.Tasks;
     using Mobile.CQRS.Domain;
     
+    // TODO: read model queue doesn't actually do anything async
     public sealed class ReadModelBuilderQueue : IReadModelQueue, IReadModelQueueProducer 
     {
         private readonly SqlRepository<ReadModelWorkItem> repository;
@@ -95,7 +96,7 @@ namespace Mobile.CQRS.SQLite.Domain
             {
                 try
                 {
-                    await Task.Factory.StartNew<IList<IReadModelWorkItem>>(() => {
+                    return await Task.Factory.StartNew<IList<IReadModelWorkItem>>(() => {
                         return this.repository.Connection.Table<ReadModelWorkItem>().Take(batchSize).Cast<IReadModelWorkItem>().ToList();
                     });
                 }

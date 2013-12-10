@@ -1,7 +1,21 @@
 /*
  * TODO: async support for remote and local stores.
+ * TODO: SyncSomething needs to know how to find aggregates.
  * 
  * I have an idea for handling the locking of the sqlite connections, similar to sqlite-net with its connection pool.
+ * 
+ * SQLIte Async COnnection
+ * connection pool has _one_ connection per database path
+ * whenever a connection is requested, that single connection is returned with a lock. If the thread can enter the lock
+ * it "owns" the connection. this specific connection is then passed to actions so that they can interact with the db
+ * this appears to allow multiple threads to update the DB, but only one instance / process if you will.
+ * 
+ * 
+ * Sooo, when we call BeginUnitOfWork, we get a connection from the pool for the event store.  this will block other threads that
+ * are trying to start a unit of work
+ * -- read model builder agent starts a unit of work to get the event store (read only)
+ * -- sync does the same, but for write as well.
+ * 
  * 
  * 
  * 

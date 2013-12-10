@@ -27,6 +27,7 @@ namespace Mobile.CQRS.SQLite.Domain
     using Mobile.CQRS.Domain;
     using System.Threading.Tasks;
 
+    // TODO: event store doesn't actually do anything async
     public sealed class EventStore : SqlRepository<AggregateEvent>, IMergableEventStore
     {
         private readonly ISerializer<IAggregateEvent> serializer;

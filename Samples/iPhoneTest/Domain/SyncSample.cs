@@ -199,7 +199,13 @@ namespace Sample.Domain
 
                 Client1.StartDelayedReadModels();
 
-                Client2.Register(registration);
+
+                // Immediate models are only available in the same db as the event store
+                Client2.Register(registration.WithDelayedReadModel(
+                    // TODO: pass in read model db as a scope
+                    scope => new TransactionReadModelBuilder(new SqlRepository<TransactionDataContract>(scope, "TestId"))));
+
+                Client2.StartDelayedReadModels();
             }
         }
 
@@ -244,9 +250,9 @@ namespace Sample.Domain
 
         public static void ResetSample()
         {
-            SomeOtherTest();
+            //SomeOtherTest();
             //Client1DB.Main.Table<AggregateIndex>().Where(x => x.Version == 23).Delete();
-            return;
+            //return;
 
             TestId = Guid.Empty;
             Remote = null;

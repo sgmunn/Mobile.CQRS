@@ -102,24 +102,27 @@ namespace Mobile.CQRS.Domain
                 return;
             }
 
-            Task.Factory.StartNew(async () => {
-                if (Interlocked.Exchange(ref this.locker, 1) == 0)
+            Task.Factory.StartNew(() => this.TryProcessQueue());
+        }
+
+        private async void TryProcessQueue()
+        {
+            if (Interlocked.Exchange(ref this.locker, 1) == 0)
+            {
+                try
                 {
-                    try
-                    {
-                        await this.DoProcessQueueAsync().ConfigureAwait(false);
-                    }
-                    catch (Exception ex)
-                    {
-                        this.IsFaulted = true;
-                        this.Fault = ex;
-                    }
-                    finally
-                    {
-                        Interlocked.Exchange(ref this.locker, 0);
-                    }
+                    await this.DoProcessQueueAsync().ConfigureAwait(false);
                 }
-            });
+                catch (Exception ex)
+                {
+                    this.IsFaulted = true;
+                    this.Fault = ex;
+                }
+                finally
+                {
+                    Interlocked.Exchange(ref this.locker, 0);
+                }
+            }
         }
 
         private async Task DoProcessQueueAsync()
@@ -152,7 +155,8 @@ namespace Mobile.CQRS.Domain
                             return;
                         }
 
-                        var registration = this.registrations.FirstOrDefault(x => AggregateRootBase.GetAggregateTypeDescriptor(x.AggregateType) == workItem.AggregateType);
+                        var aggregateType = workItem.AggregateType;
+                        var registration = this.registrations.FirstOrDefault(x => AggregateRootBase.GetAggregateTypeDescriptor(x.AggregateType) == aggregateType);
                         if (registration != null)
                         {
                             Exception error = null;
@@ -184,24 +188,21 @@ namespace Mobile.CQRS.Domain
 
         private async Task ProcessWorkItemAsync(IUnitOfWorkScope scope, IAggregateRegistration registration, IDomainNotificationBus bus, IReadModelWorkItem workItem)
         {
-            var eventScope = this.context.BeginUnitOfWork();
-            using (eventScope)
-            {
-                var events = (await eventScope.GetRegisteredObject<IEventStore>().GetEventsAfterVersionAsync(workItem.Identity, workItem.FromVersion - 1).ConfigureAwait(false)).ToList();
-                var builders = registration.DelayedReadModels(scope);
-                foreach (var builder in builders)
-                {
-                    if (workItem.FromVersion == 0)
-                    {
-                        await builder.DeleteForAggregateAsync(workItem.Identity).ConfigureAwait(false);
-                    }
+            var eventStore = this.context.GetReadOnlyEventStore();
+            var events = (await eventStore.GetEventsAfterVersionAsync(workItem.Identity, workItem.FromVersion - 1).ConfigureAwait(false)).ToList();
 
-                    // we need to get the events from the event store
-                    var builderEvents = await builder.ProcessAsync(events).ConfigureAwait(false);
-                    foreach (var evt in builderEvents)
-                    {
-                        await bus.PublishAsync(evt).ConfigureAwait(false);
-                    }
+            var builders = registration.DelayedReadModels(scope);
+            foreach (var builder in builders)
+            {
+                if (workItem.FromVersion == 0)
+                {
+                    await builder.DeleteForAggregateAsync(workItem.Identity).ConfigureAwait(false);
+                }
+
+                var builderEvents = await builder.ProcessAsync(events).ConfigureAwait(false);
+                foreach (var evt in builderEvents)
+                {
+                    await bus.PublishAsync(evt).ConfigureAwait(false);
                 }
             }
         }

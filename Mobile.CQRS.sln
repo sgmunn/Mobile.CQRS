@@ -160,6 +160,6 @@ Global
 		{B3DF75B1-5844-4066-9A1D-810D54A55B16} = {EF797DF8-A64A-4979-B452-A71FFC81D17E}
 	EndGlobalSection
 	GlobalSection(MonoDevelopProperties) = preSolution
-		StartupItem = UnitTests\UnitTestRunner.iOS\UnitTestRunner.iOS.csproj
+		StartupItem = Samples\iPhoneTest\iPhoneTest.csproj
 	EndGlobalSection
 EndGlobal

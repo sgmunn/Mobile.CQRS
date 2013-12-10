@@ -82,33 +82,49 @@ namespace Mobile.CQRS.SQLite.Domain
 
         public override IUnitOfWorkScope BeginUnitOfWork()
         {
-            var connection = new SQLiteConnection(this.ConnectionString, true);
-            var scope = new SqlUnitOfWorkScope(connection);
-
-            scope.RegisterObject<IEventStore>(new EventStore(connection, this.EventSerializer));
-
-            if (this.CommandSerializer != null)
+            var sqlConnectionString = new SQLiteConnectionString(this.ConnectionString, true);
+            var connection = SQLiteConnectionPool.Shared.GetConnection(sqlConnectionString);
+            var sqlLock = connection.Lock();
+            try
             {
-                scope.RegisterObject<IPendingCommandRepository>(new PendingCommandRepository(connection, this.CommandSerializer));
-                scope.RegisterObject<IRepository<ISyncState>>(new SyncStateRepository(connection));
-            }
-            
-            if (this.SnapshotSerializer != null)
-            {
-                scope.RegisterObject<ISnapshotRepository>(new SnapshotRepository(connection, this.SnapshotSerializer));
-            }
+                var scope = new SqlUnitOfWorkScope(connection);
 
-            if (!string.IsNullOrWhiteSpace(this.ReadModelConnectionString))
-            {
-                if (this.readModelQueue == null)
+                scope.RegisterObject<IEventStore>(new EventStore(connection, this.EventSerializer));
+
+                if (this.CommandSerializer != null)
                 {
-                    this.readModelQueue = new ReadModelBuilderQueue(this.readModelConnection);
+                    scope.RegisterObject<IPendingCommandRepository>(new PendingCommandRepository(connection, this.CommandSerializer));
+                    scope.RegisterObject<IRepository<ISyncState>>(new SyncStateRepository(connection));
                 }
 
-                scope.RegisterObject<IReadModelQueueProducer>(this.readModelQueue);
-            }
+                if (this.SnapshotSerializer != null)
+                {
+                    scope.RegisterObject<ISnapshotRepository>(new SnapshotRepository(connection, this.SnapshotSerializer));
+                }
 
-            return scope;
+                if (!string.IsNullOrWhiteSpace(this.ReadModelConnectionString))
+                {
+                    if (this.readModelQueue == null)
+                    {
+                        this.readModelQueue = new ReadModelBuilderQueue(this.readModelConnection);
+                    }
+
+                    scope.RegisterObject<IReadModelQueueProducer>(this.readModelQueue);
+                }
+
+                return scope;
+            }
+            catch
+            {
+                sqlLock.Dispose();
+                throw;
+            }
+        }
+
+        public override IReadOnlyEventStore GetReadOnlyEventStore()
+        {
+            var connection = new SQLiteConnection(this.ConnectionString, true);
+            return new EventStore(connection, this.EventSerializer);
         }
 
         public void StartDelayedReadModels()

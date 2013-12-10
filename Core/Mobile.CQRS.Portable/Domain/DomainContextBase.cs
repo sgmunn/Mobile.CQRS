@@ -82,6 +82,8 @@ namespace Mobile.CQRS.Domain
             return new InMemoryUnitOfWorkScope();
         }
 
+        public abstract IReadOnlyEventStore GetReadOnlyEventStore();
+
         protected async virtual Task InternalExecuteAsync<T>(IList<IAggregateCommand> commands, int expectedVersion) where T : IAggregateRoot
         {
             var registration = this.registrations.FirstOrDefault(x => x.AggregateType == typeof(T));

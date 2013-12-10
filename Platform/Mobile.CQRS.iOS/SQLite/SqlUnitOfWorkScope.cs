@@ -24,21 +24,30 @@ namespace Mobile.CQRS.SQLite
     using System.Threading;
     using Mobile.CQRS.InMemory;
 
+    /// <summary>
+    /// Implements a unit of work scope for SQLite.
+    /// An instance of this class should be short lived as it creates a transaction on creation
+    /// </summary>
     public class SqlUnitOfWorkScope : InMemoryUnitOfWorkScope
     {
         private readonly SQLiteConnection connection;
 
+        private readonly IDisposable sqlLock;
+
         private bool inTransaction;
 
-        public SqlUnitOfWorkScope(SQLiteConnection connection)
+        public SqlUnitOfWorkScope(SQLiteConnection connection, IDisposable sqlLock = null)
         {
             if (connection == null)
                 throw new ArgumentNullException("connection");
 
             this.RegisterObject<SQLiteConnection>(connection);
 
+            this.sqlLock = sqlLock;
             // TODO: do a lock here, and loose all the other locks
             this.connection = connection;
+
+            // IMPROVE: we really shouldn't be starting a transaction in here
             this.BeginTransaction();
         }
 
@@ -58,6 +67,10 @@ namespace Mobile.CQRS.SQLite
         protected override void FinallyDispose()
         {
             this.Rollback();
+            if (this.sqlLock != null)
+            {
+                this.sqlLock.Dispose();
+            }
         }
 
         private void BeginTransaction()

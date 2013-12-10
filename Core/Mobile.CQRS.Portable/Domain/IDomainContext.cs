@@ -34,5 +34,7 @@ namespace Mobile.CQRS.Domain
         Task ExecuteAsync<T>(IList<IAggregateCommand> commands, int expectedVersion) where T : IAggregateRoot;
 
         IUnitOfWorkScope BeginUnitOfWork();
+
+        IReadOnlyEventStore GetReadOnlyEventStore();
     }
 }

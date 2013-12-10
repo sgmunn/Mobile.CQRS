@@ -38,6 +38,7 @@ namespace Mobile.CQRS.SQLite.Domain
                 throw new ArgumentNullException("snapshotSerializer");
 
             this.ConnectionString = connectionString;
+
             this.SnapshotSerializer = snapshotSerializer;
         }
 
@@ -47,13 +48,27 @@ namespace Mobile.CQRS.SQLite.Domain
 
         public override IUnitOfWorkScope BeginUnitOfWork()
         {
-            var connection = new SQLiteConnection(this.ConnectionString, true);
-            var scope = new SqlUnitOfWorkScope(connection);
+            var sqlConnectionString = new SQLiteConnectionString(this.ConnectionString, true);
+            var connection = SQLiteConnectionPool.Shared.GetConnection(sqlConnectionString);
+            var sqlLock = connection.Lock();
+            try
+            {
+                var scope = new SqlUnitOfWorkScope(connection, sqlLock);
+                scope.RegisterObject<SQLiteConnection>(connection);
+                scope.RegisterObject<ISnapshotRepository>(new SnapshotRepository(connection, this.SnapshotSerializer));
 
-            scope.RegisterObject<SQLiteConnection>(connection);
-            scope.RegisterObject<ISnapshotRepository>(new SnapshotRepository(connection, this.SnapshotSerializer));
+                return scope;
+            }
+            catch
+            {
+                sqlLock.Dispose();
+                throw;
+            }
+        }
 
-            return scope;
+        public override IReadOnlyEventStore GetReadOnlyEventStore()
+        {
+            throw new NotSupportedException();
         }
     }
 }

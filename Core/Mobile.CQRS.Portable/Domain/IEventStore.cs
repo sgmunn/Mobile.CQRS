@@ -24,11 +24,13 @@ namespace Mobile.CQRS.Domain
     using System.Collections.Generic;
     using System.Threading.Tasks;
 
-    public interface IEventStore : IDisposable
+    public interface IEventStore : IReadOnlyEventStore, IDisposable
     {
-        // 
         Task SaveEventsAsync(Guid aggregateId, IList<IAggregateEvent> events, int expectedVersion);
-        //
+    }
+
+    public interface IReadOnlyEventStore : IDisposable
+    {
         Task<int> GetCurrentVersionAsync(Guid rootId);
         Task<IList<IAggregateEvent>> GetAllEventsAsync(Guid rootId);
         Task<IList<IAggregateEvent>> GetEventsAfterVersionAsync(Guid rootId, int version);
