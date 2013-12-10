@@ -64,7 +64,12 @@ namespace Mobile.CQRS.Domain
 
             // subscribe to the changes in the aggregate and publish them to aggregateEvents
             var aggregateRepo = new AggregateRepository(registration.New, this.scope.GetRegisteredObject<IEventStore>(), scope.GetRegisteredObject<ISnapshotRepository>());
-            var subscription = aggregateRepo.Changes.Subscribe(async (evt) => aggregateEvents.PublishAsync(evt));
+
+            // Note, we have a subsciption that is async void, but this isn't an issue here as we know that all the publish does
+            // is to add the event to a queue because it being a UnitOfWorkEventBus. If the bus was going to do something with
+            // the event, it might become an issue.
+            var subscription = aggregateRepo.Changes.Subscribe(async (evt) => await aggregateEvents.PublishAsync(evt));
+
             this.scope.Add(new UnitOfWorkDisposable(subscription));
 
             // add them in this order so that aggregateEvents >> readModelBuilderBus >> read model builder >> eventBus
