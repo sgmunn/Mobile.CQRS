@@ -26,8 +26,6 @@ namespace Mobile.CQRS.InMemory
     using System.Threading.Tasks;
     using Mobile.CQRS.Domain;
 
-    // TODO: fix up locking with async in in memory repository
-
     public class InMemorySnapshotRepository<T> : DictionaryRepositoryBase<T>, ISnapshotRepository
         where T : class, ISnapshot, new() 
     {
@@ -37,16 +35,21 @@ namespace Mobile.CQRS.InMemory
 
         public async Task<SaveResult> SaveAsync(ISnapshot instance, int expectedVersion)
         {
-            lock (this.Storage)
+            await this.SyncLock.WaitAsync();
+            try
             {
                 // get the current version 
-                var current = this.GetByIdAsync(instance.Identity).Result;
+                var current = await this.GetByIdAsync(instance.Identity);
                 if (current != null && current.Version != expectedVersion)
                 {
                     throw new ConcurrencyException(instance.Identity, expectedVersion, current.Version);
                 }
 
-                return this.SaveAsync(instance).Result;
+                return await this.SaveAsync(instance);
+            }
+            finally
+            {
+                this.SyncLock.Release();
             }
         }
 
@@ -57,17 +60,14 @@ namespace Mobile.CQRS.InMemory
 
         protected override Task<SaveResult> InternalSaveAsync(T instance)
         {
-            lock (this.Storage)
+            if (this.Storage.ContainsKey(instance.Identity))
             {
-                if (this.Storage.ContainsKey(instance.Identity))
-                {
-                    this.Storage[instance.Identity] = instance;
-                    return Task.FromResult<SaveResult>(SaveResult.Updated);
-                }
-
                 this.Storage[instance.Identity] = instance;
-                return Task.FromResult<SaveResult>(SaveResult.Added);
+                return Task.FromResult<SaveResult>(SaveResult.Updated);
             }
+
+            this.Storage[instance.Identity] = instance;
+            return Task.FromResult<SaveResult>(SaveResult.Added);
         }
 
         protected override Task InternalDeleteAsync(T instance)
@@ -87,34 +87,22 @@ namespace Mobile.CQRS.InMemory
 
         public async new Task<ISnapshot> GetByIdAsync(Guid id)
         {
-            lock (this.Storage)
-            {
-                return base.GetByIdAsync(id).Result;
-            }
+            return await base.GetByIdAsync(id);
         }
 
         public async new Task<IList<ISnapshot>> GetAllAsync()
         {
-            lock (this.Storage)
-            {
-                return base.GetAllAsync().Result.Cast<ISnapshot>().ToList();
-            }
+            return (await base.GetAllAsync()).Cast<ISnapshot>().ToList();
         }
 
-        public Task<SaveResult> SaveAsync(ISnapshot snapshot)
+        public async Task<SaveResult> SaveAsync(ISnapshot snapshot)
         {
-            lock (this.Storage)
-            {
-                return this.InternalSaveAsync((T)snapshot);
-            }
+            return await this.InternalSaveAsync((T)snapshot);
         }
 
         public Task DeleteAsync(ISnapshot snapshot)
         {
-            lock (this.Storage)
-            {
-                return this.InternalDeleteAsync((T)snapshot);
-            }
+            return this.InternalDeleteAsync((T)snapshot);
         }
     }
 }

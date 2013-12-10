@@ -24,6 +24,7 @@ namespace Mobile.CQRS.Domain
     using System.Collections.Generic;
     using System.Linq;
     using System.Threading.Tasks;
+    using Mobile.CQRS.InMemory;
 
     public abstract class DomainContextBase : IDomainContext
     {

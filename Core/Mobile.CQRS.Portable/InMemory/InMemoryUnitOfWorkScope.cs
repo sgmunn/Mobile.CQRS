@@ -18,7 +18,7 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace Mobile.CQRS.Domain
+namespace Mobile.CQRS.InMemory
 {
     using System;
     using System.Collections.Generic;
@@ -135,6 +135,5 @@ namespace Mobile.CQRS.Domain
                 this.FinallyDispose();
             }
         }
-
     }
 }

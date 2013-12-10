@@ -18,12 +18,13 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace Mobile.CQRS.Domain
+namespace Mobile.CQRS.InMemory
 {
     using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Threading.Tasks;
+    using Mobile.CQRS.Domain;
 
     public sealed class InMemoryEventStore : IEventStore
     {
@@ -38,7 +39,7 @@ namespace Mobile.CQRS.Domain
         {
         }
 
-        public async Task SaveEventsAsync(Guid aggregateId, IList<IAggregateEvent> events, int expectedVersion)
+        public Task SaveEventsAsync(Guid aggregateId, IList<IAggregateEvent> events, int expectedVersion)
         {
             lock(this.storage)
             {
@@ -53,9 +54,11 @@ namespace Mobile.CQRS.Domain
                 savedEvents.AddRange(events);
                 this.storage[aggregateId] = savedEvents;
             }
+
+            return TaskHelpers.Empty;
         }
 
-        public async Task MergeEvents(Guid aggregateId, IList<IAggregateEvent> events, int expectedVersion, int afterVersion)
+        public Task MergeEvents(Guid aggregateId, IList<IAggregateEvent> events, int expectedVersion, int afterVersion)
         {
             lock(this.storage)
             {
@@ -76,6 +79,8 @@ namespace Mobile.CQRS.Domain
                 savedEvents.AddRange(events);
                 this.storage[aggregateId] = savedEvents;
             }
+
+            return TaskHelpers.Empty;
         }
         
         public Task<int> GetCurrentVersionAsync(Guid rootId)

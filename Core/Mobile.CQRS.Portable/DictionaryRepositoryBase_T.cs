@@ -23,11 +23,14 @@ namespace Mobile.CQRS
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Threading;
     using System.Threading.Tasks;
 
     public abstract class DictionaryRepositoryBase<T> : IRepository<T>
     {
         private readonly Dictionary<Guid, T> storage;
+
+        protected readonly SemaphoreSlim SyncLock = new SemaphoreSlim(1);
 
         protected DictionaryRepositoryBase()
         {
@@ -47,39 +50,77 @@ namespace Mobile.CQRS
             return this.InternalNew();
         }
 
-        public Task<T> GetByIdAsync(Guid id)
+        public async Task<T> GetByIdAsync(Guid id)
         {
-            if (this.storage.ContainsKey(id))
+            await this.SyncLock.WaitAsync();
+            try
             {
-                return Task.FromResult<T>(this.Storage[id]);
+                if (this.storage.ContainsKey(id))
+                {
+                    return this.Storage[id];
+                }
+
+                return default(T);
             }
-
-            return Task.FromResult<T>(default(T));
-        }
-
-        public Task<IList<T>> GetAllAsync()
-        {
-            return Task.FromResult<IList<T>>(this.Storage.Values.ToList());
-        }
-
-        public Task<SaveResult> SaveAsync(T instance)
-        {
-            return this.InternalSaveAsync(instance);
-        }
-
-        public Task DeleteAsync(T instance)
-        {
-            return this.InternalDeleteAsync(instance);
-        }
-
-        public Task DeleteIdAsync(Guid id)
-        {
-            if (this.Storage.ContainsKey(id))
+            finally
             {
-                this.Storage.Remove(id);
+                this.SyncLock.Release();
             }
+        }
 
-            return TaskHelpers.Empty;
+        public async Task<IList<T>> GetAllAsync()
+        {
+            await this.SyncLock.WaitAsync();
+            try
+            {
+                return this.Storage.Values.ToList();
+            }
+            finally
+            {
+                this.SyncLock.Release();
+            }
+        }
+
+        public async Task<SaveResult> SaveAsync(T instance)
+        {
+            await this.SyncLock.WaitAsync();
+            try
+            {
+                return await this.InternalSaveAsync(instance);
+            }
+            finally
+            {
+                this.SyncLock.Release();
+            }
+        }
+
+        public async Task DeleteAsync(T instance)
+        {
+            await this.SyncLock.WaitAsync();
+            try
+            {
+                await this.InternalDeleteAsync(instance);
+            }
+            finally
+            {
+                this.SyncLock.Release();
+            }
+        }
+
+        public async Task DeleteIdAsync(Guid id)
+        {
+            await this.SyncLock.WaitAsync();
+            try
+            {
+                if (this.Storage.ContainsKey(id))
+                {
+                    this.Storage.Remove(id);
+                }
+            }
+            finally
+            {
+                this.SyncLock.Release();
+            }
         }
 
         public void Dispose()
