@@ -16,7 +16,7 @@ namespace Mobile.CQRS.Core.UnitTests.Data
         [Test]
         public void WhenGettingAllItems_ThenNoItemsAreReturned()
         {
-            var items = this.Repository.GetAll();
+            var items = this.Repository.GetAllAsync().Result;
             Assert.AreEqual(0, items.Count);
         }
 
@@ -30,15 +30,15 @@ namespace Mobile.CQRS.Core.UnitTests.Data
         [Test]
         public void WhenAddingAnItem_ThenOneItemIsAdded()
         {
-            this.Repository.Save(this.Repository.New());
-            var count = this.Repository.GetAll().Count;
+            this.Repository.SaveAsync(this.Repository.New()).Wait();
+            var count = this.Repository.GetAllAsync().Result.Count;
             Assert.AreEqual(1, count);
         }
 
         [Test]
         public void WhenAddingAnItem_ThenTheSaveResultIsAdded()
         {
-            var saveResult = this.Repository.Save(this.Repository.New());
+            var saveResult = this.Repository.SaveAsync(this.Repository.New()).Result;
             Assert.AreEqual(SaveResult.Added, saveResult);
         }
 
@@ -46,8 +46,8 @@ namespace Mobile.CQRS.Core.UnitTests.Data
         public void WhenAddingAnItem_ThenTheItemIsReturned()
         {
             var item = this.Repository.New();
-            this.Repository.Save(item);
-            var result = this.Repository.GetById(item.Identity);
+            this.Repository.SaveAsync(item).Wait();
+            var result = this.Repository.GetByIdAsync(item.Identity).Result;
             Assert.AreEqual(item, result);
         }
 
@@ -56,10 +56,10 @@ namespace Mobile.CQRS.Core.UnitTests.Data
         {
             for (int i = 0;i<10;i++)
             {
-                this.Repository.Save(this.Repository.New());
+                this.Repository.SaveAsync(this.Repository.New()).Wait();
             }
 
-            var count = this.Repository.GetAll().Count;
+            var count = this.Repository.GetAllAsync().Result.Count;
             Assert.AreEqual(10, count);
         }
     }

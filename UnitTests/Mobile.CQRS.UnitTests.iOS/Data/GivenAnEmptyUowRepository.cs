@@ -16,7 +16,7 @@ namespace Mobile.CQRS.Core.UnitTests.Data
         [Test]
         public void WhenGettingAllItems_ThenNoItemsAreReturned()
         {
-            var items = this.UnitOfWork.GetAll();
+            var items = this.UnitOfWork.GetAllAsync().Result;
             Assert.AreEqual(0, items.Count);
         }
         
@@ -30,33 +30,33 @@ namespace Mobile.CQRS.Core.UnitTests.Data
         [Test]
         public void WhenAddingAnItem_ThenOneItemIsAdded()
         {
-            this.UnitOfWork.Save(this.UnitOfWork.New());
-            var count = this.UnitOfWork.GetAll().Count;
+            this.UnitOfWork.SaveAsync(this.UnitOfWork.New()).Wait();
+            var count = this.UnitOfWork.GetAllAsync().Result.Count;
             Assert.AreEqual(1, count);
         }
         
         [Test]
         public void WhenAddingAnItem_ThenTheUnderlyingRepositoryIsNotUpdated()
         {
-            this.UnitOfWork.Save(this.UnitOfWork.New());
-            var count = this.Repository.GetAll().Count;
+            this.UnitOfWork.SaveAsync(this.UnitOfWork.New()).Wait();
+            var count = this.Repository.GetAllAsync().Result.Count;
             Assert.AreEqual(0, count);
         }
         
         [Test]
         public void WhenAddingAnItemAndCommitting_ThenTheUnderlyingRepositoryIsUpdated()
         {
-            this.UnitOfWork.Save(this.UnitOfWork.New());
-            this.UnitOfWork.Commit();
+            this.UnitOfWork.SaveAsync(this.UnitOfWork.New()).Wait();
+            this.UnitOfWork.CommitAsync().Wait();
 
-            var count = this.Repository.GetAll().Count;
+            var count = this.Repository.GetAllAsync().Result.Count;
             Assert.AreEqual(1, count);
         }
 
         [Test]
         public void WhenAddingAnItem_ThenTheSaveResultIsAdded()
         {
-            var saveResult = this.UnitOfWork.Save(this.UnitOfWork.New());
+            var saveResult = this.UnitOfWork.SaveAsync(this.UnitOfWork.New()).Result;
             Assert.AreEqual(SaveResult.Added, saveResult);
         }
 
@@ -64,8 +64,8 @@ namespace Mobile.CQRS.Core.UnitTests.Data
         public void WhenAddingAnItem_ThenTheItemIsReturned()
         {
             var item = this.UnitOfWork.New();
-            this.UnitOfWork.Save(item);
-            var result = this.UnitOfWork.GetById(item.Identity);
+            this.UnitOfWork.SaveAsync(item).Wait();
+            var result = this.UnitOfWork.GetByIdAsync(item.Identity).Result;
             Assert.AreEqual(item, result);
         }
 
@@ -73,8 +73,8 @@ namespace Mobile.CQRS.Core.UnitTests.Data
         public void WhenAddingAnItem_ThenTheUnderlyingRepositoryDoesNotContainTheItem()
         {
             var item = this.UnitOfWork.New();
-            this.UnitOfWork.Save(item);
-            var result = this.Repository.GetById(item.Identity);
+            this.UnitOfWork.SaveAsync(item).Wait();
+            var result = this.Repository.GetByIdAsync(item.Identity).Result;
             Assert.AreEqual(null, result);
         }
 
@@ -82,10 +82,10 @@ namespace Mobile.CQRS.Core.UnitTests.Data
         public void WhenAddingAnItemAndCommitting_ThenTheUnderlyingRepositoryDoesContainTheItem()
         {
             var item = this.UnitOfWork.New();
-            this.UnitOfWork.Save(item);
-            this.UnitOfWork.Commit();
+            this.UnitOfWork.SaveAsync(item).Wait();
+            this.UnitOfWork.CommitAsync().Wait();
 
-            var result = this.Repository.GetById(item.Identity);
+            var result = this.Repository.GetByIdAsync(item.Identity).Result;
             Assert.AreEqual(item, result);
         }
 
@@ -94,10 +94,10 @@ namespace Mobile.CQRS.Core.UnitTests.Data
         {
             for (int i = 0;i<10;i++)
             {
-                this.UnitOfWork.Save(this.UnitOfWork.New());
+                this.UnitOfWork.SaveAsync(this.UnitOfWork.New()).Wait();
             }
             
-            var count = this.UnitOfWork.GetAll().Count;
+            var count = this.UnitOfWork.GetAllAsync().Result.Count;
             Assert.AreEqual(10, count);
         }
     }

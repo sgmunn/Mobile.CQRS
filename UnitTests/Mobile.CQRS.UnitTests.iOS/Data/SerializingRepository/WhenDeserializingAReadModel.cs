@@ -50,13 +50,13 @@ namespace Mobile.CQRS.Core.UnitTests.Data
             };
 
             var x = new SerializingRepository<ReadModel, SerializedReadModel>(this.Repository, this.Serializer);
-            yield return x.Save(readModel);
+            yield return x.SaveAsync(readModel).Result;
         }
 
         public override ReadModel When()
         {
             var x = new SerializingRepository<ReadModel, SerializedReadModel>(this.Repository, this.Serializer);
-            return x.GetById(TheId);
+            return x.GetByIdAsync(TheId).Result;
         }
 
         [Test]

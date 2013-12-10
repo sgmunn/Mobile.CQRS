@@ -56,9 +56,9 @@ namespace Mobile.CQRS.Core.UnitTests.Data
             var readModel = this.Givens.OfType<ReadModel>().Single();
 
             var repo = new SerializingRepository<ReadModel, SerializedReadModel>(this.Repository, this.Serializer);
-            repo.Save(readModel);
+            repo.SaveAsync(readModel).Wait();
 
-            return this.Repository.GetById(TheId);
+            return this.Repository.GetByIdAsync(TheId).Result;
         }
 
         [Test]

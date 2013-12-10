@@ -17,7 +17,7 @@ namespace Mobile.CQRS.Domain.UnitTests.Repositories.SnapshotSourced
             var id = Guid.NewGuid();
             this.Aggregate = new TestAggregateRoot();
             this.Aggregate.Execute(new TestCommand1{ AggregateId = id, Value1 = "1", Value2 = 1, });
-            this.Repository.Save(this.Aggregate);
+            this.Repository.SaveAsync(this.Aggregate).Wait();
 
             this.Aggregate.Execute(new TestCommand1{ AggregateId = id, Value1 = "2", Value2 = 2, });
         }
@@ -25,7 +25,7 @@ namespace Mobile.CQRS.Domain.UnitTests.Repositories.SnapshotSourced
         [Test]
         public void WhenSavingTheAggregate_ThenTheSaveResultIsAdded()
         {
-            var result = this.Repository.Save(this.Aggregate);
+            var result = this.Repository.SaveAsync(this.Aggregate).Result;
             Assert.AreEqual(SaveResult.Updated, result);
         }
     }

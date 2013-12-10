@@ -22,14 +22,14 @@ namespace Mobile.CQRS.Domain.UnitTests.Repositories.EventSourcing
                 this.Aggregate.Execute(new TestCommand1{ AggregateId = id, Value1 = "1", Value2 = i, });
             }
 
-            this.Repository.Save(this.Aggregate);
+            this.Repository.SaveAsync(this.Aggregate).Wait();
         }
         
         [Test]
         public void WhenLoadingTheAggregate_ThenThePerformanceIsOK()
         {
             // we actually have to test this manually by seeing how long it takes for real
-            var result = this.Repository.GetById(this.Aggregate.Identity);
+            var result = this.Repository.GetByIdAsync(this.Aggregate.Identity).Result;
             Assert.AreNotEqual(null, result);
             Assert.AreNotEqual(0, result.Version);
         }

@@ -24,16 +24,16 @@ namespace Mobile.CQRS.Domain.UnitTests.Repositories.SnapshotSourced
         [Test]
         public void WhenSavingTheAggregate_ThenTheAggregateHasNoUncommittedEvents()
         {
-            this.Repository.Save(this.Aggregate);
+            this.Repository.SaveAsync(this.Aggregate).Wait();
             Assert.AreEqual(0, this.Aggregate.UncommittedEvents.ToList().Count);
         }
 
         [Test]
         public void WhenSavingTheAggregate_ThenTheSnapshotStoreContainsTheSnapshot()
         {
-            this.Repository.Save(this.Aggregate);
+            this.Repository.SaveAsync(this.Aggregate).Wait();
 
-            var snapshot = this.SnapshotStore.GetById(this.Aggregate.Identity);
+            var snapshot = this.SnapshotStore.GetByIdAsync(this.Aggregate.Identity).Result;
             Assert.AreNotEqual(null, snapshot);
             Assert.AreEqual(3, snapshot.Version);
         }
@@ -41,9 +41,9 @@ namespace Mobile.CQRS.Domain.UnitTests.Repositories.SnapshotSourced
         [Test]
         public void WhenTheAggregateHasBeenSaved_ThenTheAggregateCanBeRetrievedAndHasTheCorrectVersion()
         {
-            this.Repository.Save(this.Aggregate);
+            this.Repository.SaveAsync(this.Aggregate).Wait();
 
-            var result = (TestAggregateRoot)this.Repository.GetById(this.Aggregate.Identity);
+            var result = (TestAggregateRoot)this.Repository.GetByIdAsync(this.Aggregate.Identity).Result;
             Assert.AreNotEqual(null, result);
 
             Assert.AreEqual(3, result.Version);
@@ -56,10 +56,10 @@ namespace Mobile.CQRS.Domain.UnitTests.Repositories.SnapshotSourced
         public void WhenSavingTheAggregateAndAnotherProcessHasSavedOtherEvents_ThenAConcurrencyExceptionIsThrown()
         {
             // other process
-            this.SnapshotStore.Save(new TestSnapshot() {Identity = this.Aggregate.Identity, Version = 4, });
+            this.SnapshotStore.SaveAsync(new TestSnapshot() {Identity = this.Aggregate.Identity, Version = 4, }).Wait();
 
             // this process
-            this.Repository.Save(this.Aggregate);
+            this.Repository.SaveAsync(this.Aggregate).Wait();
         }
 
 // events are not published any more

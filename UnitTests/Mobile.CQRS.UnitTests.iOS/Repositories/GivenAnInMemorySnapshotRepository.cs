@@ -1,6 +1,7 @@
 
 using System;
 using NUnit.Framework;
+using Mobile.CQRS.InMemory;
 
 namespace Mobile.CQRS.Domain.UnitTests.Repositories
 {

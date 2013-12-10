@@ -1,6 +1,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Mobile.CQRS.Domain.UnitTests.Repositories
 {
@@ -13,9 +14,10 @@ namespace Mobile.CQRS.Domain.UnitTests.Repositories
 
         public List<IDomainNotification> PublishedEvents { get; private set; }
 
-        public void Publish(IDomainNotification evt)
+        public Task PublishAsync(IDomainNotification evt)
         {
             this.PublishedEvents.Add(evt);
+            return TaskHelpers.Empty;
         }   
 
         public IDisposable Subscribe(IObserver<IDomainNotification> observer)

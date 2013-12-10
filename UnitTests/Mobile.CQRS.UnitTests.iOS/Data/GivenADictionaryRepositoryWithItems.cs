@@ -23,16 +23,16 @@ namespace Mobile.CQRS.Core.UnitTests.Data
             this.Item2.Value = 2;
             this.Item3.Value = 3;
 
-            this.Repository.Save(this.Item1);
-            this.Repository.Save(this.Item2);
-            this.Repository.Save(this.Item3);
+            this.Repository.SaveAsync(this.Item1).Wait();
+            this.Repository.SaveAsync(this.Item2).Wait();
+            this.Repository.SaveAsync(this.Item3).Wait();
         }
         
         [Test]
         public void WhenUpdatingAnItem_ThenTheItemSaveResultIsUpdated()
         {
             var item = new IdTest() { Identity = this.Item1.Identity, Value = 123, };
-            var result = this.Repository.Save(item);
+            var result = this.Repository.SaveAsync(item).Result;
             Assert.AreEqual(SaveResult.Updated, result);
         }
         
@@ -40,42 +40,42 @@ namespace Mobile.CQRS.Core.UnitTests.Data
         public void WhenUpdatingAnItem_ThenTheItemIsUpdated()
         {
             var item = new IdTest() { Identity = this.Item1.Identity, Value = 123, };
-            this.Repository.Save(item);
-            var updated = this.Repository.GetById(item.Identity);
+            this.Repository.SaveAsync(item).Wait();
+            var updated = this.Repository.GetByIdAsync(item.Identity).Result;
             Assert.AreEqual(123, updated.Value);
         }
         
         [Test]
         public void WhenDeletingAnItem_ThenTheItemIsRemoved()
         {
-            this.Repository.Delete(this.Item2);
-            var count = this.Repository.GetAll().Count;
+            this.Repository.DeleteAsync(this.Item2).Wait();
+            var count = this.Repository.GetAllAsync().Result.Count;
             Assert.AreEqual(2, count);
         }
         
         [Test]
         public void WhenDeletingAnItemById_ThenTheItemIsRemoved()
         {
-            this.Repository.DeleteId(this.Item2.Identity);
-            var count = this.Repository.GetAll().Count;
+            this.Repository.DeleteIdAsync(this.Item2.Identity).Wait();
+            var count = this.Repository.GetAllAsync().Result.Count;
             Assert.AreEqual(2, count);
         }
 
         [Test]
         public void WhenDeletingAnItem_ThenTheItemIsNoLongerInTheRepository()
         {
-            this.Repository.Delete(this.Item2);
-            var deleted = this.Repository.GetById(this.Item2.Identity);
+            this.Repository.DeleteAsync(this.Item2).Wait();
+            var deleted = this.Repository.GetByIdAsync(this.Item2.Identity).Result;
             Assert.AreEqual(null, deleted);
         }
         
         [Test]
         public void WhenDeletingAllItems_ThenThereAreNoItems()
         {
-            this.Repository.DeleteId(this.Item1.Identity);
-            this.Repository.DeleteId(this.Item2.Identity);
-            this.Repository.DeleteId(this.Item3.Identity);
-            var count = this.Repository.GetAll().Count;
+            this.Repository.DeleteIdAsync(this.Item1.Identity).Wait();
+            this.Repository.DeleteIdAsync(this.Item2.Identity).Wait();
+            this.Repository.DeleteIdAsync(this.Item3.Identity).Wait();
+            var count = this.Repository.GetAllAsync().Result.Count;
             Assert.AreEqual(0, count);
         }
     }

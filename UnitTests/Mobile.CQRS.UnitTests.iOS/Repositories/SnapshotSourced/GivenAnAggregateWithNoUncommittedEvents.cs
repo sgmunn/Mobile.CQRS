@@ -20,7 +20,7 @@ namespace Mobile.CQRS.Domain.UnitTests.Repositories.SnapshotSourced
         [Test]
         public void WhenSavingTheAggregate_ThenTheSaveResultIsNone()
         {
-            var result = this.Repository.Save(this.Aggregate);
+            var result = this.Repository.SaveAsync(this.Aggregate).Result;
             Assert.AreEqual(SaveResult.None, result);
         }
     }

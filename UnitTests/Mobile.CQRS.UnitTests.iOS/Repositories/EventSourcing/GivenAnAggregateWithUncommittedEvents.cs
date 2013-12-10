@@ -24,23 +24,23 @@ namespace Mobile.CQRS.Domain.UnitTests.Repositories.EventSourcing
         [Test]
         public void WhenSavingTheAggregate_ThenTheAggregateHasNoUncommittedEvents()
         {
-            this.Repository.Save(this.Aggregate);
+            this.Repository.SaveAsync(this.Aggregate).Wait();
             Assert.AreEqual(0, this.Aggregate.UncommittedEvents.ToList().Count);
         }
 
         [Test]
         public void WhenSavingTheAggregate_ThenTheEventStoreContainsTheEvents()
         {
-            this.Repository.Save(this.Aggregate);
-            Assert.AreEqual(3, this.EventStore.GetAllEvents(Aggregate.Identity).Count);
+            this.Repository.SaveAsync(this.Aggregate).Wait();
+            Assert.AreEqual(3, this.EventStore.GetAllEventsAsync(Aggregate.Identity).Result.Count);
         }
 
         [Test]
         public void WhenTheAggregateHasBeenSaved_ThenTheAggregateCanBeRetrievedAndHasTheCorrectVersion()
         {
-            this.Repository.Save(this.Aggregate);
+            this.Repository.SaveAsync(this.Aggregate).Wait();
 
-            var result = (TestAggregateRoot)this.Repository.GetById(this.Aggregate.Identity);
+            var result = (TestAggregateRoot)this.Repository.GetByIdAsync(this.Aggregate.Identity).Result;
             Assert.AreNotEqual(null, result);
 
             Assert.AreEqual(3, result.Version);
@@ -53,10 +53,10 @@ namespace Mobile.CQRS.Domain.UnitTests.Repositories.EventSourcing
         public void WhenSavingTheAggregateAndAnotherProcessHasSavedOtherEvents_ThenAConcurrencyExceptionIsThrown()
         {
             // other process
-            this.EventStore.SaveEvents(Aggregate.Identity, new[] { new TestEvent1() {AggregateId = this.Aggregate.Identity, Version = 4, }, }, 3);
+            this.EventStore.SaveEventsAsync(Aggregate.Identity, new[] { new TestEvent1() {AggregateId = this.Aggregate.Identity, Version = 4, }, }, 3).Wait();
 
             // this process
-            this.Repository.Save(this.Aggregate);
+            this.Repository.SaveAsync(this.Aggregate).Wait();
         }
 
 // events are not published anymore

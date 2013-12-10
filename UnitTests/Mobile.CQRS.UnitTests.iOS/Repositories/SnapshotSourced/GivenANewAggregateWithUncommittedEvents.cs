@@ -22,7 +22,7 @@ namespace Mobile.CQRS.Domain.UnitTests.Repositories.SnapshotSourced
         [Test]
         public void WhenSavingTheAggregate_ThenTheSaveResultIsAdded()
         {
-            var result = this.Repository.Save(this.Aggregate);
+            var result = this.Repository.SaveAsync(this.Aggregate).Result;
             Assert.AreEqual(SaveResult.Added, result);
         }
     }

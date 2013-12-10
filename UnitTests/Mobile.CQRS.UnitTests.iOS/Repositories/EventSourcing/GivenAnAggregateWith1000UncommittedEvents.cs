@@ -26,7 +26,7 @@ namespace Mobile.CQRS.Domain.UnitTests.Repositories.EventSourcing
         public void WhenSavingTheAggregate_ThenThePerformanceIsOK()
         {
             // we actually have to test this manually by seeing how long it takes for real
-            this.Repository.Save(this.Aggregate);
+            this.Repository.SaveAsync(this.Aggregate).Wait();
             Assert.True(true);
         }
     }

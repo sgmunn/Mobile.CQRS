@@ -17,7 +17,7 @@ namespace Mobile.CQRS.Domain.UnitTests.Repositories.SnapshotSourced
         public void WhenRetreivingAnAggregate_ThenNullIsReturned()
         {
             var id = Guid.NewGuid();
-            var result = this.Repository.GetById(id);
+            var result = this.Repository.GetByIdAsync(id).Result;
 
             Assert.AreEqual(null, result);
         }
