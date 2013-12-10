@@ -61,7 +61,7 @@ namespace Mobile.CQRS
             return false;
         }
 
-        public async static Task<bool> ExecuteMethodAsync(object instance, object param)
+        public static Task ExecuteMethodAsync(object instance, object param)
         {
             if (instance == null)
             {
@@ -82,19 +82,14 @@ namespace Mobile.CQRS
 
             if (methodInfo != null)
             {
-                // TODO: we need to invoke this async!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                var result = methodInfo.Invoke(instance, new[] { param });
-
-                // does this work??
-                if (result is Task)
+                if (typeof(Task).GetTypeInfo().IsAssignableFrom(methodInfo.ReturnType.GetTypeInfo() ))
                 {
-                    await (Task)result;
+                    var result = methodInfo.Invoke(instance, new[] { param });
+                    return (Task)result;
                 }
-
-                return true;
             }
 
-            return false;
+            return null;
         }
 
         private static bool ExecuteMethodForParams(object instance, params object[] args)

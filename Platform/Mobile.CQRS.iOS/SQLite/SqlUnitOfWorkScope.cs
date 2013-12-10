@@ -22,7 +22,7 @@ namespace Mobile.CQRS.SQLite
 {
     using System;
     using System.Threading;
-    using Mobile.CQRS.Domain;
+    using Mobile.CQRS.InMemory;
 
     public class SqlUnitOfWorkScope : InMemoryUnitOfWorkScope
     {

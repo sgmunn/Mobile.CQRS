@@ -199,7 +199,7 @@ namespace Mobile.CQRS.Domain
                     }
 
                     // we need to get the events from the event store
-                    var builderEvents = builder.Process(events);
+                    var builderEvents = await builder.ProcessAsync(events).ConfigureAwait(false);
                     foreach (var evt in builderEvents)
                     {
                         await bus.PublishAsync(evt).ConfigureAwait(false);

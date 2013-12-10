@@ -95,7 +95,7 @@ namespace Sample.Domain
             Console.WriteLine("read model builder created");
         }
         
-        public void Handle(TestEvent2 evt)
+        public async Task HandleAsync(TestEvent2 evt)
         {
             Console.WriteLine("read model updated");
             var transaction = this.Repository.New();
@@ -105,7 +105,7 @@ namespace Sample.Domain
             transaction.Description = evt.Description;
 
             // TODO: need to await 
-            this.Repository.SaveAsync(transaction).Wait();
+            await this.Repository.SaveAsync(transaction);
         }
     }
 }

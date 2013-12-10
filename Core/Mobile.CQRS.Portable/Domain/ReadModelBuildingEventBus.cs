@@ -37,13 +37,13 @@ namespace Mobile.CQRS.Domain
             this.builders = builders;
         }
 
-        public override Task CommitAsync()
+        public async override Task CommitAsync()
         {
-            this.Events.AddRange(this.BuildReadModels());
-            return base.CommitAsync();
+            this.Events.AddRange(await this.BuildReadModelsAsync().ConfigureAwait(false));
+            await base.CommitAsync().ConfigureAwait(false);
         }
 
-        protected virtual IList<IDomainNotification> BuildReadModels()
+        protected async virtual Task<IList<IDomainNotification>> BuildReadModelsAsync()
         {
             var result = new List<IDomainNotification>();
 
@@ -53,7 +53,8 @@ namespace Mobile.CQRS.Domain
             {
                 foreach (var builder in this.builders)
                 {
-                    updatedReadModels.AddRange(builder.Handle(evt));
+                    var events = await builder.HandleEventAsync(evt).ConfigureAwait(false);
+                    updatedReadModels.AddRange(events);
                 }
             }
 

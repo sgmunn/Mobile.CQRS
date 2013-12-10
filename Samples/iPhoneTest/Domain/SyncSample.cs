@@ -155,6 +155,16 @@ namespace Sample.Domain
 
     }
 
+    public class AsyncTest
+    {
+        public async Task<bool> Test(int x)
+        {
+            await Task.Delay(1000);
+            return true;
+            //return Task.Delay(1000);
+        }
+    }
+
 
 
     [MonoTouch.Foundation.Preserve()]
@@ -192,15 +202,18 @@ namespace Sample.Domain
                 Client2.Register(registration);
             }
         }
-        public static void SomeOtherTest()
+
+        public async static void SomeOtherTest()
         {
-            //HttpClient x = null;
+            var x = new AsyncTest();
+            var t = MethodExecutor.ExecuteMethodAsync(x, 1);
 
-            //var id = new Guid("d834d9bc-12f9-47a2-80c1-58c65eddfa14");
+            Console.WriteLine(">>>>>>");
 
-            //var es = new HttpEventStore();
+            await t;
 
-            //es.GetAllEvents(id);
+            Console.WriteLine(">>>>>>");
+
 
         }
         
@@ -231,9 +244,9 @@ namespace Sample.Domain
 
         public static void ResetSample()
         {
-            //SomeOtherTest();
+            SomeOtherTest();
             //Client1DB.Main.Table<AggregateIndex>().Where(x => x.Version == 23).Delete();
-            //return;
+            return;
 
             TestId = Guid.Empty;
             Remote = null;

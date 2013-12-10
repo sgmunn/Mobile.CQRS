@@ -26,10 +26,8 @@ namespace Mobile.CQRS.Domain
 
     public interface IReadModelBuilder
     {
-        // TODO: do these need to be async ?? 
-        IEnumerable<IDomainNotification> Handle(IDomainNotification evt);
-        IEnumerable<IDomainNotification> Process(IEnumerable<IDomainNotification> events);
-        IEnumerable<IDomainNotification> Process(IEnumerable<IAggregateEvent> events);
+        Task<IEnumerable<IDomainNotification>> HandleEventAsync(IDomainNotification evt);
+        Task<IEnumerable<IDomainNotification>> ProcessAsync(IEnumerable<IAggregateEvent> events);
         Task DeleteForAggregateAsync(Guid aggregateId);
     }
 }

@@ -57,31 +57,33 @@ namespace Mobile.CQRS.Domain
             }
         }
 
-        public IEnumerable<IDomainNotification> Handle(IDomainNotification evt)
+        public async Task<IEnumerable<IDomainNotification>> HandleEventAsync(IDomainNotification evt)
         {
             this.updatedReadModels.Clear();
 
-            // TODO: do we need to make this aync ??
-            MethodExecutor.ExecuteMethod(this, evt.Event);
+            var task = MethodExecutor.ExecuteMethodAsync(this, evt.Event);
+            if (task != null)
+            {
+                await task.ConfigureAwait(false);
+            }
 
             return this.updatedReadModels;
         }
 
-        public IEnumerable<IDomainNotification> Process(IEnumerable<IAggregateEvent> events)
+        public async Task<IEnumerable<IDomainNotification>> ProcessAsync(IEnumerable<IAggregateEvent> events)
         {
             this.updatedReadModels.Clear();
 
             foreach (var evt in events)
             {
-                MethodExecutor.ExecuteMethod(this, evt);
+                var task = MethodExecutor.ExecuteMethodAsync(this, evt);
+                if (task != null)
+                {
+                    await task.ConfigureAwait(false);
+                }
             }
 
             return this.updatedReadModels;
-        }
-        
-        public IEnumerable<IDomainNotification> Process(IEnumerable<IDomainNotification> events)
-        {
-            return this.Process(events.Select(evt => evt.Event).OfType<IAggregateEvent>());
         }
 
         public virtual Task DeleteForAggregateAsync(Guid aggregateId)

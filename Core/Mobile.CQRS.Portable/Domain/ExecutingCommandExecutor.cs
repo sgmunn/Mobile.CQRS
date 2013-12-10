@@ -42,14 +42,16 @@ namespace Mobile.CQRS.Domain
             }
         }
 
-        private async Task ExecuteAsync(object aggregate, object command)
+        private Task ExecuteAsync(object aggregate, object command)
         {
             try
             {
-                if (!(await MethodExecutor.ExecuteMethodAsync(aggregate, command).ConfigureAwait(false)))
+                if (!MethodExecutor.ExecuteMethod(aggregate, command))
                 {
                     throw new MissingMethodException(string.Format("Aggregate {0} does not support a method that can be called with {1}", aggregate, command));
                 }
+
+                return TaskHelpers.Empty;
             }
             catch (Exception ex)
             {

@@ -76,7 +76,6 @@ namespace Mobile.CQRS.Domain
                 syncState.AggregateType = AggregateRootBase.GetAggregateTypeDescriptor<T>();
             }
 
-            // TODO: we can await these in parallel
             var commonEvents = await this.localEventStore.GetEventsUpToVersionAsync(aggregateId, syncState.LastSyncedVersion).ConfigureAwait(false);
             var newRemoteEvents = await this.remoteEventStore.GetEventsAfterVersionAsync(aggregateId, syncState.LastSyncedVersion).ConfigureAwait(false);
             var unsyncedLocalEvents = await this.localEventStore.GetEventsAfterVersionAsync(aggregateId, syncState.LastSyncedVersion).ConfigureAwait(false);
