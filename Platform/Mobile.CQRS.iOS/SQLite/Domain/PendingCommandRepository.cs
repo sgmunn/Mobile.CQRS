@@ -24,6 +24,7 @@ namespace Mobile.CQRS.SQLite.Domain
     using System.Collections.Generic;
     using System.Linq;
     using Mobile.CQRS.Serialization;
+    using System.Threading.Tasks;
     using Mobile.CQRS.Domain;
 
     public sealed class PendingCommandRepository : SqlRepository<PendingCommand>, IPendingCommandRepository
@@ -41,7 +42,7 @@ namespace Mobile.CQRS.SQLite.Domain
             this.ScopeFieldName = "AggregateId";
         }
 
-        public void StorePendingCommand(IAggregateCommand command)
+        public Task StorePendingCommandAsync(IAggregateCommand command)
         {
             var cmd = new PendingCommand {
                 AggregateId = command.AggregateId,
@@ -50,10 +51,10 @@ namespace Mobile.CQRS.SQLite.Domain
                 CommandData = this.serializer.SerializeToString(command),
             };
 
-            this.Save(cmd);
+            return this.SaveAsync(cmd);
         }
 
-        public IList<IAggregateCommand> PendingCommandsForAggregate(Guid id)
+        public async Task<IList<IAggregateCommand>> PendingCommandsForAggregateAsync(Guid id)
         {
              var commands = this.Connection.Table<PendingCommand>()
                     .Where(x => x.AggregateId == id)
@@ -63,9 +64,9 @@ namespace Mobile.CQRS.SQLite.Domain
             return commands.Select(cmd => this.serializer.DeserializeFromString(cmd.CommandData)).ToList();
         }
 
-        public void RemovePendingCommands(Guid id)
+        public Task RemovePendingCommandsAsync(Guid id)
         {
-            this.DeleteAllInScope(id);
+            return this.DeleteAllInScopeAsync(id);
         }
     }
 }

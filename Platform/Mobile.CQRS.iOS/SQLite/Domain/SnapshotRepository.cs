@@ -21,6 +21,7 @@
 namespace Mobile.CQRS.SQLite.Domain
 {
     using System;
+    using System.Threading.Tasks;
     using Mobile.CQRS.Serialization;
     using Mobile.CQRS.Domain;
     
@@ -40,7 +41,7 @@ namespace Mobile.CQRS.SQLite.Domain
             connection.CreateTable<AggregateSnapshot>();
         }
         
-        public SaveResult Save(ISnapshot instance)
+        public Task<SaveResult> SaveAsync(ISnapshot instance)
         {
             var snapshot = new AggregateSnapshot {
                 Identity = instance.Identity,
@@ -49,18 +50,18 @@ namespace Mobile.CQRS.SQLite.Domain
                 ObjectData = this.serializer.SerializeToString(instance),
             };
 
-            return base.Save(snapshot);
+            return base.SaveAsync(snapshot);
         }
         
-        public SaveResult Save(ISnapshot instance, int expectedVersion)
+        public async Task<SaveResult> SaveAsync(ISnapshot instance, int expectedVersion)
         {
-            this.index.UpdateIndex(instance.Identity, expectedVersion, instance.Version);
-            return this.Save(instance);
+            await this.index.UpdateIndexAsync(instance.Identity, expectedVersion, instance.Version).ConfigureAwait(false);
+            return await this.SaveAsync(instance).ConfigureAwait(false);
         }
 
-        public new ISnapshot GetById(Guid id)
+        public new async Task<ISnapshot> GetByIdAsync(Guid id)
         {
-            var snapshot = base.GetById(id);
+            var snapshot = await base.GetByIdAsync(id).ConfigureAwait(false);
 
             if (snapshot == null)
             {

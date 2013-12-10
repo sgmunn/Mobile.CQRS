@@ -23,6 +23,7 @@ namespace Mobile.CQRS.SQLite.Domain
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Threading.Tasks;
     using Mobile.CQRS.Domain;
     
     public sealed class SyncStateRepository : IRepository<ISyncState> 
@@ -40,29 +41,29 @@ namespace Mobile.CQRS.SQLite.Domain
             return new SyncState();
         }
 
-        public ISyncState GetById(Guid id)
+        public async Task<ISyncState> GetByIdAsync(Guid id)
         {
-            return this.repository.GetById(id);
+            return await this.repository.GetByIdAsync(id).ConfigureAwait(false);
         }
 
-        public IList<ISyncState> GetAll()
+        public async Task<IList<ISyncState>> GetAllAsync()
         {
-            return this.repository.GetAll().Cast<ISyncState>().ToList();
+            return (await this.repository.GetAllAsync().ConfigureAwait(false)).Cast<ISyncState>().ToList();
         }
 
-        public SaveResult Save(ISyncState instance)
+        public Task<SaveResult> SaveAsync(ISyncState instance)
         {
-            return this.repository.Save((SyncState)instance);
+            return this.repository.SaveAsync((SyncState)instance);
         }
 
-        public void Delete(ISyncState instance)
+        public Task DeleteAsync(ISyncState instance)
         {
-            this.repository.Delete((SyncState)instance);
+            return this.repository.DeleteAsync((SyncState)instance);
         }
 
-        public void DeleteId(Guid id)
+        public Task DeleteIdAsync(Guid id)
         {
-            this.repository.DeleteId(id);
+            return this.repository.DeleteIdAsync(id);
         }
 
         public void Dispose()

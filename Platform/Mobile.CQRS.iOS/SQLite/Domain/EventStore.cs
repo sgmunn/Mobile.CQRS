@@ -25,6 +25,7 @@ namespace Mobile.CQRS.SQLite.Domain
     using System.Linq;
     using Mobile.CQRS.Serialization;
     using Mobile.CQRS.Domain;
+    using System.Threading.Tasks;
 
     public sealed class EventStore : SqlRepository<AggregateEvent>, IMergableEventStore
     {
@@ -43,7 +44,7 @@ namespace Mobile.CQRS.SQLite.Domain
             connection.CreateTable<AggregateEvent>();
         }
         
-        public void SaveEvents(Guid aggregateId, IList<IAggregateEvent> events, int expectedVersion)
+        public async Task SaveEventsAsync(Guid aggregateId, IList<IAggregateEvent> events, int expectedVersion)
         {
             if (events.Count == 0)
             {
@@ -59,7 +60,7 @@ namespace Mobile.CQRS.SQLite.Domain
             }).ToList();
 
             var newVersion = events[events.Count - 1].Version;
-            this.index.UpdateIndex(aggregateId, expectedVersion, newVersion);
+            await this.index.UpdateIndexAsync(aggregateId, expectedVersion, newVersion).ConfigureAwait(false);
 
             foreach (var evt in serializedEvents)
             {
@@ -67,7 +68,7 @@ namespace Mobile.CQRS.SQLite.Domain
             }
         }
 
-        public void MergeEvents(Guid aggregateId, IList<IAggregateEvent> events, int expectedVersion, int fromVersion)
+        public async Task MergeEventsAsync(Guid aggregateId, IList<IAggregateEvent> events, int expectedVersion, int fromVersion)
         {
             var serializedEvents = events.Select(evt => new AggregateEvent{
                 AggregateId = aggregateId, 
@@ -78,7 +79,7 @@ namespace Mobile.CQRS.SQLite.Domain
             }).ToList();
 
             var newVersion = events[events.Count - 1].Version;
-            this.index.UpdateIndex(aggregateId, expectedVersion, newVersion);
+            await this.index.UpdateIndexAsync(aggregateId, expectedVersion, newVersion).ConfigureAwait(false);
 
             this.Connection.Execute(string.Format("delete from AggregateEvent where AggregateId = ? and Version > {0}", fromVersion), aggregateId);
 
@@ -88,25 +89,25 @@ namespace Mobile.CQRS.SQLite.Domain
             }
         }
 
-        public IList<IAggregateEvent> GetAllEvents(Guid rootId)
+        public async Task<IList<IAggregateEvent>> GetAllEventsAsync(Guid rootId)
         {
             var events = this.Connection.Table<AggregateEvent>().Where(x => x.AggregateId == rootId).OrderBy(x => x.Version).ToList();
             return events.Select(evt => this.serializer.DeserializeFromString(evt.EventData)).ToList();
         }
 
-        public IList<IAggregateEvent> GetEventsAfterVersion(Guid rootId, int version)
+        public async Task<IList<IAggregateEvent>> GetEventsAfterVersionAsync(Guid rootId, int version)
         {
             var events = this.Connection.Table<AggregateEvent>().Where(x => x.AggregateId == rootId && x.Version > version).OrderBy(x => x.Version).ToList();
             return events.Select(evt => this.serializer.DeserializeFromString(evt.EventData)).ToList();
         }
 
-        public IList<IAggregateEvent> GetEventsUpToVersion(Guid rootId, int version)
+        public async Task<IList<IAggregateEvent>> GetEventsUpToVersionAsync(Guid rootId, int version)
         {
             var events = this.Connection.Table<AggregateEvent>().Where(x => x.AggregateId == rootId && x.Version <= version).OrderBy(x => x.Version).ToList();
             return events.Select(evt => this.serializer.DeserializeFromString(evt.EventData)).ToList();
         }
 
-        public int GetCurrentVersion(Guid rootId)
+        public async Task<int> GetCurrentVersionAsync(Guid rootId)
         {
             var result = this.Connection.Table<AggregateEvent>()
                 .Where(x => x.AggregateId == rootId)

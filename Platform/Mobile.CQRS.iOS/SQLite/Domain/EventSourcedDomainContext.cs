@@ -17,11 +17,12 @@
 //   IN THE SOFTWARE.
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
-using System.Linq;
 
 namespace Mobile.CQRS.SQLite.Domain
 {
     using System;
+    using System.Linq;
+    using System.Threading.Tasks;
     using Mobile.CQRS.Domain;
     using Mobile.CQRS.Serialization;
 
@@ -129,7 +130,7 @@ namespace Mobile.CQRS.SQLite.Domain
             }
         }
         
-        public void SyncSomething<T>(IEventStore remoteEventStore, Guid aggregateId) where T : class, IAggregateRoot, new()
+        public async Task SyncSomething<T>(IEventStore remoteEventStore, Guid aggregateId) where T : class, IAggregateRoot, new()
         {
             var scope = this.BeginUnitOfWork();
             using (scope)
@@ -141,9 +142,9 @@ namespace Mobile.CQRS.SQLite.Domain
                     scope.GetRegisteredObject<IPendingCommandRepository>(), 
                     scope.GetRegisteredObject<ISnapshotRepository>());
 
-                if (syncAgent.SyncWithRemote<T>(aggregateId))
+                if (await syncAgent.SyncWithRemoteAsync<T>(aggregateId).ConfigureAwait(false))
                 {
-                    scope.GetRegisteredObject<IReadModelQueueProducer>().Enqueue(aggregateId, AggregateRootBase.GetAggregateTypeDescriptor<T>(), 0);
+                    await scope.GetRegisteredObject<IReadModelQueueProducer>().EnqueueAsync(aggregateId, AggregateRootBase.GetAggregateTypeDescriptor<T>(), 0).ConfigureAwait(false);
 
                     if (this.BuilderAgent != null && this.BuilderAgent.IsStarted)
                     {
@@ -151,7 +152,7 @@ namespace Mobile.CQRS.SQLite.Domain
                     }
                 }
 
-                scope.Commit();
+                await scope.CommitAsync().ConfigureAwait(false);
             }
         }
     }

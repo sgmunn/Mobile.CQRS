@@ -24,6 +24,7 @@ namespace Mobile.CQRS.SQLite.Domain
     using System.Collections.Generic;
     using System.Linq;
     using System.Threading;
+    using System.Threading.Tasks;
     using Mobile.CQRS.Domain;
     
     public sealed class ReadModelBuilderQueue : IReadModelQueue, IReadModelQueueProducer 
@@ -45,7 +46,7 @@ namespace Mobile.CQRS.SQLite.Domain
             this.repository.Connection.CreateTable<ReadModelWorkItem>();
         }
 
-        public IReadModelWorkItem Enqueue(Guid aggregateId, string aggregateType, int fromVersion)
+        public async Task<IReadModelWorkItem> EnqueueAsync(Guid aggregateId, string aggregateType, int fromVersion)
         {
             var workItem = new ReadModelWorkItem {
                 AggregateType = aggregateType,
@@ -56,13 +57,13 @@ namespace Mobile.CQRS.SQLite.Domain
             Monitor.Enter(this.locker);
             try
             {
-                var existingItem = this.repository.GetById(workItem.Identity);
+                var existingItem = await this.repository.GetByIdAsync(workItem.Identity).ConfigureAwait(false);
                 if (existingItem != null && existingItem.FromVersion < workItem.FromVersion)
                 {
                     return null;
                 }
 
-                this.repository.Save((ReadModelWorkItem)workItem);
+                await this.repository.SaveAsync((ReadModelWorkItem)workItem).ConfigureAwait(false);
             }
             finally
             {
@@ -72,7 +73,7 @@ namespace Mobile.CQRS.SQLite.Domain
             return workItem;
         }
 
-        public void Dequeue(IReadModelWorkItem workItem)
+        public async Task DequeueAsync(IReadModelWorkItem workItem)
         {
             Monitor.Enter(this.locker);
             try
@@ -86,7 +87,7 @@ namespace Mobile.CQRS.SQLite.Domain
             }
         }
 
-        public IList<IReadModelWorkItem> Peek(int batchSize)
+        public async Task<IList<IReadModelWorkItem>> PeekAsync(int batchSize)
         {
             if (Monitor.TryEnter(this.locker))
             {

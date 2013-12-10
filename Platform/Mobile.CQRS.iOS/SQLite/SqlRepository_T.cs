@@ -23,6 +23,7 @@ namespace Mobile.CQRS.SQLite
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Threading.Tasks;
 
     public class SqlRepository<T> : IRepository<T>, IScopedRepository 
         where T: IUniqueId, new()
@@ -64,7 +65,7 @@ namespace Mobile.CQRS.SQLite
             return new T();
         }
 
-        public virtual T GetById(Guid id)
+        public async virtual Task<T> GetByIdAsync(Guid id)
         {
             try
             {
@@ -76,12 +77,12 @@ namespace Mobile.CQRS.SQLite
             }
         }
 
-        public virtual IList<T> GetAll()
+        public async virtual Task<IList<T>> GetAllAsync()
         {
             return this.Connection.Table<T>().ToList();
         }
 
-        public virtual SaveResult Save(T instance)
+        public async virtual Task<SaveResult> SaveAsync(T instance)
         {
             var result = SaveResult.Updated;
 
@@ -94,12 +95,12 @@ namespace Mobile.CQRS.SQLite
             return result;
         }
 
-        public virtual void Delete(T instance)
+        public async virtual Task DeleteAsync(T instance)
         {
             this.Connection.Delete(instance);  
         }
 
-        public virtual void DeleteId(Guid id)
+        public async virtual Task DeleteIdAsync(Guid id)
         {
             var map = this.Connection.GetMapping(typeof(T));
             var pk = map.PK;
@@ -113,7 +114,7 @@ namespace Mobile.CQRS.SQLite
             this.Connection.Execute (q, id);
         }
 
-        public virtual void DeleteAllInScope(Guid scopeId)
+        public async virtual Task DeleteAllInScopeAsync(Guid scopeId)
         {
             if (string.IsNullOrWhiteSpace(this.ScopeFieldName) || string.IsNullOrEmpty(this.TableName))
             {

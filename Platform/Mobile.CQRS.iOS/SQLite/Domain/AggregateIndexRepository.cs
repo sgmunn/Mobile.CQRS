@@ -21,6 +21,7 @@
 namespace Mobile.CQRS.SQLite.Domain
 {
     using System;
+    using System.Threading.Tasks;
     using Mobile.CQRS.Domain;
 
     public sealed class AggregateIndexRepository : IAggregateIndexRepository
@@ -36,13 +37,13 @@ namespace Mobile.CQRS.SQLite.Domain
             this.connection.CreateTable<AggregateIndex>();
         }
 
-        public void UpdateIndex(Guid aggregateId, int currentVersion, int newVersion)
+        public async Task UpdateIndexAsync(Guid aggregateId, int currentVersion, int newVersion)
         {
             bool updated = false;
 
             try
             {
-                updated = this.DoUpdate(aggregateId, currentVersion, newVersion);
+                updated = await this.DoUpdateAsync(aggregateId, currentVersion, newVersion).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -56,7 +57,7 @@ namespace Mobile.CQRS.SQLite.Domain
             }
         }
 
-        private bool DoUpdate(Guid aggregateId, int currentVersion, int newVersion)
+        private async Task<bool> DoUpdateAsync(Guid aggregateId, int currentVersion, int newVersion)
         {
             if (currentVersion == 0)
             {

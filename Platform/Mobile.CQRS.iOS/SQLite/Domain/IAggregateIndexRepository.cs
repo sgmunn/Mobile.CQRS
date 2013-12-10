@@ -21,9 +21,10 @@
 namespace Mobile.CQRS.SQLite.Domain
 {
     using System;
+    using System.Threading.Tasks;
 
     public interface IAggregateIndexRepository
     {
-        void UpdateIndex(Guid aggregateId, int currentVersion, int newVersion);
+        Task UpdateIndexAsync(Guid aggregateId, int currentVersion, int newVersion);
     }
 }
