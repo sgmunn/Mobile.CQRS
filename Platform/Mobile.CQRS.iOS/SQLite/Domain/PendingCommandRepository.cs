@@ -54,14 +54,17 @@ namespace Mobile.CQRS.SQLite.Domain
             return this.SaveAsync(cmd);
         }
 
-        public async Task<IList<IAggregateCommand>> PendingCommandsForAggregateAsync(Guid id)
+        public Task<IList<IAggregateCommand>> PendingCommandsForAggregateAsync(Guid id)
         {
-             var commands = this.Connection.Table<PendingCommand>()
+            return Task.Factory.StartNew<IList<IAggregateCommand>>(() =>
+            {
+                var commands = this.Connection.Table<PendingCommand>()
                     .Where(x => x.AggregateId == id)
                         .OrderByDescending(x => x.Key)
                         .ToList();
 
-            return commands.Select(cmd => this.serializer.DeserializeFromString(cmd.CommandData)).ToList();
+                return commands.Select(cmd => this.serializer.DeserializeFromString(cmd.CommandData)).ToList();
+            });
         }
 
         public Task RemovePendingCommandsAsync(Guid id)

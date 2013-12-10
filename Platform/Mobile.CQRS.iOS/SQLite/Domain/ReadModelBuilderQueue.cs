@@ -79,7 +79,9 @@ namespace Mobile.CQRS.SQLite.Domain
             try
             {
                 const string deleteCmd = "delete from ReadModelWorkItem where Identity = ? and FromVersion = {0}";
-                this.repository.Connection.Execute(string.Format(deleteCmd, workItem.FromVersion), workItem.Identity);
+                await Task.Factory.StartNew(() => {
+                    this.repository.Connection.Execute(string.Format(deleteCmd, workItem.FromVersion), workItem.Identity);
+                });
             }
             finally
             {
@@ -93,7 +95,9 @@ namespace Mobile.CQRS.SQLite.Domain
             {
                 try
                 {
-                    return this.repository.Connection.Table<ReadModelWorkItem>().Take(batchSize).Cast<IReadModelWorkItem>().ToList();
+                    await Task.Factory.StartNew<IList<IReadModelWorkItem>>(() => {
+                        return this.repository.Connection.Table<ReadModelWorkItem>().Take(batchSize).Cast<IReadModelWorkItem>().ToList();
+                    });
                 }
                 finally
                 {

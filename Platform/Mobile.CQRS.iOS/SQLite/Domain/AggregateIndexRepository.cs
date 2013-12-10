@@ -57,20 +57,23 @@ namespace Mobile.CQRS.SQLite.Domain
             }
         }
 
-        private async Task<bool> DoUpdateAsync(Guid aggregateId, int currentVersion, int newVersion)
+        private Task<bool> DoUpdateAsync(Guid aggregateId, int currentVersion, int newVersion)
         {
-            if (currentVersion == 0)
+            return Task.Factory.StartNew<bool>(() =>
             {
-                this.connection.Insert(new AggregateIndex { Identity = aggregateId, Version = newVersion, });
-            }
-            else
-            {
-                ////var rows = this.connection.Execute(UpdateSql, newVersion, aggregateId, currentVersion);
-                var rows = this.connection.Execute(string.Format(UpdateSql, newVersion, aggregateId, currentVersion));
-                return rows == 1;
-            }
+                if (currentVersion == 0)
+                {
+                    this.connection.Insert(new AggregateIndex { Identity = aggregateId, Version = newVersion, });
+                }
+                else
+                {
+                    ////var rows = this.connection.Execute(UpdateSql, newVersion, aggregateId, currentVersion);
+                    var rows = this.connection.Execute(string.Format(UpdateSql, newVersion, aggregateId, currentVersion));
+                    return rows == 1;
+                }
 
-            return true;
+                return true;
+            });
         }
     }
 }

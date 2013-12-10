@@ -69,7 +69,7 @@ namespace Mobile.CQRS.SQLite
         {
             try
             {
-                return this.Connection.Get<T>(id);
+                return await Task.Factory.StartNew<T>(() => this.Connection.Get<T>(id)).ConfigureAwait(false);
             }
             catch
             {
@@ -77,30 +77,32 @@ namespace Mobile.CQRS.SQLite
             }
         }
 
-        public async virtual Task<IList<T>> GetAllAsync()
+        public virtual Task<IList<T>> GetAllAsync()
         {
-            return this.Connection.Table<T>().ToList();
+            return Task.Factory.StartNew<IList<T>>(() => this.Connection.Table<T>().ToList());
         }
 
         public async virtual Task<SaveResult> SaveAsync(T instance)
         {
             var result = SaveResult.Updated;
 
-            if (this.Connection.Update(instance) == 0)
-            {
-                this.Connection.Insert(instance);
-                result = SaveResult.Added;
-            }
+            await Task.Factory.StartNew(() => {
+                if (this.Connection.Update(instance) == 0)
+                {
+                    this.Connection.Insert(instance);
+                    result = SaveResult.Added;
+                }
+            }).ConfigureAwait(false);
 
             return result;
         }
 
-        public async virtual Task DeleteAsync(T instance)
+        public virtual Task DeleteAsync(T instance)
         {
-            this.Connection.Delete(instance);  
+            return Task.Factory.StartNew(() => this.Connection.Delete(instance));
         }
 
-        public async virtual Task DeleteIdAsync(Guid id)
+        public virtual Task DeleteIdAsync(Guid id)
         {
             var map = this.Connection.GetMapping(typeof(T));
             var pk = map.PK;
@@ -111,17 +113,17 @@ namespace Mobile.CQRS.SQLite
             }
             
             var q = string.Format ("delete from \"{0}\" where \"{1}\" = ?", map.TableName, pk.Name);
-            this.Connection.Execute (q, id);
+            return Task.Factory.StartNew(() => this.Connection.Execute (q, id));
         }
 
-        public async virtual Task DeleteAllInScopeAsync(Guid scopeId)
+        public virtual Task DeleteAllInScopeAsync(Guid scopeId)
         {
             if (string.IsNullOrWhiteSpace(this.ScopeFieldName) || string.IsNullOrEmpty(this.TableName))
             {
                 throw new NotSupportedException();
             }
 
-            this.Connection.Execute(string.Format("delete from {0} where {1} = ?", this.TableName, this.ScopeFieldName), scopeId);
+            return Task.Factory.StartNew(() => this.Connection.Execute(string.Format("delete from {0} where {1} = ?", this.TableName, this.ScopeFieldName), scopeId));
         }
     }    
 }

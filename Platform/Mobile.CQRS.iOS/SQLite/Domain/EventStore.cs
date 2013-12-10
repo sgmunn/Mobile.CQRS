@@ -89,32 +89,43 @@ namespace Mobile.CQRS.SQLite.Domain
             }
         }
 
-        public async Task<IList<IAggregateEvent>> GetAllEventsAsync(Guid rootId)
+        public Task<IList<IAggregateEvent>> GetAllEventsAsync(Guid rootId)
         {
-            var events = this.Connection.Table<AggregateEvent>().Where(x => x.AggregateId == rootId).OrderBy(x => x.Version).ToList();
-            return events.Select(evt => this.serializer.DeserializeFromString(evt.EventData)).ToList();
+            return Task.Factory.StartNew<IList<IAggregateEvent>>(() => {
+                var events = this.Connection.Table<AggregateEvent>().Where(x => x.AggregateId == rootId).OrderBy(x => x.Version).ToList();
+                return events.Select(evt => this.serializer.DeserializeFromString(evt.EventData)).ToList();
+            });
         }
 
-        public async Task<IList<IAggregateEvent>> GetEventsAfterVersionAsync(Guid rootId, int version)
+        public Task<IList<IAggregateEvent>> GetEventsAfterVersionAsync(Guid rootId, int version)
         {
-            var events = this.Connection.Table<AggregateEvent>().Where(x => x.AggregateId == rootId && x.Version > version).OrderBy(x => x.Version).ToList();
-            return events.Select(evt => this.serializer.DeserializeFromString(evt.EventData)).ToList();
+            return Task.Factory.StartNew<IList<IAggregateEvent>>(() =>
+            {
+                var events = this.Connection.Table<AggregateEvent>().Where(x => x.AggregateId == rootId && x.Version > version).OrderBy(x => x.Version).ToList();
+                return events.Select(evt => this.serializer.DeserializeFromString(evt.EventData)).ToList();
+            });
         }
 
-        public async Task<IList<IAggregateEvent>> GetEventsUpToVersionAsync(Guid rootId, int version)
+        public Task<IList<IAggregateEvent>> GetEventsUpToVersionAsync(Guid rootId, int version)
         {
-            var events = this.Connection.Table<AggregateEvent>().Where(x => x.AggregateId == rootId && x.Version <= version).OrderBy(x => x.Version).ToList();
-            return events.Select(evt => this.serializer.DeserializeFromString(evt.EventData)).ToList();
+            return Task.Factory.StartNew<IList<IAggregateEvent>>(() =>
+            {
+                var events = this.Connection.Table<AggregateEvent>().Where(x => x.AggregateId == rootId && x.Version <= version).OrderBy(x => x.Version).ToList();
+                return events.Select(evt => this.serializer.DeserializeFromString(evt.EventData)).ToList();
+            });
         }
 
-        public async Task<int> GetCurrentVersionAsync(Guid rootId)
+        public Task<int> GetCurrentVersionAsync(Guid rootId)
         {
-            var result = this.Connection.Table<AggregateEvent>()
+            return Task.Factory.StartNew<int>(() =>
+            {
+                var result = this.Connection.Table<AggregateEvent>()
                 .Where(x => x.AggregateId == rootId)
                     .OrderByDescending(x => x.Version)
                     .Take(1).ToList();
 
-            return result.Select(x => x.Version).FirstOrDefault();
+                return result.Select(x => x.Version).FirstOrDefault();
+            });
         }
     }
 }
