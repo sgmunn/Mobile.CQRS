@@ -30,10 +30,11 @@ namespace Mobile.CQRS
     {
         private readonly Dictionary<Guid, T> storage;
 
-        protected readonly SemaphoreSlim SyncLock = new SemaphoreSlim(1);
+        protected readonly SemaphoreSlim SyncLock;
 
         protected DictionaryRepositoryBase()
         {
+            this.SyncLock = new SemaphoreSlim(1);
             this.storage = new Dictionary<Guid, T>();
         }
 
@@ -52,7 +53,7 @@ namespace Mobile.CQRS
 
         public async Task<T> GetByIdAsync(Guid id)
         {
-            await this.SyncLock.WaitAsync();
+            await this.SyncLock.WaitAsync().ConfigureAwait(false);
             try
             {
                 if (this.storage.ContainsKey(id))
@@ -70,7 +71,7 @@ namespace Mobile.CQRS
 
         public async Task<IList<T>> GetAllAsync()
         {
-            await this.SyncLock.WaitAsync();
+            await this.SyncLock.WaitAsync().ConfigureAwait(false);
             try
             {
                 return this.Storage.Values.ToList();
@@ -83,10 +84,10 @@ namespace Mobile.CQRS
 
         public async Task<SaveResult> SaveAsync(T instance)
         {
-            await this.SyncLock.WaitAsync();
+            await this.SyncLock.WaitAsync().ConfigureAwait(false);
             try
             {
-                return await this.InternalSaveAsync(instance);
+                return this.InternalSave(instance);
             }
             finally
             {
@@ -96,10 +97,10 @@ namespace Mobile.CQRS
 
         public async Task DeleteAsync(T instance)
         {
-            await this.SyncLock.WaitAsync();
+            await this.SyncLock.WaitAsync().ConfigureAwait(false);
             try
             {
-                await this.InternalDeleteAsync(instance);
+                this.InternalDelete(instance);
             }
             finally
             {
@@ -109,7 +110,7 @@ namespace Mobile.CQRS
 
         public async Task DeleteIdAsync(Guid id)
         {
-            await this.SyncLock.WaitAsync();
+            await this.SyncLock.WaitAsync().ConfigureAwait(false);
             try
             {
                 if (this.Storage.ContainsKey(id))
@@ -129,8 +130,8 @@ namespace Mobile.CQRS
 
         protected abstract T InternalNew();
 
-        protected abstract Task<SaveResult> InternalSaveAsync(T instance);
+        protected abstract SaveResult InternalSave(T instance);
 
-        protected abstract Task InternalDeleteAsync(T instance);
+        protected abstract void InternalDelete(T instance);
     }
 }

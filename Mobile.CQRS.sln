@@ -90,6 +90,7 @@ Global
 		{803C9E36-8844-4965-8DC8-F73A24DB6804}.AppStore|iPhone.ActiveCfg = AppStore|iPhone
 		{803C9E36-8844-4965-8DC8-F73A24DB6804}.AppStore|iPhone.Build.0 = AppStore|iPhone
 		{803C9E36-8844-4965-8DC8-F73A24DB6804}.Debug|Any CPU.ActiveCfg = Debug|iPhoneSimulator
+		{803C9E36-8844-4965-8DC8-F73A24DB6804}.Debug|Any CPU.Build.0 = Debug|iPhoneSimulator
 		{803C9E36-8844-4965-8DC8-F73A24DB6804}.Debug|iPhone.ActiveCfg = Debug|iPhone
 		{803C9E36-8844-4965-8DC8-F73A24DB6804}.Debug|iPhone.Build.0 = Debug|iPhone
 		{803C9E36-8844-4965-8DC8-F73A24DB6804}.Debug|iPhoneSimulator.ActiveCfg = Debug|iPhoneSimulator
@@ -121,6 +122,7 @@ Global
 		{D51E3F48-C3BB-4507-A763-664817E70F4B}.AppStore|iPhone.ActiveCfg = Release|Any CPU
 		{D51E3F48-C3BB-4507-A763-664817E70F4B}.AppStore|iPhone.Build.0 = Release|Any CPU
 		{D51E3F48-C3BB-4507-A763-664817E70F4B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D51E3F48-C3BB-4507-A763-664817E70F4B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D51E3F48-C3BB-4507-A763-664817E70F4B}.Debug|iPhone.ActiveCfg = Debug|Any CPU
 		{D51E3F48-C3BB-4507-A763-664817E70F4B}.Debug|iPhone.Build.0 = Debug|Any CPU
 		{D51E3F48-C3BB-4507-A763-664817E70F4B}.Debug|iPhoneSimulator.ActiveCfg = Debug|Any CPU
@@ -158,6 +160,6 @@ Global
 		{B3DF75B1-5844-4066-9A1D-810D54A55B16} = {EF797DF8-A64A-4979-B452-A71FFC81D17E}
 	EndGlobalSection
 	GlobalSection(MonoDevelopProperties) = preSolution
-		StartupItem = Samples\iPhoneTest\iPhoneTest.csproj
+		StartupItem = UnitTests\UnitTestRunner.iOS\UnitTestRunner.iOS.csproj
 	EndGlobalSection
 EndGlobal

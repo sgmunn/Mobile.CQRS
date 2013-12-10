@@ -59,7 +59,17 @@ namespace Mobile.CQRS.Domain.UnitTests.Repositories.SnapshotSourced
             this.SnapshotStore.SaveAsync(new TestSnapshot() {Identity = this.Aggregate.Identity, Version = 4, }).Wait();
 
             // this process
-            this.Repository.SaveAsync(this.Aggregate).Wait();
+            try
+            {
+                this.Repository.SaveAsync(this.Aggregate).Wait();
+            }
+            catch (AggregateException ex)
+            {
+                if (ex.InnerException != null)
+                {
+                    throw ex.InnerException;
+                }
+            }
         }
 
 // events are not published any more

@@ -35,17 +35,23 @@ namespace Mobile.CQRS.InMemory
 
         public async Task<SaveResult> SaveAsync(ISnapshot instance, int expectedVersion)
         {
-            await this.SyncLock.WaitAsync();
+            await this.SyncLock.WaitAsync().ConfigureAwait(false);
             try
             {
                 // get the current version 
-                var current = await this.GetByIdAsync(instance.Identity);
+                ISnapshot current = default(ISnapshot);
+
+                if (this.Storage.ContainsKey(instance.Identity))
+                {
+                    current = this.Storage[instance.Identity];
+                }
+
                 if (current != null && current.Version != expectedVersion)
                 {
                     throw new ConcurrencyException(instance.Identity, expectedVersion, current.Version);
                 }
 
-                return await this.SaveAsync(instance);
+                return this.InternalSave((T)instance);
             }
             finally
             {
@@ -58,26 +64,24 @@ namespace Mobile.CQRS.InMemory
             return new T(); 
         }
 
-        protected override Task<SaveResult> InternalSaveAsync(T instance)
+        protected override SaveResult InternalSave(T instance)
         {
             if (this.Storage.ContainsKey(instance.Identity))
             {
                 this.Storage[instance.Identity] = instance;
-                return Task.FromResult<SaveResult>(SaveResult.Updated);
+                return SaveResult.Updated;
             }
 
             this.Storage[instance.Identity] = instance;
-            return Task.FromResult<SaveResult>(SaveResult.Added);
+            return SaveResult.Added;
         }
 
-        protected override Task InternalDeleteAsync(T instance)
+        protected override void InternalDelete(T instance)
         {
             if (this.Storage.ContainsKey(instance.Identity))
             {
                 this.Storage.Remove(instance.Identity);
             }
-
-            return TaskHelpers.Empty;
         }
 
         public new ISnapshot New()
@@ -87,7 +91,20 @@ namespace Mobile.CQRS.InMemory
 
         public async new Task<ISnapshot> GetByIdAsync(Guid id)
         {
-            return await base.GetByIdAsync(id);
+            await this.SyncLock.WaitAsync().ConfigureAwait(false);
+            try
+            {
+                if (this.Storage.ContainsKey(id))
+                {
+                    return this.Storage[id];
+                }
+
+                return default(ISnapshot);
+            }
+            finally
+            {
+                this.SyncLock.Release();
+            }
         }
 
         public async new Task<IList<ISnapshot>> GetAllAsync()
@@ -97,12 +114,12 @@ namespace Mobile.CQRS.InMemory
 
         public async Task<SaveResult> SaveAsync(ISnapshot snapshot)
         {
-            return await this.InternalSaveAsync((T)snapshot);
+            return this.InternalSave((T)snapshot);
         }
 
-        public Task DeleteAsync(ISnapshot snapshot)
+        public async Task DeleteAsync(ISnapshot snapshot)
         {
-            return this.InternalDeleteAsync((T)snapshot);
+            this.InternalDelete((T)snapshot);
         }
     }
 }

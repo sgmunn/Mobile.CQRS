@@ -21,7 +21,6 @@
 namespace Mobile.CQRS
 {
     using System;
-    using System.Threading.Tasks;
 
     public class IdDictionaryRepository<T> : DictionaryRepositoryBase<T> 
         where T : IUniqueId, new() 
@@ -31,26 +30,24 @@ namespace Mobile.CQRS
             return new T(); 
         }
 
-        protected override Task<SaveResult> InternalSaveAsync(T instance)
+        protected override SaveResult InternalSave(T instance)
         {
             if (this.Storage.ContainsKey(instance.Identity))
             {
                 this.Storage[instance.Identity] = instance;
-                return Task.FromResult<SaveResult>(SaveResult.Updated);
+                return SaveResult.Updated;
             }
             
             this.Storage[instance.Identity] = instance;
-            return Task.FromResult<SaveResult>(SaveResult.Added);
+            return SaveResult.Added;
         }
         
-        protected override Task InternalDeleteAsync(T instance)
+        protected override void InternalDelete(T instance)
         {
             if (this.Storage.ContainsKey(instance.Identity))
             {
                 this.Storage.Remove(instance.Identity);
             }
-
-            return TaskHelpers.Empty;
         }
     }
 }

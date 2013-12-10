@@ -44,16 +44,18 @@ namespace Mobile.CQRS.InMemory
 
         public async Task SaveEventsAsync(Guid aggregateId, IList<IAggregateEvent> events, int expectedVersion)
         {
-            await this.syncLock.WaitAsync();
+            await this.syncLock.WaitAsync().ConfigureAwait(false);
             try
             {
-                var currentVersion = await this.GetCurrentVersionAsync(aggregateId);
+                var savedEvents = this.GetEvents(aggregateId);
+
+                var currentVersion = savedEvents.Count == 0 ? 0 : savedEvents[savedEvents.Count - 1].Version;
+
                 if (currentVersion != expectedVersion)
                 {
                     throw new ConcurrencyException(aggregateId, expectedVersion, currentVersion);
                 }
 
-                var savedEvents = this.GetEvents(aggregateId);
                 savedEvents.AddRange(events);
                 this.storage[aggregateId] = savedEvents;
             }
@@ -65,16 +67,18 @@ namespace Mobile.CQRS.InMemory
 
         public async Task MergeEvents(Guid aggregateId, IList<IAggregateEvent> events, int expectedVersion, int afterVersion)
         {
-            await this.syncLock.WaitAsync();
+            await this.syncLock.WaitAsync().ConfigureAwait(false);
             try
             {
-                var currentVersion = await this.GetCurrentVersionAsync(aggregateId);
+                var savedEvents = this.GetEvents(aggregateId);
+
+                var currentVersion = savedEvents.Count == 0 ? 0 : savedEvents[savedEvents.Count - 1].Version;
+
                 if (currentVersion != expectedVersion)
                 {
                     throw new ConcurrencyException(aggregateId, expectedVersion, currentVersion);
                 }
 
-                var savedEvents = this.GetEvents(aggregateId);
                 // TODO: Test this
                 // list is zero based
                 // 0 1 2 3 4 5 6 7 8
@@ -92,7 +96,7 @@ namespace Mobile.CQRS.InMemory
         
         public async Task<int> GetCurrentVersionAsync(Guid rootId)
         {
-            await this.syncLock.WaitAsync();
+            await this.syncLock.WaitAsync().ConfigureAwait(false);
             try
             {
                 var savedEvents = this.GetEvents(rootId);
@@ -112,7 +116,7 @@ namespace Mobile.CQRS.InMemory
 
         public async Task<IList<IAggregateEvent>> GetAllEventsAsync(Guid rootId)
         {
-            await this.syncLock.WaitAsync();
+            await this.syncLock.WaitAsync().ConfigureAwait(false);
             try
             {
                 var savedEvents = this.GetEvents(rootId);
@@ -126,7 +130,7 @@ namespace Mobile.CQRS.InMemory
 
         public async Task<IList<IAggregateEvent>> GetEventsAfterVersionAsync(Guid rootId, int version)
         {
-            await this.syncLock.WaitAsync();
+            await this.syncLock.WaitAsync().ConfigureAwait(false);
             try
             {
                 var savedEvents = this.GetEvents(rootId);
@@ -140,7 +144,7 @@ namespace Mobile.CQRS.InMemory
         
         public async Task<IList<IAggregateEvent>> GetEventsUpToVersionAsync(Guid rootId, int version)
         {
-            await this.syncLock.WaitAsync();
+            await this.syncLock.WaitAsync().ConfigureAwait(false);
             try
             {
                 var savedEvents = this.GetEvents(rootId);

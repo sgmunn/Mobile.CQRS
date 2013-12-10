@@ -165,7 +165,12 @@ namespace Mobile.CQRS.Domain
 
         private Task SaveEventsAsync(IAggregateRoot instance, int expectedVersion)
         {
-            return this.eventStore.SaveEventsAsync(instance.Identity, instance.UncommittedEvents.ToList(), expectedVersion);
+            if (this.eventStore != null)
+            {
+                return this.eventStore.SaveEventsAsync(instance.Identity, instance.UncommittedEvents.ToList(), expectedVersion);
+            }
+
+            return TaskHelpers.Empty;
         }
 
         private async Task<IDomainNotification> SaveSnapshotAsync(IAggregateRoot instance, int expectedVersion)

@@ -15,6 +15,14 @@ namespace Mobile.CQRS.Core.UnitTests.Data
         public override void SetUp()
         {
             base.SetUp();
+
+
+            //var syncLock = new System.Threading.SemaphoreSlim(1);
+
+            //await syncLock.WaitAsync();
+
+
+
             this.Item1 = this.Repository.New();
             this.Item2 = this.Repository.New();
             this.Item3 = this.Repository.New();
