@@ -44,7 +44,6 @@ namespace Mobile.CQRS.SQLite
             this.RegisterObject<SQLiteConnection>(connection);
 
             this.sqlLock = sqlLock;
-            // TODO: do a lock here, and loose all the other locks
             this.connection = connection;
 
             // IMPROVE: we really shouldn't be starting a transaction in here

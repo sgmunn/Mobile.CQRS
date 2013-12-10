@@ -68,16 +68,25 @@ namespace Mobile.CQRS.Domain
             return this.instantiator();
         }
 
+        /// <summary>
+        /// Gets a list of read models that will be built in the same scope (db) as the event store
+        /// </summary>
         public IList<IReadModelBuilder> ImmediateReadModels(IUnitOfWorkScope scope)
         {
             return this.immediateBuilders.Select(r => r(scope)).ToList();
         }
-        
+
+        /// <summary>
+        /// Gets a list of read models that will be built in a different (read model) scope to the event store
+        /// </summary>
         public IList<IReadModelBuilder> DelayedReadModels(IUnitOfWorkScope scope)
         {
             return this.delayedBuilders.Select(r => r(scope)).ToList();
         }
 
+        /// <summary>
+        /// Registers a read model to be built in the same scope as the event store
+        /// </summary>
         public AggregateRegistration WithImmediateReadModel(Func<IUnitOfWorkScope, IReadModelBuilder> builderFactory)
         {
             var registration = new AggregateRegistration(this);
@@ -85,6 +94,9 @@ namespace Mobile.CQRS.Domain
             return registration;
         }
         
+        /// <summary>
+        /// Registers a read model to be built in a different scope to the event store (ie a read model database)
+        /// </summary>
         public AggregateRegistration WithDelayedReadModel(Func<IUnitOfWorkScope, IReadModelBuilder> builderFactory)
         {
             var registration = new AggregateRegistration(this);

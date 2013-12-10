@@ -27,7 +27,6 @@ namespace Mobile.CQRS.SQLite.Domain
     using Mobile.CQRS.Domain;
     using System.Threading.Tasks;
 
-    // TODO: event store doesn't actually do anything async
     public sealed class EventStore : SqlRepository<AggregateEvent>, IMergableEventStore
     {
         private readonly ISerializer<IAggregateEvent> serializer;
@@ -63,10 +62,13 @@ namespace Mobile.CQRS.SQLite.Domain
             var newVersion = events[events.Count - 1].Version;
             await this.index.UpdateIndexAsync(aggregateId, expectedVersion, newVersion).ConfigureAwait(false);
 
-            foreach (var evt in serializedEvents)
+            await Task.Factory.StartNew(() =>
             {
-                this.Connection.Insert(evt);
-            }
+                foreach (var evt in serializedEvents)
+                {
+                    this.Connection.Insert(evt);
+                }
+            });
         }
 
         public async Task MergeEventsAsync(Guid aggregateId, IList<IAggregateEvent> events, int expectedVersion, int fromVersion)
@@ -84,10 +86,13 @@ namespace Mobile.CQRS.SQLite.Domain
 
             this.Connection.Execute(string.Format("delete from AggregateEvent where AggregateId = ? and Version > {0}", fromVersion), aggregateId);
 
-            foreach (var evt in serializedEvents)
+            await Task.Factory.StartNew(() =>
             {
-                this.Connection.Insert(evt);
-            }
+                foreach (var evt in serializedEvents)
+                {
+                    this.Connection.Insert(evt);
+                }
+            });
         }
 
         public Task<IList<IAggregateEvent>> GetAllEventsAsync(Guid rootId)

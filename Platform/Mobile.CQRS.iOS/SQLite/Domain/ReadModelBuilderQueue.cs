@@ -26,8 +26,10 @@ namespace Mobile.CQRS.SQLite.Domain
     using System.Threading;
     using System.Threading.Tasks;
     using Mobile.CQRS.Domain;
-    
-    // TODO: read model queue doesn't actually do anything async
+
+
+    // split this into two classes, then we can refactor to have a separate queue connection
+
     public sealed class ReadModelBuilderQueue : IReadModelQueue, IReadModelQueueProducer 
     {
         private readonly SqlRepository<ReadModelWorkItem> repository;
@@ -58,13 +60,13 @@ namespace Mobile.CQRS.SQLite.Domain
             Monitor.Enter(this.locker);
             try
             {
-                var existingItem = await this.repository.GetByIdAsync(workItem.Identity).ConfigureAwait(false);
+                var existingItem = await this.repository.GetByIdAsync(workItem.Identity);
                 if (existingItem != null && existingItem.FromVersion < workItem.FromVersion)
                 {
                     return null;
                 }
 
-                await this.repository.SaveAsync((ReadModelWorkItem)workItem).ConfigureAwait(false);
+                await this.repository.SaveAsync((ReadModelWorkItem)workItem);
             }
             finally
             {

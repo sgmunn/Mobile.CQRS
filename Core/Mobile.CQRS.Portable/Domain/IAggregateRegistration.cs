@@ -27,7 +27,15 @@ namespace Mobile.CQRS.Domain
     {
         Type AggregateType { get; }
         IAggregateRoot New();
+
+        /// <summary>
+        /// Gets a list of read models that will be built in the same scope (db) as the event store
+        /// </summary>
         IList<IReadModelBuilder> ImmediateReadModels(IUnitOfWorkScope scope);
+
+        /// <summary>
+        /// Gets a list of read models that will be built in a different (read model) scope to the event store
+        /// </summary>
         IList<IReadModelBuilder> DelayedReadModels(IUnitOfWorkScope scope);
     }
 }

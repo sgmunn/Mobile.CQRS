@@ -62,7 +62,7 @@ namespace Mobile.CQRS.SQLite.Domain
             this.EventSerializer = eventSerializer;
             this.ReadModelConnectionString = readModelConnectionString;
 
-            // we need a single read model connection because SQLite gives Busy exceptions is we try to write from 2 connections
+            // we need a single read model connection because SQLite gives Busy exceptions if we try to write from 2 connections
             // at the same time - which we do (1 thread enqueues read models and the other updates the read models)
             // if our queue were a different connection then we should not need to do this
             this.readModelConnection = new SQLiteConnection(ReadModelConnectionString, true);

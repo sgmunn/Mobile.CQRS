@@ -142,7 +142,6 @@ namespace Mobile.CQRS
 
         public async virtual Task CommitAsync()
         {
-            // TODO: can we await each in parallel
             foreach (var item in this.savedItems.Values.Cast<T>())
             {
                 await this.Repository.SaveAsync(item).ConfigureAwait(false);
