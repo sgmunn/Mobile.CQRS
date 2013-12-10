@@ -64,7 +64,7 @@ namespace Mobile.CQRS.Domain
 
             // subscribe to the changes in the aggregate and publish them to aggregateEvents
             var aggregateRepo = new AggregateRepository(registration.New, this.scope.GetRegisteredObject<IEventStore>(), scope.GetRegisteredObject<ISnapshotRepository>());
-            var subscription = aggregateRepo.Changes.Subscribe(aggregateEvents.Publish);
+            var subscription = aggregateRepo.Changes.Subscribe(async (evt) => aggregateEvents.PublishAsync(evt));
             this.scope.Add(new UnitOfWorkDisposable(subscription));
 
             // add them in this order so that aggregateEvents >> readModelBuilderBus >> read model builder >> eventBus
@@ -75,25 +75,25 @@ namespace Mobile.CQRS.Domain
             await cmd.ExecuteAsync(commands.ToList(), expectedVersion).ConfigureAwait(false);
 
             // enqueue pending commands
-            this.EnqueueCommands(this.scope.GetRegisteredObject<IPendingCommandRepository>(), commands);
+            await this.EnqueueCommandsAsync(this.scope.GetRegisteredObject<IPendingCommandRepository>(), commands).ConfigureAwait(false);
 
             // enqueue read models to be built - for non-immediate read models
             var typeName = AggregateRootBase.GetAggregateTypeDescriptor(registration.AggregateType);
             this.EnqueueReadModels(this.scope.GetRegisteredObject<IReadModelQueueProducer>(), typeName, aggregateEvents.GetEvents().Select(x => x.Event).OfType<IAggregateEvent>().ToList());
         }
         
-        private void EnqueueCommands(IPendingCommandRepository commandRepository, IList<IAggregateCommand> commands)
+        private async Task EnqueueCommandsAsync(IPendingCommandRepository commandRepository, IList<IAggregateCommand> commands)
         {
             if (commandRepository != null)
             {
                 foreach (var cmd in commands)
                 {
-                    commandRepository.StorePendingCommand(cmd);
+                    await commandRepository.StorePendingCommandAsync(cmd).ConfigureAwait(false);
                 }
             }
         }
         
-        private void EnqueueReadModels(IReadModelQueueProducer queue, string aggregateType, IList<IAggregateEvent> events)
+        private async Task EnqueueReadModels(IReadModelQueueProducer queue, string aggregateType, IList<IAggregateEvent> events)
         {
             if (queue != null)
             {
@@ -103,11 +103,11 @@ namespace Mobile.CQRS.Domain
 
                 foreach (var g in groupedEvents)
                 {
-                    var workItem = queue.Enqueue(g.RootId, aggregateType, g.Version);
+                    var workItem = await queue.EnqueueAsync(g.RootId, aggregateType, g.Version).ConfigureAwait(false);
                     if (workItem != null)
                     {
                         var topic = new DomainTopic(this.registration.AggregateType, g.RootId);
-                        this.eventBus.Publish(new DomainNotification(topic, workItem));
+                        await this.eventBus.PublishAsync(new DomainNotification(topic, workItem)).ConfigureAwait(false);
                     }
                 }
             }

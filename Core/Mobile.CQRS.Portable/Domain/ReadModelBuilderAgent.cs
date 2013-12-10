@@ -143,7 +143,7 @@ namespace Mobile.CQRS.Domain
                 using (scope)
                 {
                     var queue = this.queueFactory(scope);
-                    var workItems = queue.Peek(this.maxItems);
+                    var workItems = await queue.PeekAsync(this.maxItems).ConfigureAwait(false);
                     var bus = new UnitOfWorkEventBus(this.context.EventBus);
                     scope.Add(bus);
 
@@ -157,17 +157,23 @@ namespace Mobile.CQRS.Domain
                         var registration = this.registrations.FirstOrDefault(x => AggregateRootBase.GetAggregateTypeDescriptor(x.AggregateType) == workItem.AggregateType);
                         if (registration != null)
                         {
+                            Exception error = null;
                             try
                             {
                                 await this.ProcessWorkItemAsync(scope, registration, bus, workItem).ConfigureAwait(false);
-                                queue.Dequeue(workItem);
+                                await queue.DequeueAsync(workItem).ConfigureAwait(false);
                             }
                             catch (Exception ex)
                             {
+                                error = ex;
                                 // TODO: handle sqlite busy exceptions
+                            }
+
+                            if (error != null)
+                            {
                                 var topic = new DomainTopic(registration.AggregateType, workItem.Identity);
-                                this.context.EventBus.Publish(new DomainNotification(topic, new ReadModelBuilderFaultedEvent(workItem.Identity, ex)));
-                                throw;
+                                await this.context.EventBus.PublishAsync(new DomainNotification(topic, new ReadModelBuilderFaultedEvent(workItem.Identity, error))).ConfigureAwait(false);
+                                throw error;
                             }
                         }
                     }
@@ -196,7 +202,7 @@ namespace Mobile.CQRS.Domain
                     var builderEvents = builder.Process(events);
                     foreach (var evt in builderEvents)
                     {
-                        bus.Publish(evt);
+                        await bus.PublishAsync(evt).ConfigureAwait(false);
                     }
                 }
             }

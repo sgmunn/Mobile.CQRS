@@ -23,7 +23,7 @@ namespace Mobile.CQRS.Domain
     using System;
     using System.Threading.Tasks;
 
-    public interface ISnapshotRepository : IDisposable//: IRepository<ISnapshot>
+    public interface ISnapshotRepository : IDisposable
     {
         Task<ISnapshot> GetByIdAsync(Guid id);
         Task<SaveResult> SaveAsync(ISnapshot instance);

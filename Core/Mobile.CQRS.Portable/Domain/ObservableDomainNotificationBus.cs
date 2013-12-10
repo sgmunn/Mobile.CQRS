@@ -22,6 +22,7 @@ namespace Mobile.CQRS.Domain
 {
     using System;
     using Mobile.CQRS.Reactive;
+    using System.Threading.Tasks;
 
     public sealed class ObservableDomainNotificationBus : IDomainNotificationBus
     {
@@ -32,9 +33,9 @@ namespace Mobile.CQRS.Domain
             this.eventPublisher = new Subject<IDomainNotification>();
         }
 
-        public void Publish(IDomainNotification evt)
+        public Task PublishAsync(IDomainNotification evt)
         {
-            this.eventPublisher.OnNext(evt);
+            return Task.Run(() => this.eventPublisher.OnNext(evt));
         }
 
         public IDisposable Subscribe(IObserver<IDomainNotification> observer)

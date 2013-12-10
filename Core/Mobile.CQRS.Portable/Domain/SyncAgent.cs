@@ -101,7 +101,7 @@ namespace Mobile.CQRS.Domain
             // or because we've never synced at all
             var pendingEvents = await this.GetPendingEventsAsync<T>(syncState, newCommonHistory).ConfigureAwait(false);
 
-            this.pendingCommands.RemovePendingCommands(aggregateId);
+            await this.pendingCommands.RemovePendingCommandsAsync(aggregateId).ConfigureAwait(false);
 
             // we need to do a full rebuild if we have previously synced with remote and we merged in any remote events
             var needsFullRebuild = syncState.LastSyncedVersion > 0 && newRemoteEvents.Count != 0;
@@ -112,7 +112,7 @@ namespace Mobile.CQRS.Domain
             // merge remote events into our eventstore - including our pending events
             if (newRemoteEvents.Count != 0)
             {
-                this.localEventStore.MergeEvents(aggregateId, newRemoteEvents.Concat(pendingEvents).ToList(), currentVersion, syncState.LastSyncedVersion);
+                await this.localEventStore.MergeEventsAsync(aggregateId, newRemoteEvents.Concat(pendingEvents).ToList(), currentVersion, syncState.LastSyncedVersion).ConfigureAwait(false);
             }
 
             // update sync state
@@ -138,7 +138,7 @@ namespace Mobile.CQRS.Domain
             }
 
             // if we have synced the aggregate at least once, then we need to get events from pending commands
-            var pendingCommandsToExecute = this.pendingCommands.PendingCommandsForAggregate(syncState.Identity).ToList();
+            var pendingCommandsToExecute = (await this.pendingCommands.PendingCommandsForAggregateAsync(syncState.Identity).ConfigureAwait(false)).ToList();
             if (pendingCommandsToExecute.Count == 0)
             {
                 return new List<IAggregateEvent>();

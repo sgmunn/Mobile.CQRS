@@ -22,10 +22,11 @@ namespace Mobile.CQRS.Domain
 {
     using System;
     using System.Collections.Generic;
+    using System.Threading.Tasks;
 
     public interface IReadModelQueue
     {
-        void Dequeue(IReadModelWorkItem workItem);
-        IList<IReadModelWorkItem> Peek(int batchSize);
+        Task DequeueAsync(IReadModelWorkItem workItem);
+        Task<IList<IReadModelWorkItem>> PeekAsync(int batchSize);
     }
 }

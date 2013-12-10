@@ -61,6 +61,7 @@ namespace Mobile.CQRS.Domain
         {
             this.updatedReadModels.Clear();
 
+            // TODO: do we need to make this aync ??
             MethodExecutor.ExecuteMethod(this, evt.Event);
 
             return this.updatedReadModels;

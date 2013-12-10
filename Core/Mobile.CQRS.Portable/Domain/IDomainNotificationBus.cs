@@ -21,12 +21,13 @@
 namespace Mobile.CQRS.Domain
 {
     using System;
+    using System.Threading.Tasks;
 
     /// <summary>
     /// An observable series of domain notifications
     /// </summary>
     public interface IDomainNotificationBus : IObservable<IDomainNotification> 
     {
-        void Publish(IDomainNotification notification);
+        Task PublishAsync(IDomainNotification notification);
     }
 }

@@ -81,7 +81,7 @@ namespace Mobile.CQRS.Domain
             return new List<IDomainNotification>(this.events);
         }
 
-        public virtual void Publish(IDomainNotification evt)
+        public virtual Task PublishAsync(IDomainNotification evt)
         {
             if (this.onPublish != null)
             {
@@ -89,6 +89,8 @@ namespace Mobile.CQRS.Domain
             }
 
             this.Events.Add(evt);
+
+            return TaskHelpers.Empty;
         }
 
         public virtual IDisposable Subscribe(IObserver<IDomainNotification> subscriber)
@@ -101,11 +103,11 @@ namespace Mobile.CQRS.Domain
             this.Events.Clear();
         }
 
-        public virtual Task CommitAsync()
+        public async virtual Task CommitAsync()
         {
             foreach (var evt in this.Events)
             {
-                this.bus.Publish(evt);
+                await this.bus.PublishAsync(evt).ConfigureAwait(false);
             }
 
             this.Events.Clear();
@@ -114,8 +116,6 @@ namespace Mobile.CQRS.Domain
             {
                 this.onCommit();
             }
-
-            return TaskHelpers.Empty;
         }
     }
 }

@@ -22,9 +22,10 @@ namespace Mobile.CQRS.Domain
 {
     using System;
     using System.Collections.Generic;
-    
+    using System.Threading.Tasks;
+
     public interface IMergableEventStore : IEventStore
     {
-        void MergeEvents(Guid aggregateId, IList<IAggregateEvent> events, int expectedVersion, int afterVersion);
+        Task MergeEventsAsync(Guid aggregateId, IList<IAggregateEvent> events, int expectedVersion, int afterVersion);
     }
 }

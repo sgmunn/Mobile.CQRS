@@ -22,11 +22,12 @@ namespace Mobile.CQRS.Domain
 {
     using System;
     using System.Collections.Generic;
+    using System.Threading.Tasks;
 
     public interface IPendingCommandRepository
     {
-        void StorePendingCommand(IAggregateCommand command);
-        IList<IAggregateCommand> PendingCommandsForAggregate(Guid id);
-        void RemovePendingCommands(Guid id);
+        Task StorePendingCommandAsync(IAggregateCommand command);
+        Task<IList<IAggregateCommand>> PendingCommandsForAggregateAsync(Guid id);
+        Task RemovePendingCommandsAsync(Guid id);
     }
 }

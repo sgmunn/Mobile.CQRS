@@ -21,9 +21,10 @@
 namespace Mobile.CQRS.Domain
 {
     using System;
+    using System.Threading.Tasks;
 
     public interface IReadModelQueueProducer
     {
-        IReadModelWorkItem Enqueue(Guid aggregateId, string aggregateType, int fromVersion);
+        Task<IReadModelWorkItem> EnqueueAsync(Guid aggregateId, string aggregateType, int fromVersion);
     }
 }
