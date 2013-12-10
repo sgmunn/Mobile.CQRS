@@ -24,11 +24,14 @@ namespace Mobile.CQRS.InMemory
     using System.Collections.Generic;
     using System.Linq;
     using System.Threading.Tasks;
+    using System.Threading;
     using Mobile.CQRS.Domain;
 
     public sealed class InMemoryEventStore : IEventStore
     {
         private readonly Dictionary<Guid, List<IAggregateEvent>> storage;
+
+        private readonly SemaphoreSlim syncLock = new SemaphoreSlim(1);
 
         public InMemoryEventStore()
         {
@@ -39,12 +42,12 @@ namespace Mobile.CQRS.InMemory
         {
         }
 
-        public Task SaveEventsAsync(Guid aggregateId, IList<IAggregateEvent> events, int expectedVersion)
+        public async Task SaveEventsAsync(Guid aggregateId, IList<IAggregateEvent> events, int expectedVersion)
         {
-            lock(this.storage)
+            await this.syncLock.WaitAsync();
+            try
             {
-                // TODO: need to refactor this
-                var currentVersion = this.GetCurrentVersionAsync(aggregateId).Result;
+                var currentVersion = await this.GetCurrentVersionAsync(aggregateId);
                 if (currentVersion != expectedVersion)
                 {
                     throw new ConcurrencyException(aggregateId, expectedVersion, currentVersion);
@@ -54,16 +57,18 @@ namespace Mobile.CQRS.InMemory
                 savedEvents.AddRange(events);
                 this.storage[aggregateId] = savedEvents;
             }
-
-            return TaskHelpers.Empty;
+            finally
+            {
+                this.syncLock.Release();
+            }
         }
 
-        public Task MergeEvents(Guid aggregateId, IList<IAggregateEvent> events, int expectedVersion, int afterVersion)
+        public async Task MergeEvents(Guid aggregateId, IList<IAggregateEvent> events, int expectedVersion, int afterVersion)
         {
-            lock(this.storage)
+            await this.syncLock.WaitAsync();
+            try
             {
-                // TODO: need to refactor this
-                var currentVersion = this.GetCurrentVersionAsync(aggregateId).Result;
+                var currentVersion = await this.GetCurrentVersionAsync(aggregateId);
                 if (currentVersion != expectedVersion)
                 {
                     throw new ConcurrencyException(aggregateId, expectedVersion, currentVersion);
@@ -79,57 +84,72 @@ namespace Mobile.CQRS.InMemory
                 savedEvents.AddRange(events);
                 this.storage[aggregateId] = savedEvents;
             }
-
-            return TaskHelpers.Empty;
+            finally
+            {
+                this.syncLock.Release();
+            }
         }
         
-        public Task<int> GetCurrentVersionAsync(Guid rootId)
+        public async Task<int> GetCurrentVersionAsync(Guid rootId)
         {
-            List<IAggregateEvent> savedEvents;
-            lock(this.storage)
+            await this.syncLock.WaitAsync();
+            try
             {
-                savedEvents = this.GetEvents(rootId);
-            }
+                var savedEvents = this.GetEvents(rootId);
 
-            if (savedEvents.Count == 0)
+                if (savedEvents.Count == 0)
+                {
+                    return 0;
+                }
+
+                return savedEvents[savedEvents.Count - 1].Version;
+            }
+            finally
             {
-                return Task.FromResult<int>(0);
+                this.syncLock.Release();
             }
-
-            return Task.FromResult<int>(savedEvents[savedEvents.Count - 1].Version);
         }
 
-        public Task<IList<IAggregateEvent>> GetAllEventsAsync(Guid rootId)
+        public async Task<IList<IAggregateEvent>> GetAllEventsAsync(Guid rootId)
         {
-            List<IAggregateEvent> savedEvents;
-            lock(this.storage)
+            await this.syncLock.WaitAsync();
+            try
             {
-                savedEvents = this.GetEvents(rootId);
+                var savedEvents = this.GetEvents(rootId);
+                return savedEvents;
             }
-
-            return Task.FromResult<IList<IAggregateEvent>>(savedEvents);
+            finally
+            {
+                this.syncLock.Release();
+            }
         }
 
-        public Task<IList<IAggregateEvent>> GetEventsAfterVersionAsync(Guid rootId, int version)
+        public async Task<IList<IAggregateEvent>> GetEventsAfterVersionAsync(Guid rootId, int version)
         {
-            List<IAggregateEvent> savedEvents;
-            lock(this.storage)
+            await this.syncLock.WaitAsync();
+            try
             {
-                savedEvents = this.GetEvents(rootId);
+                var savedEvents = this.GetEvents(rootId);
+                return savedEvents.Where(x => x.Version > version).ToList();
             }
-
-            return Task.FromResult<IList<IAggregateEvent>>(savedEvents.Where(x => x.Version > version).ToList());
+            finally
+            {
+                this.syncLock.Release();
+            }
         }
         
-        public Task<IList<IAggregateEvent>> GetEventsUpToVersionAsync(Guid rootId, int version)
+        public async Task<IList<IAggregateEvent>> GetEventsUpToVersionAsync(Guid rootId, int version)
         {
-            List<IAggregateEvent> savedEvents;
-            lock(this.storage)
+            await this.syncLock.WaitAsync();
+            try
             {
-                savedEvents = this.GetEvents(rootId);
+                var savedEvents = this.GetEvents(rootId);
+                return savedEvents.Where(x => x.Version <= version).ToList();
             }
-
-            return Task.FromResult<IList<IAggregateEvent>>(savedEvents.Where(x => x.Version <= version).ToList());
+            finally
+            {
+                this.syncLock.Release();
+            }
         }
 
         private List<IAggregateEvent> GetEvents(Guid rootId)
