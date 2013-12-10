@@ -17,6 +17,7 @@
 //   IN THE SOFTWARE.
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
+using System.Threading.Tasks;
 
 namespace Mobile.CQRS.Domain
 {
@@ -82,7 +83,7 @@ namespace Mobile.CQRS.Domain
             return this.Process(events.Select(evt => evt.Event).OfType<IAggregateEvent>());
         }
 
-        public virtual void DeleteForAggregate(Guid aggregateId)
+        public virtual Task DeleteForAggregateAsync(Guid aggregateId)
         {
             var scoped = this.Repository as IScopedRepository;
             if (scoped == null)
@@ -90,7 +91,7 @@ namespace Mobile.CQRS.Domain
                 throw new NotSupportedException("Repository does not support IScopedRepository");
             }
 
-            scoped.DeleteAllInScope(aggregateId);
+            return scoped.DeleteAllInScopeAsync(aggregateId);
         }
     }
 }

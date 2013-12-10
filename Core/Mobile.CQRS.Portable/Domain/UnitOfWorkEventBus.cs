@@ -22,6 +22,7 @@ namespace Mobile.CQRS.Domain
 {
     using System;
     using System.Collections.Generic;
+    using System.Threading.Tasks;
 
     /// <summary>
     /// An event bus that performs all publishing in a single unit of work
@@ -100,7 +101,7 @@ namespace Mobile.CQRS.Domain
             this.Events.Clear();
         }
 
-        public virtual void Commit()
+        public virtual Task CommitAsync()
         {
             foreach (var evt in this.Events)
             {
@@ -113,6 +114,8 @@ namespace Mobile.CQRS.Domain
             {
                 this.onCommit();
             }
+
+            return TaskHelpers.Empty;
         }
     }
 }

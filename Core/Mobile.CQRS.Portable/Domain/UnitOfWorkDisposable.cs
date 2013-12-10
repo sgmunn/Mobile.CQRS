@@ -21,6 +21,7 @@
 namespace Mobile.CQRS.Domain
 {
     using System;
+    using System.Threading.Tasks;
 
     public sealed class UnitOfWorkDisposable : IUnitOfWork
     {
@@ -36,9 +37,10 @@ namespace Mobile.CQRS.Domain
             this.disposable.Dispose();
         }
 
-        public void Commit()
+        public Task CommitAsync()
         {
             this.disposable.Dispose();
+            return TaskHelpers.Empty;
         }
     }
 }

@@ -23,6 +23,7 @@ namespace Mobile.CQRS
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Threading.Tasks;
 
     public abstract class DictionaryRepositoryBase<T> : IRepository<T>
     {
@@ -46,37 +47,39 @@ namespace Mobile.CQRS
             return this.InternalNew();
         }
 
-        public T GetById(Guid id)
+        public Task<T> GetByIdAsync(Guid id)
         {
             if (this.storage.ContainsKey(id))
             {
-                return this.Storage[id];
+                return Task.FromResult<T>(this.Storage[id]);
             }
 
-            return default(T);
+            return Task.FromResult<T>(default(T));
         }
 
-        public IList<T> GetAll()
+        public Task<IList<T>> GetAllAsync()
         {
-            return this.Storage.Values.ToList();
+            return Task.FromResult<IList<T>>(this.Storage.Values.ToList());
         }
 
-        public SaveResult Save(T instance)
+        public Task<SaveResult> SaveAsync(T instance)
         {
-            return this.InternalSave(instance);
+            return this.InternalSaveAsync(instance);
         }
 
-        public void Delete(T instance)
+        public Task DeleteAsync(T instance)
         {
-            this.InternalDelete(instance);
+            return this.InternalDeleteAsync(instance);
         }
 
-        public void DeleteId(Guid id)
+        public Task DeleteIdAsync(Guid id)
         {
             if (this.Storage.ContainsKey(id))
             {
                 this.Storage.Remove(id);
             }
+
+            return TaskHelpers.Empty;
         }
 
         public void Dispose()
@@ -85,8 +88,8 @@ namespace Mobile.CQRS
 
         protected abstract T InternalNew();
 
-        protected abstract SaveResult InternalSave(T instance);
+        protected abstract Task<SaveResult> InternalSaveAsync(T instance);
 
-        protected abstract void InternalDelete(T instance);
+        protected abstract Task InternalDeleteAsync(T instance);
     }
 }

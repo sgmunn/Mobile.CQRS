@@ -18,12 +18,16 @@
 //  </copyright>
 //  --------------------------------------------------------------------------------------------------------------------
 
-namespace Mobile.CQRS.Domain
+namespace Mobile.CQRS.InMemory
 {
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    
+    using System.Threading.Tasks;
+    using Mobile.CQRS.Domain;
+
+    // TODO: fix up locking with async in in memory repository
+
     public class InMemorySnapshotRepository<T> : DictionaryRepositoryBase<T>, ISnapshotRepository
         where T : class, ISnapshot, new() 
     {
@@ -31,18 +35,18 @@ namespace Mobile.CQRS.Domain
         {
         }
 
-        public SaveResult Save(ISnapshot instance, int expectedVersion)
+        public async Task<SaveResult> SaveAsync(ISnapshot instance, int expectedVersion)
         {
             lock (this.Storage)
             {
                 // get the current version 
-                var current = this.GetById(instance.Identity);
+                var current = this.GetByIdAsync(instance.Identity).Result;
                 if (current != null && current.Version != expectedVersion)
                 {
                     throw new ConcurrencyException(instance.Identity, expectedVersion, current.Version);
                 }
 
-                return this.Save(instance);
+                return this.SaveAsync(instance).Result;
             }
         }
 
@@ -51,27 +55,29 @@ namespace Mobile.CQRS.Domain
             return new T(); 
         }
 
-        protected override SaveResult InternalSave(T snapshot)
+        protected override Task<SaveResult> InternalSaveAsync(T instance)
         {
             lock (this.Storage)
             {
-                if (this.Storage.ContainsKey(snapshot.Identity))
+                if (this.Storage.ContainsKey(instance.Identity))
                 {
-                    this.Storage[snapshot.Identity] = snapshot;
-                    return SaveResult.Updated;
+                    this.Storage[instance.Identity] = instance;
+                    return Task.FromResult<SaveResult>(SaveResult.Updated);
                 }
 
-                this.Storage[snapshot.Identity] = snapshot;
-                return SaveResult.Added;
+                this.Storage[instance.Identity] = instance;
+                return Task.FromResult<SaveResult>(SaveResult.Added);
             }
         }
 
-        protected override void InternalDelete(T snapshot)
+        protected override Task InternalDeleteAsync(T instance)
         {
-            if (this.Storage.ContainsKey(snapshot.Identity))
+            if (this.Storage.ContainsKey(instance.Identity))
             {
-                this.Storage.Remove(snapshot.Identity);
+                this.Storage.Remove(instance.Identity);
             }
+
+            return TaskHelpers.Empty;
         }
 
         public new ISnapshot New()
@@ -79,35 +85,35 @@ namespace Mobile.CQRS.Domain
             return this.InternalNew();
         }
 
-        public new ISnapshot GetById(Guid id)
+        public async new Task<ISnapshot> GetByIdAsync(Guid id)
         {
             lock (this.Storage)
             {
-                return base.GetById(id);
+                return base.GetByIdAsync(id).Result;
             }
         }
 
-        public new IList<ISnapshot> GetAll()
+        public async new Task<IList<ISnapshot>> GetAllAsync()
         {
             lock (this.Storage)
             {
-                return base.GetAll().Cast<ISnapshot>().ToList();
+                return base.GetAllAsync().Result.Cast<ISnapshot>().ToList();
             }
         }
 
-        public SaveResult Save(ISnapshot snapshot)
+        public Task<SaveResult> SaveAsync(ISnapshot snapshot)
         {
             lock (this.Storage)
             {
-                return this.InternalSave((T)snapshot);
+                return this.InternalSaveAsync((T)snapshot);
             }
         }
 
-        public void Delete(ISnapshot snapshot)
+        public Task DeleteAsync(ISnapshot snapshot)
         {
             lock (this.Storage)
             {
-                this.InternalDelete((T)snapshot);
+                return this.InternalDeleteAsync((T)snapshot);
             }
         }
     }

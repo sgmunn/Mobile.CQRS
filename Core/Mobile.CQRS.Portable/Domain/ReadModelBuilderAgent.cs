@@ -172,7 +172,7 @@ namespace Mobile.CQRS.Domain
                         }
                     }
 
-                    scope.Commit();
+                    await scope.CommitAsync();
                     doMore = workItems.Count == this.maxItems;
                 }
             }
@@ -189,7 +189,7 @@ namespace Mobile.CQRS.Domain
                 {
                     if (workItem.FromVersion == 0)
                     {
-                        builder.DeleteForAggregate(workItem.Identity);
+                        await builder.DeleteForAggregateAsync(workItem.Identity).ConfigureAwait(false);
                     }
 
                     // we need to get the events from the event store

@@ -24,6 +24,7 @@ namespace Mobile.CQRS
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
+    using System.Threading.Tasks;
     using Mobile.CQRS.Serialization;
 
     /// <summary>
@@ -68,9 +69,9 @@ namespace Mobile.CQRS
             return new TReadModel();
         }
 
-        public TReadModel GetById(Guid id)
+        public async Task<TReadModel> GetByIdAsync(Guid id)
         {
-            var serialized = this.Repository.GetById(id);
+            var serialized = await this.Repository.GetByIdAsync(id).ConfigureAwait(false);
             if (serialized == null)
             {
                 return default(TReadModel);
@@ -79,10 +80,10 @@ namespace Mobile.CQRS
             return this.Serializer.DeserializeFromString(serialized.ObjectData);
         }
 
-        public virtual IList<TReadModel> GetAll()
+        public async virtual Task<IList<TReadModel>> GetAllAsync()
         {
             var result = new List<TReadModel>();
-            var serialized = this.Repository.GetAll();
+            var serialized = await this.Repository.GetAllAsync().ConfigureAwait(false);
 
             foreach (var item in serialized)
             {
@@ -92,7 +93,7 @@ namespace Mobile.CQRS
             return result;
         }
 
-        public virtual SaveResult Save(TReadModel instance)
+        public virtual Task<SaveResult> SaveAsync(TReadModel instance)
         {
             var serialized = this.Repository.New();
             serialized.ObjectData = this.Serializer.SerializeToString(instance);
@@ -100,17 +101,17 @@ namespace Mobile.CQRS
 
             this.Flatten(instance, serialized);
 
-            return this.Repository.Save(serialized);
+            return this.Repository.SaveAsync(serialized);
         }
 
-        public virtual void Delete(TReadModel instance)
+        public virtual Task DeleteAsync(TReadModel instance)
         {
-            this.Repository.DeleteId(instance.Identity);
+            return this.Repository.DeleteIdAsync(instance.Identity);
         }
 
-        public virtual void DeleteId(Guid id)
+        public virtual Task DeleteIdAsync(Guid id)
         {
-            this.Repository.DeleteId(id);
+            return this.Repository.DeleteIdAsync(id);
         }
 
         protected virtual void Flatten(TReadModel readModel, TSerialized serialized)

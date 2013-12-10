@@ -88,7 +88,7 @@ namespace Mobile.CQRS.Domain
 
         public async Task<IAggregateRoot> GetByIdAsync(Guid id)
         {
-            var snapshot = this.GetSnapshot(id);
+            var snapshot = await this.GetSnapshotAsync(id).ConfigureAwait(false);
             var version = snapshot != null ? snapshot.Version : 0;
             var eventsAfterSnapshot = await this.GetEventsAfterVersionAsync(id, version).ConfigureAwait(false);
 
@@ -127,7 +127,7 @@ namespace Mobile.CQRS.Domain
             ////this.EnsureConcurrency(instance.Identity, expectedVersion);
             var newVersion = instance.UncommittedEvents.Last().Version;
 
-            var snapshotChange = this.SaveSnapshot(instance, expectedVersion);
+            var snapshotChange = await this.SaveSnapshotAsync(instance, expectedVersion).ConfigureAwait(false);
             await this.SaveEventsAsync(instance, expectedVersion).ConfigureAwait(false);
 
             this.PublishEvents(instance, snapshotChange);
@@ -168,7 +168,7 @@ namespace Mobile.CQRS.Domain
             return this.eventStore.SaveEventsAsync(instance.Identity, instance.UncommittedEvents.ToList(), expectedVersion);
         }
 
-        private IDomainNotification SaveSnapshot(IAggregateRoot instance, int expectedVersion)
+        private async Task<IDomainNotification> SaveSnapshotAsync(IAggregateRoot instance, int expectedVersion)
         {
             if (this.snapshotRepository != null && this.ShouldSaveSnapshot(instance))
             {
@@ -178,11 +178,11 @@ namespace Mobile.CQRS.Domain
                 SaveResult saveResult;
                 if (this.eventStore == null)
                 {
-                    saveResult = this.snapshotRepository.Save(snapshot, expectedVersion);
+                    saveResult = await this.snapshotRepository.SaveAsync(snapshot, expectedVersion).ConfigureAwait(false);
                 }
                 else
                 {
-                    saveResult = this.snapshotRepository.Save(snapshot);
+                    saveResult = await this.snapshotRepository.SaveAsync(snapshot).ConfigureAwait(false);
                 }
 
                 return NotificationExtensions.CreateModelNotification(instance.Identity, snapshot, saveResult == SaveResult.Added ? ModelChangeKind.Added : ModelChangeKind.Changed);
@@ -255,14 +255,14 @@ namespace Mobile.CQRS.Domain
             return Task.FromResult<IList<IAggregateEvent>>(new List<IAggregateEvent>());
         }
 
-        private ISnapshot GetSnapshot(Guid id)
+        private Task<ISnapshot> GetSnapshotAsync(Guid id)
         {
             if (this.snapshotRepository != null)
             {
-                return this.snapshotRepository.GetById(id);
+                return this.snapshotRepository.GetByIdAsync(id);
             }
 
-            return null;
+            return Task.FromResult<ISnapshot>(null);
         }
     }
 }

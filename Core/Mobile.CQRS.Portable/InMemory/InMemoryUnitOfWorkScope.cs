@@ -17,12 +17,13 @@
 //   IN THE SOFTWARE.
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
-using System.Reflection;
 
 namespace Mobile.CQRS.Domain
 {
     using System;
     using System.Collections.Generic;
+    using System.Reflection;
+    using System.Threading.Tasks;
 
     public class InMemoryUnitOfWorkScope : IUnitOfWorkScope
     {
@@ -69,7 +70,7 @@ namespace Mobile.CQRS.Domain
             this.scopedWork.Add(uow);
         }
 
-        public void Commit()
+        public async Task CommitAsync()
         {
             if (this.committed)
             {
@@ -82,7 +83,7 @@ namespace Mobile.CQRS.Domain
 
                 foreach (var uow in this.scopedWork)
                 {
-                    uow.Commit();
+                    await uow.CommitAsync().ConfigureAwait(false);
                 }
 
                 this.AfterCommit();

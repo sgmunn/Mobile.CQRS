@@ -97,13 +97,13 @@ namespace Mobile.CQRS.Domain
                     var exec = new DomainCommandExecutor(scope, registration, busBuffer);
                     await exec.ExecuteAsync(commands, expectedVersion).ConfigureAwait(false);
 
-                    scope.Commit();
+                    await scope.CommitAsync().ConfigureAwait(false);
                 }
 
                 // get events in the buffer, bundle them up and send them in one go to the background read model builder
 
                 // finally, publish the events to the real event bus
-                busBuffer.Commit();
+                await busBuffer.CommitAsync().ConfigureAwait(false);
             }
         }
     }

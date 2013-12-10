@@ -21,9 +21,10 @@
 namespace Mobile.CQRS
 {
     using System;
+    using System.Threading.Tasks;
 
     public interface IScopedRepository
     {
-        void DeleteAllInScope(Guid scopeId);
+        Task DeleteAllInScopeAsync(Guid scopeId);
     }
 }

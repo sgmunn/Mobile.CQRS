@@ -22,6 +22,7 @@ namespace Mobile.CQRS.Domain
 {
     using System;
     using System.Collections.Generic;
+    using System.Threading.Tasks;
 
     public class ReadModelBuildingEventBus : UnitOfWorkEventBus 
     {
@@ -36,10 +37,10 @@ namespace Mobile.CQRS.Domain
             this.builders = builders;
         }
 
-        public override void Commit()
+        public override Task CommitAsync()
         {
             this.Events.AddRange(this.BuildReadModels());
-            base.Commit();
+            return base.CommitAsync();
         }
 
         protected virtual IList<IDomainNotification> BuildReadModels()

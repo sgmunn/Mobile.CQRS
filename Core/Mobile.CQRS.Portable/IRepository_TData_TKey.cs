@@ -22,6 +22,7 @@ namespace Mobile.CQRS
 {
     using System;
     using System.Collections.Generic;
+    using System.Threading.Tasks;
 
     /// <summary>
     /// A Repository that gets objects of TData that are keyed by TKey
@@ -30,14 +31,14 @@ namespace Mobile.CQRS
     {
         TData New();
 
-        TData GetById(TKey id);
+        Task<TData> GetByIdAsync(TKey id);
 
-        IList<TData> GetAll(); 
+        Task<IList<TData>> GetAllAsync(); 
 
-        SaveResult Save(TData instance);
+        Task<SaveResult> SaveAsync(TData instance);
 
-        void Delete(TData instance);
+        Task DeleteAsync(TData instance);
 
-        void DeleteId(TKey id);
+        Task DeleteIdAsync(TKey id);
     }
 }

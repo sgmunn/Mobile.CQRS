@@ -66,7 +66,7 @@ namespace Mobile.CQRS.Domain
         {
             var currentVersion = await this.localEventStore.GetCurrentVersionAsync(aggregateId).ConfigureAwait(false);
 
-            var syncState = this.syncStateRepository.GetById(aggregateId);
+            var syncState = await this.syncStateRepository.GetByIdAsync(aggregateId).ConfigureAwait(false);
 
             // if no sync state, then assume that the aggregate originated from here, or other repo and that this is the first sync
             if (syncState == null)
@@ -117,7 +117,7 @@ namespace Mobile.CQRS.Domain
 
             // update sync state
             syncState.LastSyncedVersion = newVersion;
-            this.syncStateRepository.Save(syncState);
+            await this.syncStateRepository.SaveAsync(syncState).ConfigureAwait(false);
 
             // update remote
             if (pendingEvents.Count != 0)
@@ -153,7 +153,7 @@ namespace Mobile.CQRS.Domain
 
             if (this.snapshotRepository != null && aggregate is ISnapshotSupport)
             {
-                this.snapshotRepository.Save(((ISnapshotSupport)aggregate).GetSnapshot());
+                await this.snapshotRepository.SaveAsync(((ISnapshotSupport)aggregate).GetSnapshot()).ConfigureAwait(false);
             }
 
             return aggregate.UncommittedEvents.ToList();

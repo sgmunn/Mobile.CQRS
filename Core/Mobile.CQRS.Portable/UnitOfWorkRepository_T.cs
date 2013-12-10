@@ -23,6 +23,7 @@ namespace Mobile.CQRS
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Threading.Tasks;
 
     public class UnitOfWorkRepository<T> : IUnitOfWorkRepository<T> 
         where T : IUniqueId
@@ -64,7 +65,7 @@ namespace Mobile.CQRS
             return this.repository.New();
         }
 
-        public T GetById(Guid id)
+        public async Task<T> GetByIdAsync(Guid id)
         {
             if (this.deletedItemKeys.Any(x => x == id))
             {
@@ -76,7 +77,7 @@ namespace Mobile.CQRS
                 return (T)this.savedItems[id];
             }
 
-            var item = this.repository.GetById(id);
+            var item = await this.repository.GetByIdAsync(id).ConfigureAwait(false);
 
             if (item != null)
             {
@@ -86,14 +87,16 @@ namespace Mobile.CQRS
             return item;
         }
 
-        public IList<T> GetAll()
+        public async Task<IList<T>> GetAllAsync()
         {
             var saved = this.savedItems.Values.Cast<T>();
 
-            return saved.Union(this.Repository.GetAll()).Where(x => !this.deletedItemKeys.Any(y => y == x.Identity)).ToList();
+            var allItems = await this.Repository.GetAllAsync().ConfigureAwait(false);
+
+            return saved.Union(allItems).Where(x => !this.deletedItemKeys.Any(y => y == x.Identity)).ToList();
         }
 
-        public virtual SaveResult Save(T instance)
+        public async virtual Task<SaveResult> SaveAsync(T instance)
         {
             if (this.savedItems.ContainsKey(instance.Identity))
             {
@@ -110,7 +113,7 @@ namespace Mobile.CQRS
             else
             {
                 // we don't know if the item exists or not, so for now just get the item
-                var realItem = this.repository.GetById(instance.Identity);
+                var realItem = await this.repository.GetByIdAsync(instance.Identity).ConfigureAwait(false);
                 if (realItem != null)
                 {
                     this.loadedItemKeys.Add(instance.Identity);
@@ -121,30 +124,33 @@ namespace Mobile.CQRS
             return SaveResult.Added;
         }
 
-        public virtual void Delete(T instance)
+        public virtual Task DeleteAsync(T instance)
         {
             var id = instance.Identity;
-            this.DeleteId(id);
+            return this.DeleteIdAsync(id);
         }
 
-        public virtual void DeleteId(Guid id)
+        public virtual Task DeleteIdAsync(Guid id)
         {
             if (!this.deletedItemKeys.Any(x => x == id))
             {
                 this.deletedItemKeys.Add(id);
             }
+
+            return TaskHelpers.Empty;
         }
 
-        public virtual void Commit()
+        public async virtual Task CommitAsync()
         {
+            // TODO: can we await each in parallel
             foreach (var item in this.savedItems.Values.Cast<T>())
             {
-                this.Repository.Save(item);
+                await this.Repository.SaveAsync(item).ConfigureAwait(false);
             }
 
             foreach (var id in this.deletedItemKeys)
             {
-                this.Repository.DeleteId(id);
+                await this.Repository.DeleteIdAsync(id).ConfigureAwait(false);
             }
         }
     }

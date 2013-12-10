@@ -22,12 +22,13 @@ namespace Mobile.CQRS.Domain
 {
     using System;
     using System.Collections.Generic;
+    using System.Threading.Tasks;
 
     public interface IReadModelBuilder
     {
         IEnumerable<IDomainNotification> Handle(IDomainNotification evt);
         IEnumerable<IDomainNotification> Process(IEnumerable<IDomainNotification> events);
         IEnumerable<IDomainNotification> Process(IEnumerable<IAggregateEvent> events);
-        void DeleteForAggregate(Guid aggregateId);
+        Task DeleteForAggregateAsync(Guid aggregateId);
     }
 }

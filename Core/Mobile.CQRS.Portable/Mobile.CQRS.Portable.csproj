@@ -139,6 +139,7 @@
     <Compile Include="ConcurrentCache.cs" />
     <Compile Include="IdLock.cs" />
     <Compile Include="_Notes.cs" />
+    <Compile Include="TaskHelpers.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
   <ItemGroup>

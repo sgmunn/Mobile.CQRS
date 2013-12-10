@@ -21,12 +21,13 @@
 namespace Mobile.CQRS
 {
     using System;
+    using System.Threading.Tasks;
 
     /// <summary>
     /// Represents a unit of work that is commited on Commit and undone on Dispose
     /// </summary>
     public interface IUnitOfWork : IDisposable
     {
-        void Commit();
+        Task CommitAsync();
     }
 }

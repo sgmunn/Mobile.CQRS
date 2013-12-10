@@ -23,6 +23,7 @@ namespace Mobile.CQRS.Domain
     using System;
     using System.Collections.Generic;
     using Mobile.CQRS.Reactive;
+    using System.Threading.Tasks;
 
     public class ObservableRepository<T> : IRepository<T>, IObservableRepository, IScopedRepository 
         where T : IUniqueId
@@ -63,19 +64,19 @@ namespace Mobile.CQRS.Domain
             return this.Repository.New();
         }
 
-        public T GetById(Guid id)
+        public Task<T> GetByIdAsync(Guid id)
         {
-            return this.Repository.GetById(id);
+            return this.Repository.GetByIdAsync(id);
         }
 
-        public IList<T> GetAll()
+        public Task<IList<T>> GetAllAsync()
         {
-            return this.Repository.GetAll();
+            return this.Repository.GetAllAsync();
         }
 
-        public virtual SaveResult Save(T instance)
+        public async virtual Task<SaveResult> SaveAsync(T instance)
         {
-            var saveResult = this.Repository.Save(instance);
+            var saveResult = await this.Repository.SaveAsync(instance).ConfigureAwait(false);
             
             IDomainNotification modelChange = null; 
             switch (saveResult)
@@ -96,23 +97,23 @@ namespace Mobile.CQRS.Domain
             return saveResult;
         }
 
-        public virtual void Delete(T instance)
+        public async virtual Task DeleteAsync(T instance)
         {
-            this.Repository.Delete(instance);
+            await this.Repository.DeleteAsync(instance).ConfigureAwait(false);
             
             var modelChange = NotificationExtensions.CreateModelNotification(instance.Identity, null, ModelChangeKind.Deleted);
             this.changes.OnNext(modelChange);
         }
 
-        public virtual void DeleteId(Guid id)
+        public async virtual Task DeleteIdAsync(Guid id)
         {
-            this.Repository.DeleteId(id);
+            await this.Repository.DeleteIdAsync(id).ConfigureAwait(false);
             
             var modelChange = NotificationExtensions.CreateModelNotification(id, null, ModelChangeKind.Deleted);
             this.changes.OnNext(modelChange);
         }
 
-        public void DeleteAllInScope(Guid scopeId)
+        public Task DeleteAllInScopeAsync(Guid scopeId)
         {
             var scoped = this.Repository as IScopedRepository;
             if (scoped == null)
@@ -120,7 +121,7 @@ namespace Mobile.CQRS.Domain
                 throw new NotSupportedException();
             }
 
-            scoped.DeleteAllInScope(scopeId);
+            return scoped.DeleteAllInScopeAsync(scopeId);
         }
     }
 }
