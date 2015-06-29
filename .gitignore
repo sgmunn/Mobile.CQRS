@@ -9,3 +9,6 @@ Platform/Mobile.CQRS.iOS/bin
 Platform/Mobile.CQRS.Droid/bin
 Platform/Mobile.CQRS.Droid/obj
 Extensions/bin
+Platform/Mobile.CQRS.iOS/obj
+Extensions/obj
+UnitTests/Mobile.CQRS.UnitTests.iOS/obj

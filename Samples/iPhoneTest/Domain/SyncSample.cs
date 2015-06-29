@@ -167,7 +167,7 @@ namespace Sample.Domain
 
 
 
-    [MonoTouch.Foundation.Preserve()]
+    [Foundation.Preserve()]
     public static class SyncSample
     {
         public static EventSourcedDomainContext Remote;
