@@ -6,21 +6,14 @@ Run from the repository root with the .NET 10 SDK:
 dotnet run --project UnitTests/Review.Characterization
 ```
 
-This standalone executable links the existing core source without changing its
-legacy project or requiring MonoTouch/NUnitLite. It uses the SDK's immutable
-collections implementation rather than the old NuGet binary. Assembly metadata
-is excluded because its wildcard version conflicts with deterministic builds.
+This executable references the .NET 10 core library. All six checks assert
+**remaining observed bugs**, and exit zero when all are reproduced. They are
+review evidence, not correctness tests. When fixing a finding, replace its check
+with a desired-behavior regression test in the NUnit suite. Run this executable
+with `dotnet run`, not `dotnet test`.
 
-All eight checks assert **observed bugs**, and exit zero when all are reproduced.
-They are evidence for the review, not a claim that the library is correct. When
-fixing a finding, convert its check to assert the desired contract and move it
-into the normal test suite. Run with `dotnet run`, not `dotnet test`.
-
-The actual `SqlUnitOfWorkScope` source is included, but its connection is a small
-control-flow double. This verifies transaction/monitor ownership on a participant
-failure, not actual SQLite commits, locking, recovery, or mobile execution. The
-merge adapter exposes the existing in-memory store's merge method through
-`IMergableEventStore`; the production class declares only `IEventStore`.
-
-No HTTP endpoint is contacted. No UI behavior was changed. The historical iOS
-suite and real SQLite integration were not executed.
+The two original transaction reproductions have been replaced by NUnit tests
+under `Mobile.CQRS.UnitTests.iOS/Transactions`, including real SQLite integration.
+The remaining merge adapter exposes the existing in-memory store's merge method
+through `IMergableEventStore`; the production class declares only `IEventStore`.
+No HTTP endpoint is contacted.

@@ -24,70 +24,52 @@ namespace Mobile.CQRS.SQLite
     using System.Threading;
     using Mobile.CQRS.Domain;
 
+    /// <summary>A synchronous, thread-affine transaction. Dispose on the creating thread.</summary>
     public class SqlUnitOfWorkScope : InMemoryUnitOfWorkScope
     {
         private readonly SQLiteConnection connection;
-
+        private readonly bool ownsConnection;
         private bool inTransaction;
 
-        public SqlUnitOfWorkScope(SQLiteConnection connection)
+        public SqlUnitOfWorkScope(SQLiteConnection connection) : this(connection, false)
         {
-            if (connection == null)
-                throw new ArgumentNullException("connection");
-
-            this.RegisterObject<SQLiteConnection>(connection);
-
-            // TODO: do a lock here, and loose all the other locks
-            this.connection = connection;
-            this.BeginTransaction();
         }
 
-        public SQLiteConnection Connection
+        /// <param name="connection">Connection exclusively used by this scope until disposal.</param>
+        /// <param name="ownsConnection">Close the connection on disposal, including failed construction.</param>
+        public SqlUnitOfWorkScope(SQLiteConnection connection, bool ownsConnection)
         {
-            get
+            if (connection == null) throw new ArgumentNullException(nameof(connection));
+            this.connection = connection;
+            this.ownsConnection = ownsConnection;
+            Monitor.Enter(connection);
+            try
             {
-                return this.connection;
+                if (connection.IsInTransaction)
+                    throw new InvalidOperationException("Nested unit of work scopes are not supported.");
+                connection.BeginTransaction();
+                this.inTransaction = true;
+                this.RegisterObject<SQLiteConnection>(connection);
+            }
+            catch
+            {
+                Monitor.Exit(connection);
+                // An existing transaction belongs to the caller, even if ownership
+                // was requested for this rejected nested scope.
+                if (ownsConnection && !connection.IsInTransaction) connection.Dispose();
+                throw;
             }
         }
+
+        public SQLiteConnection Connection => this.connection;
 
         protected override void AfterCommit()
         {
-            this.EndTransaction();
+            this.connection.Commit();
+            this.inTransaction = false;
         }
-        
+
         protected override void FinallyDispose()
-        {
-            this.Rollback();
-        }
-
-        private void BeginTransaction()
-        {
-            Monitor.Enter(this.connection);
-
-            if (!this.connection.IsInTransaction)
-            {
-                this.connection.BeginTransaction();
-                this.inTransaction = true;
-            }
-        }
-
-        private void EndTransaction()
-        {
-            try
-            {
-                if (this.inTransaction)
-                {
-                    this.connection.Commit();
-                    this.inTransaction = false;
-                }
-            }
-            finally
-            {
-                Monitor.Exit(this.connection);
-            }
-        }
-
-        private void Rollback()
         {
             try
             {
@@ -99,7 +81,8 @@ namespace Mobile.CQRS.SQLite
             }
             finally
             {
-                Monitor.Exit(this.connection);
+                try { if (this.ownsConnection) this.connection.Dispose(); }
+                finally { Monitor.Exit(this.connection); }
             }
         }
     }

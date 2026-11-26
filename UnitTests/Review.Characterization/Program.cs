@@ -1,27 +1,9 @@
 using Mobile.CQRS;
 using Mobile.CQRS.Domain;
-using Mobile.CQRS.SQLite;
 
 // These checks assert OBSERVED DEFECTS, not the intended contract. A repair should
 // replace the corresponding check with a regression test for correct behavior.
 var failures = 0;
-Check("abandoned scope disposes participants twice", () => {
-    var work = new Work();
-    var scope = new InMemoryUnitOfWorkScope();
-    scope.Add(work);
-    scope.Dispose();
-    Require(work.Disposals == 2);
-});
-Check("failed participant commit skips rollback and leaves monitor held", () => {
-    var connection = new SQLiteConnection();
-    var scope = new SqlUnitOfWorkScope(connection);
-    scope.Add(new Work { FailCommit = true });
-    try { scope.Commit(); } catch (InvalidOperationException) { }
-    scope.Dispose();
-    var held = Monitor.IsEntered(connection);
-    if (held) Monitor.Exit(connection); // keep the reproduction from leaking its lock
-    Require(connection.IsInTransaction && connection.Rollbacks == 0 && held);
-});
 Check("registered concrete store cannot resolve its interface", () => {
     var scope = new InMemoryUnitOfWorkScope();
     var store = new MergeStore();
@@ -70,7 +52,7 @@ Check("first sync of divergent histories appends duplicate version", () => {
     sync.SyncWithRemote<Aggregate>(id);
     Require(remote.GetAllEvents(id).Select(e => e.Version).SequenceEqual(new[] { 1, 1 }));
 });
-Console.WriteLine($"{8 - failures}/8 defect reproductions confirmed.");
+Console.WriteLine($"{6 - failures}/6 defect reproductions confirmed.");
 return failures == 0 ? 0 : 1;
 
 void Check(string name, Action test) {
@@ -79,12 +61,6 @@ void Check(string name, Action test) {
 }
 static void Require(bool condition) { if (!condition) throw new Exception("Observation changed"); }
 
-sealed class Work : IUnitOfWork {
-    public int Disposals;
-    public bool FailCommit;
-    public void Commit() { if (FailCommit) throw new InvalidOperationException("injected failure"); }
-    public void Dispose() { Disposals++; }
-}
 sealed class Event : IAggregateEvent {
     public Guid Identity { get; set; } = Guid.NewGuid();
     public Guid AggregateId { get; set; }
@@ -118,17 +94,6 @@ sealed class MergeStore : IMergableEventStore {
     public IList<IAggregateEvent> GetEventsAfterVersion(Guid id, int version) => store.GetEventsAfterVersion(id, version);
     public IList<IAggregateEvent> GetEventsUpToVersion(Guid id, int version) => store.GetEventsUpToVersion(id, version);
 }
-namespace Mobile.CQRS.SQLite {
-    // Transaction/monitor control-flow double only; no SQLite durability is tested.
-    public sealed class SQLiteConnection {
-        public bool IsInTransaction { get; private set; }
-        public int Rollbacks { get; private set; }
-        public void BeginTransaction() => IsInTransaction = true;
-        public void Commit() => IsInTransaction = false;
-        public void Rollback() { Rollbacks++; IsInTransaction = false; }
-    }
-}
-
 sealed class StateRepository : DictionaryRepositoryBase<ISyncState> {
     protected override ISyncState InternalNew() => new SyncState();
     protected override SaveResult InternalSave(ISyncState state) {

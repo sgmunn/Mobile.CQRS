@@ -3,6 +3,13 @@
 Reviewed 2026-11-26 against commit `b6ae827`. This is a review and proposed design;
 production library behavior has not been changed.
 
+Update: the subsequent .NET 10 baseline replaces the legacy solution build and
+addresses finding 1 (scope lifecycle, ownership, failed BEGIN/COMMIT tracking).
+Transaction reproductions are now desired-behavior NUnit tests using real SQLite;
+six other defect reproductions remain. The findings and build results below are
+historical review evidence. See the root README for the current build commands
+and supported transaction contract.
+
 The architecture is worth preserving: aggregates generate events, persistence is
 abstracted, snapshots are optional, and immediate and delayed projections are
 separate concerns. Offline operation is the most distinctive direction to develop.

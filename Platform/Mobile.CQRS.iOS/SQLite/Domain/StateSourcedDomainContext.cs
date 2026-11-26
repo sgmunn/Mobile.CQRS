@@ -48,7 +48,7 @@ namespace Mobile.CQRS.SQLite.Domain
         public override IUnitOfWorkScope BeginUnitOfWork()
         {
             var connection = new SQLiteConnection(this.ConnectionString, true);
-            var scope = new SqlUnitOfWorkScope(connection);
+            var scope = new SqlUnitOfWorkScope(connection, ownsConnection: true);
 
             scope.RegisterObject<SQLiteConnection>(connection);
             scope.RegisterObject<ISnapshotRepository>(new SnapshotRepository(connection, this.SnapshotSerializer));
