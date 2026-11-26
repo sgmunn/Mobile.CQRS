@@ -31,28 +31,7 @@ Check("replay accepts wrong aggregate and skipped versions", () => {
     });
     Require(aggregate.Version == 7);
 });
-Check("first remote download does not request projection rebuild", () => {
-    var id = Guid.NewGuid();
-    var local = new MergeStore();
-    var remote = new InMemoryEventStore();
-    remote.SaveEvents(id, new IAggregateEvent[] { new Event { AggregateId = id, Version = 1 } }, 0);
-    var state = new StateRepository();
-    var sync = new SyncAgent(local, remote, state, new Pending(), null);
-    var rebuild = sync.SyncWithRemote<Aggregate>(id);
-    Require(local.GetCurrentVersion(id) == 1 && !rebuild);
-});
-Check("first sync of divergent histories appends duplicate version", () => {
-    var id = Guid.NewGuid();
-    var local = new MergeStore();
-    var remote = new InMemoryEventStore();
-    local.SaveEvents(id, new IAggregateEvent[] { new Event { AggregateId = id, Version = 1 } }, 0);
-    remote.SaveEvents(id, new IAggregateEvent[] { new Event { AggregateId = id, Version = 1 } }, 0);
-    var sync = new SyncAgent(local, remote,
-        new StateRepository(), new Pending(), null);
-    sync.SyncWithRemote<Aggregate>(id);
-    Require(remote.GetAllEvents(id).Select(e => e.Version).SequenceEqual(new[] { 1, 1 }));
-});
-Console.WriteLine($"{6 - failures}/6 defect reproductions confirmed.");
+Console.WriteLine($"{4 - failures}/4 defect reproductions confirmed.");
 return failures == 0 ? 0 : 1;
 
 void Check(string name, Action test) {
@@ -73,17 +52,7 @@ sealed class Event : IAggregateEvent {
 sealed class Aggregate : AggregateRootBase {
     private void Apply(Event evt) { }
 }
-sealed class SyncState : ISyncState {
-    public Guid Identity { get; set; }
-    public int LastSyncedVersion { get; set; }
-    public string AggregateType { get; set; }
-}
-sealed class Pending : IPendingCommandRepository {
-    public void StorePendingCommand(IAggregateCommand command) { }
-    public IList<IAggregateCommand> PendingCommandsForAggregate(Guid id) => new List<IAggregateCommand>();
-    public void RemovePendingCommands(Guid id) { }
-}
-// Adapter exposes the existing in-memory implementation through the merge interface.
+// Adapter exposes the existing in-memory merge method for the lookup reproduction.
 sealed class MergeStore : IMergableEventStore {
     private readonly InMemoryEventStore store = new();
     public void Dispose() => store.Dispose();
@@ -93,12 +62,4 @@ sealed class MergeStore : IMergableEventStore {
     public IList<IAggregateEvent> GetAllEvents(Guid id) => store.GetAllEvents(id);
     public IList<IAggregateEvent> GetEventsAfterVersion(Guid id, int version) => store.GetEventsAfterVersion(id, version);
     public IList<IAggregateEvent> GetEventsUpToVersion(Guid id, int version) => store.GetEventsUpToVersion(id, version);
-}
-sealed class StateRepository : DictionaryRepositoryBase<ISyncState> {
-    protected override ISyncState InternalNew() => new SyncState();
-    protected override SaveResult InternalSave(ISyncState state) {
-        Storage[state.Identity] = state;
-        return SaveResult.Added;
-    }
-    protected override void InternalDelete(ISyncState state) => Storage.Remove(state.Identity);
 }

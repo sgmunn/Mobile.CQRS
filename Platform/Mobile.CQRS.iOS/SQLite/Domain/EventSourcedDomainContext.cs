@@ -88,6 +88,7 @@ namespace Mobile.CQRS.SQLite.Domain
                 {
                     scope.RegisterObject<IPendingCommandRepository>(new PendingCommandRepository(connection, this.CommandSerializer));
                     scope.RegisterObject<IRepository<ISyncState>>(new SyncStateRepository(connection));
+                    scope.RegisterObject<ISyncOperationRepository>(new SyncOperationRepository(connection));
                 }
 
                 if (this.SnapshotSerializer != null)
@@ -154,23 +155,29 @@ namespace Mobile.CQRS.SQLite.Domain
             if (this.BuilderAgent != null) await this.BuilderAgent.StopAsync().ConfigureAwait(false);
         }
 
+        public ISyncRemote AsSyncRemote(string remoteId = null)
+            => new SQLiteSyncRemote(this.BeginUnitOfWork, this.EventSerializer,
+                remoteId ?? "sqlite:" + System.IO.Path.GetFullPath(this.ConnectionString));
+
+        public async System.Threading.Tasks.Task<SyncResult> SyncWithRemoteAsync<T>(ISyncRemote remote, Guid aggregateId,
+            ISyncRebasePolicy policy = null, System.Threading.CancellationToken cancellationToken = default)
+            where T : class, IAggregateRoot, new()
+        {
+            var agent = new SyncAgent(this.BeginUnitOfWork, remote, this.EventSerializer);
+            var result = await agent.SyncWithRemoteAsync<T>(aggregateId, policy, cancellationToken).ConfigureAwait(false);
+            this.BuilderAgent?.NotifyWorkAvailable();
+            return result;
+        }
+
+        // Compatibility for an already durable append-only store. A scoped SQLite
+        // repository cannot acknowledge durability; pass context.AsSyncRemote instead.
         public void SyncSomething<T>(IEventStore remoteEventStore, Guid aggregateId) where T : class, IAggregateRoot, new()
         {
-            var scope = this.BeginUnitOfWork();
-            using (scope)
-            {
-                var syncAgent = new SyncAgent(
-                    scope.GetRegisteredObject<IMergableEventStore>(),
-                    remoteEventStore,
-                    scope.GetRegisteredObject<IRepository<ISyncState>>(),
-                    scope.GetRegisteredObject<IPendingCommandRepository>(),
-                    scope.GetRegisteredObject<ISnapshotRepository>());
-
-                syncAgent.SyncWithRemote<T>(aggregateId);
-
-                scope.Commit();
-            }
-            this.BuilderAgent?.NotifyWorkAvailable();
+            if (remoteEventStore is EventStore)
+                throw new NotSupportedException("Use the remote context's AsSyncRemote endpoint, not an uncommitted SQLite store.");
+            var remote = new EventStoreSyncRemote(remoteEventStore, this.EventSerializer,
+                "legacy:" + System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(remoteEventStore));
+            this.SyncWithRemoteAsync<T>(remote, aggregateId).GetAwaiter().GetResult();
         }
     }
 }

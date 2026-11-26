@@ -17,6 +17,14 @@ also queue first imports regardless of SyncAgent's legacy boolean (part of findi
 4). Sync conflict/retry semantics and snapshot invalidation remain open. The
 original findings below describe the reviewed historical implementation.
 
+The sync update subsequently addresses findings 3-5 with durable frozen operations,
+atomic remote receipts, conservative conflicts and explicit ordered command rebase.
+History replacement invalidates snapshots transactionally, including same-version
+branches and disabled snapshot serializers; unsupported snapshot loaders fall back
+to fresh replay when event history exists. Four unrelated defect reproductions
+remain. The root README describes the current protocol, upgrade constraints and
+remaining transport/serializer responsibilities.
+
 The architecture is worth preserving: aggregates generate events, persistence is
 abstracted, snapshots are optional, and immediate and delayed projections are
 separate concerns. Offline operation is the most distinctive direction to develop.

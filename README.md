@@ -36,7 +36,7 @@ they have not been ported to modern mobile frameworks. CI covers macOS and Linux
 Windows requires a compatible native `sqlite3` library and is not yet verified.
 
 NUnit 3 is retained to migrate the existing assertions with minimal churn. The
-review executable confirms six **remaining defects** outside this update's scope;
+review executable confirms four **remaining defects** outside this update's scope;
 its successful exit is not a correctness claim. See its
 [README](UnitTests/Review.Characterization/README.md).
 
@@ -57,7 +57,7 @@ sharing of an outer transaction is no longer supported.
 
 Event, index, snapshot and configured projection-outbox writes using one
 connection and scope roll back together. In-memory participants are not reversible
-transactions. Sync conflict resolution remains follow-up work.
+transactions. See the sync contract below for canonical versus speculative history.
 
 ## Durable delayed projections
 
@@ -131,3 +131,88 @@ bounded retries, cancellation/restart and explicit rebuilds. They also terminate
 separate .NET test host during an uncommitted projection and after projection
 commit/before acknowledgement, then reopen the files and recover. The explicit
 crash probe is invoked only by those parent tests, not as a standalone normal test.
+
+## Recoverable sync and snapshot invalidation
+
+Use a stable canonical endpoint identity and configure command serialization on
+clients. A SQLite peer can expose its own committed endpoint:
+
+```csharp
+ISyncRemote endpoint = serverContext.AsSyncRemote("orders-canonical-v1");
+SyncResult result = await clientContext.SyncWithRemoteAsync<Order>(endpoint, id,
+    cancellationToken: cancellationToken);
+```
+
+The event serializers on both peers must be compatible and deterministic. Sync
+uses frozen serialized payloads, event IDs and contiguous stream positions;
+changing payload bytes, IDs or serializer format within existing history requires
+an explicit data migration. `ISyncRemote` is a transport boundary; this change
+does not provide a production HTTP server or retrofit the historical HTTP sample.
+
+A client first persists a `SyncOperationRecord` containing the exact outgoing
+batch, operation ID, prepared local history, canonical result and command IDs.
+It sends that request **outside** its SQLite transactions. `SQLiteSyncRemote`
+atomically appends events and stores a `SyncReceipt` fingerprint. Repeating the
+same operation succeeds even after later remote appends; reusing its ID with a
+different request is rejected. Keep receipts: removing them can break recovery
+for clients whose acknowledgement was lost.
+
+After acknowledgement, the client commits history reconciliation, snapshot
+invalidation, projection rebuild intent, sync state, removal of only the prepared
+commands and journal deletion together. A timeout, cancellation or lost response
+leaves the frozen journal and local commands available for retry. Calling sync
+again (including after restart) resends that operation, without regenerating its
+events. Only a definitive expected-version rejection permits replanning; remote
+head races are retried at most three times per call. Remote transport adapters
+must check their durable receipt before checking expected version and must never
+report `ConcurrencyException` for an ambiguous outcome.
+
+History through `LastSyncedVersion` is an immutable acknowledged prefix; the local
+tail remains speculative. Confirmed history is never rebased by sync. First
+contact with two different origins for the same aggregate ID is rejected, and
+remote truncation or rewriting of an acknowledged prefix is rejected. The client
+also persists the endpoint's `RemoteId`; switching endpoints with outstanding or
+acknowledged work is rejected. Do not use one endpoint ID for different stores.
+
+Divergent tails fail with `ConflictException` by default. To opt into replay,
+provide an `ISyncRebasePolicy` that approves the domain's local and remote changes.
+Only then are covered pending commands replayed, in original insertion order,
+against canonical history. Commands must be pure/replayable, with time, randomness
+and external inputs captured in their data. Pairwise event conflict checks alone
+are not a convergence proof. The generated candidate is frozen before sending,
+so an unknown outcome never causes another command replay.
+
+Local edits can continue during a request. Their commands are not acknowledged
+by that operation. If reconciliation changes their base, replaying those later
+commands also requires policy approval. A late conflict leaves the accepted
+operation journal and all local changes intact; retry with an appropriate policy
+after resolving the domain conflict. There is no automatic discard or force-reset
+of speculative data. Run one sync coordinator per local stream; concurrent calls
+or SQLite writers may return concurrency/busy errors and can be retried.
+
+`MergeEvents` on SQLite now requires an active transaction and invalidates the
+aggregate's snapshot in that transaction, even if snapshot serialization is
+currently disabled or the replacement has the same version. Configured stores
+also enqueue a full projection rebuild. Unsupported snapshot types fall back to
+fresh event replay; state-only persistence raises `UnsupportedSnapshotException`
+because it has no event history to recover from. Direct history replacement is a
+low-level operation; application code must not use it to rewrite canonical history.
+
+The old `SyncSomething(IEventStore, id)` wrapper remains for already durable,
+append-only legacy stores. Its compatibility adapter deduplicates by frozen event
+IDs/payloads. It rejects a scoped SQLite repository: use `AsSyncRemote()` so remote
+commit finishes before acknowledgement. Its instance-based legacy identity is
+not a durable network endpoint identity; new integrations should implement
+`ISyncRemote` instead. `SyncAgent` now takes a scope factory, remote and serializer;
+custom client stores need transactional `ISyncOperationRepository`, selective
+pending-command removal, `ISyncState.RemoteId` and snapshot invalidation support.
+
+Existing SQLite schemas gain journal/receipt tables and remote identity metadata
+additively. Back up the event files before upgrading. Legacy sync state is accepted
+only when the claimed acknowledged prefix exactly matches both stores; corruption
+or unknown ancestry is surfaced instead of resetting state or deleting commands.
+The former sync defect reproductions have been replaced by regression tests.
+Tests cover two-client imports, conflicts, ordered rebase, remote races, unknown
+outcomes, concurrent local edits, cancellation, receipt integrity and invalidation
+rollback. Separate test hosts exit before send, after remote acceptance and during
+uncommitted local finalization; reopening the files recovers the same operation.

@@ -34,7 +34,9 @@ namespace Mobile.CQRS.Domain
 
         public virtual void LoadFromSnapshot(ISnapshot snapshot)
         {
-            this.InternalState = snapshot as TState;
+            if (snapshot is not TState state)
+                throw new UnsupportedSnapshotException("Snapshot type is not supported by this aggregate.");
+            this.InternalState = state;
             this.Version = snapshot.Version;
             this.Identity = snapshot.Identity;
         }

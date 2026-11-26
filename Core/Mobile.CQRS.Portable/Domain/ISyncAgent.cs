@@ -24,6 +24,10 @@ namespace Mobile.CQRS.Domain
 
     public interface ISyncAgent
     {
+        System.Threading.Tasks.Task<SyncResult> SyncWithRemoteAsync<T>(Guid aggregateId,
+            ISyncRebasePolicy policy = null, System.Threading.CancellationToken cancellationToken = default)
+            where T : class, IAggregateRoot, new();
+
         bool SyncWithRemote<T>(Guid aggregateId) where T : class, IAggregateRoot, new();
     }
 }

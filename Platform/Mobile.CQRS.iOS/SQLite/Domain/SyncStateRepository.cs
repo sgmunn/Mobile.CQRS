@@ -28,9 +28,11 @@ namespace Mobile.CQRS.SQLite.Domain
     public sealed class SyncStateRepository : IRepository<ISyncState> 
     {
         private readonly SqlRepository<SyncState> repository;
+        private readonly SQLiteConnection connection;
 
         public SyncStateRepository(SQLiteConnection connection)
         {
+            this.connection = connection;
             this.repository = new SqlRepository<SyncState>(connection);
             connection.CreateTable<SyncState>();
         }
@@ -42,7 +44,7 @@ namespace Mobile.CQRS.SQLite.Domain
 
         public ISyncState GetById(Guid id)
         {
-            return this.repository.GetById(id);
+            return this.connection.Find<SyncState>(id);
         }
 
         public IList<ISyncState> GetAll()
