@@ -1,20 +1,13 @@
-# Review characterization checks
+# Archived review reproductions
 
-Run from the repository root with the .NET 10 SDK:
+The original executable deliberately reproduced eight bugs in the historical
+library. It has been retired: all eight scenarios now have desired-behavior NUnit
+regressions in [Transactions](../Mobile.CQRS.UnitTests.iOS/Transactions),
+[Sync](../Mobile.CQRS.UnitTests.iOS/Sync) and
+[Integrity](../Mobile.CQRS.UnitTests.iOS/Integrity). Projection recovery has its own
+integration tests as well.
 
-```sh
-dotnet run --project UnitTests/Review.Characterization
-```
-
-This executable references the .NET 10 core library. All four checks assert
-**remaining observed bugs**, and exit zero when all are reproduced. They are
-review evidence, not correctness tests. When fixing a finding, replace its check
-with a desired-behavior regression test in the NUnit suite. Run this executable
-with `dotnet run`, not `dotnet test`.
-
-The two original transaction reproductions have been replaced by NUnit tests
-under `Mobile.CQRS.UnitTests.iOS/Transactions`, including real SQLite integration.
-The remaining merge adapter exposes the existing in-memory store's merge method
-through `IMergableEventStore`; the production class declares only `IEventStore`.
-The two former sync reproductions are now desired-behavior tests under
-`Mobile.CQRS.UnitTests.iOS/Sync`. No HTTP endpoint is contacted.
+Run `dotnet test Mobile.CQRS.sln -c Release` from the repository root. See the
+[historical review](../../docs/REVIEW.md) for original evidence and the root README
+for the current behavior and upgrade contract. There is no longer an executable
+that succeeds by confirming known bugs.
