@@ -138,7 +138,12 @@ namespace Mobile.CQRS.SQLite.Domain
             {
                 var queue = scope.GetRegisteredObject<IReadModelQueueProducer>()
                     ?? throw new InvalidOperationException("A read-model database is required.");
-                queue.Enqueue(aggregateId, AggregateRootBase.GetAggregateTypeDescriptor<T>(), 0);
+                var type = AggregateRootBase.GetAggregateTypeDescriptor<T>();
+                var stream = scope.GetRegisteredObject<SQLiteConnection>().Table<AggregateEvent>()
+                    .Where(x => x.AggregateId == aggregateId).Take(1).ToList().FirstOrDefault();
+                if (stream != null && stream.AggregateType != type)
+                    throw new InvalidOperationException("The aggregate ID belongs to a different aggregate type.");
+                queue.Enqueue(aggregateId, type, 0);
                 scope.Commit();
             }
             this.BuilderAgent?.Trigger();
@@ -165,7 +170,7 @@ namespace Mobile.CQRS.SQLite.Domain
 
                 scope.Commit();
             }
-            this.BuilderAgent?.Trigger();
+            this.BuilderAgent?.NotifyWorkAvailable();
         }
     }
 }

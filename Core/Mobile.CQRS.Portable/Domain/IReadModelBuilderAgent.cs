@@ -37,5 +37,7 @@ namespace Mobile.CQRS.Domain
         System.Threading.Tasks.Task StopAsync();
          
         void Trigger();
+
+        void NotifyWorkAvailable();
     }
 }

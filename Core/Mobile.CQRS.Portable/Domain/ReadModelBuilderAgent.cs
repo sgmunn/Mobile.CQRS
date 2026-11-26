@@ -39,7 +39,7 @@ public sealed class ReadModelBuilderAgent : IReadModelBuilderAgent
     private SemaphoreSlim wake;
     private IDisposable subscription;
     private Task worker = Task.CompletedTask;
-    private bool started, faulted;
+    private bool started, faulted, retryRequested;
     private Exception fault;
     private IReadModelWorkItem currentWork;
 
@@ -70,9 +70,10 @@ public sealed class ReadModelBuilderAgent : IReadModelBuilderAgent
             wake = new SemaphoreSlim(1, 1); // startup scans durable work without needing an event
             faulted = false;
             fault = null;
+            retryRequested = false;
             started = true;
             subscription = context.EventBus.Subscribe(notification => {
-                if (notification.Event is IReadModelWorkItem || notification.Event is IAggregateEvent) Trigger();
+                if (notification.Event is IReadModelWorkItem || notification.Event is IAggregateEvent) NotifyWorkAvailable();
             });
             var token = cancel.Token;
             var signal = wake;
@@ -102,11 +103,16 @@ public sealed class ReadModelBuilderAgent : IReadModelBuilderAgent
         cancel.Cancel();
     }
 
-    public void Trigger()
+    public void Trigger() => Wake(retry: true);
+
+    public void NotifyWorkAvailable() => Wake(retry: false);
+
+    private void Wake(bool retry)
     {
         lock (lifecycle)
         {
             if (!started) return;
+            retryRequested |= retry;
             if (wake.CurrentCount == 0) wake.Release();
         }
     }
@@ -114,25 +120,32 @@ public sealed class ReadModelBuilderAgent : IReadModelBuilderAgent
     private async Task RunAsync(SemaphoreSlim signal, CancellationToken token)
     {
         var attempts = 0;
+        Guid? failedDelivery = null;
+        long retryAt = 0;
         try
         {
             while (true)
             {
                 // Polling recovers a commit whose in-process notification was lost.
-                var signaled = await signal.WaitAsync(TimeSpan.FromSeconds(1), token).ConfigureAwait(false);
-                if (signaled) attempts = 0;
-                if (IsFaulted && attempts >= 3 && !signaled) continue;
+                await signal.WaitAsync(TimeSpan.FromSeconds(1), token).ConfigureAwait(false);
+                bool retry;
+                lock (lifecycle) { retry = retryRequested; retryRequested = false; }
+                if (retry) { attempts = 0; failedDelivery = null; retryAt = 0; }
+                if (IsFaulted && !retry && (attempts >= 3 || Environment.TickCount64 < retryAt)) continue;
                 token.ThrowIfCancellationRequested();
                 try
                 {
                     lock (lifecycle) { faulted = false; fault = null; }
-                    Drain(token);
+                    Drain(token, () => { attempts = 0; failedDelivery = null; retryAt = 0; });
                     attempts = 0;
                 }
                 catch (OperationCanceledException) when (token.IsCancellationRequested) { throw; }
                 catch (Exception ex)
                 {
-                    attempts++;
+                    var delivery = currentWork?.DeliveryId;
+                    attempts = failedDelivery == delivery ? attempts + 1 : 1;
+                    failedDelivery = delivery;
+                    retryAt = Environment.TickCount64 + 1000;
                     lock (lifecycle) { faulted = true; fault = ex; }
                     var id = currentWork?.Identity ?? Guid.Empty;
                     // Diagnostics are best effort and never control durable delivery.
@@ -145,7 +158,7 @@ public sealed class ReadModelBuilderAgent : IReadModelBuilderAgent
         catch (OperationCanceledException) when (token.IsCancellationRequested) { }
     }
 
-    private void Drain(CancellationToken token)
+    private void Drain(CancellationToken token, Action acknowledged)
     {
         currentWork = null;
         while (true)
@@ -158,12 +171,18 @@ public sealed class ReadModelBuilderAgent : IReadModelBuilderAgent
             {
                 currentWork = item;
                 token.ThrowIfCancellationRequested();
+                IList<IAggregateEvent> events;
+                using (var source = context.BeginUnitOfWork())
+                {
+                    // Pair the intent and history in the same source snapshot. A merge
+                    // may have replaced both since the batch was first peeked.
+                    var current = queueFactory(source).Peek(50).SingleOrDefault(x => x.Identity == item.Identity);
+                    if (current == null || current.DeliveryId != item.DeliveryId) continue;
+                    events = source.GetRegisteredObject<IEventStore>().GetAllEvents(item.Identity);
+                }
                 var registration = registrations.SingleOrDefault(x =>
                     AggregateRootBase.GetAggregateTypeDescriptor(x.AggregateType) == item.AggregateType)
                     ?? throw new InvalidOperationException($"No projection registration for {item.AggregateType} ({item.Identity}).");
-                IList<IAggregateEvent> events;
-                using (var source = context.BeginUnitOfWork())
-                    events = source.GetRegisteredObject<IEventStore>().GetAllEvents(item.Identity);
                 var notifications = new List<IDomainNotification>();
                 using (var target = scopeFactory())
                 {
@@ -181,7 +200,7 @@ public sealed class ReadModelBuilderAgent : IReadModelBuilderAgent
                         var pending = events.Where(x => x.Version > version).ToList();
                         foreach (var evt in pending)
                         {
-                            if (evt.AggregateId != item.Identity || evt.Version != ++version)
+                            if (evt.AggregateId != item.Identity || evt.AggregateType != item.AggregateType || evt.Version != ++version)
                                 throw new InvalidOperationException("Projection history is not contiguous for this aggregate.");
                         }
                         foreach (var builder in registration.DelayedReadModels(target))
@@ -201,6 +220,8 @@ public sealed class ReadModelBuilderAgent : IReadModelBuilderAgent
                     queueFactory(source).Dequeue(item);
                     source.Commit();
                 }
+                currentWork = null;
+                acknowledged();
                 foreach (var notification in notifications) context.EventBus.Publish(notification);
             }
         }

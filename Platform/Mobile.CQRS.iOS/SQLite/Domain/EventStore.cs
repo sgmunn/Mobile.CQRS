@@ -49,6 +49,8 @@ namespace Mobile.CQRS.SQLite.Domain
             connection.CreateTable<AggregateEvent>();
         }
         
+        public bool EnqueuesReadModels => this.outbox != null;
+
         public void SaveEvents(Guid aggregateId, IList<IAggregateEvent> events, int expectedVersion)
         {
             if (events.Count == 0)

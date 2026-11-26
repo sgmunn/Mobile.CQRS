@@ -25,7 +25,10 @@ namespace Mobile.CQRS.Domain
 
     public interface IEventStore : IDisposable
     {
-        // 
+        // Stores opting in own the durable enqueue; generic command execution
+        // still publishes aggregate notifications after commit.
+        bool EnqueuesReadModels => false;
+
         void SaveEvents(Guid aggregateId, IList<IAggregateEvent> events, int expectedVersion);
         //
         int GetCurrentVersion(Guid rootId);

@@ -88,17 +88,20 @@ projection output, not distributed exactly-once side effects. Notification deliv
 is best effort and happens after both commits.
 
 Startup scans durable work, and a one-second poll recovers missed in-process
-notifications. Failed work stays queued. There are three attempts per wakeup, at
-one-second intervals; a persistent fault then pauses the worker. Inspect `IsFaulted`
-and `Fault` or subscribe to `IReadModelBuilderFaulted`, fix the cause, and call
-`Trigger()` to retry. Unknown aggregate registrations fault instead of silently
-losing work or spinning. One faulty item pauses that worker, so monitor its fault
+notifications. Failed work stays queued. Each delivery gets up to three consecutive
+attempts, at least one second apart; a persistent fault then pauses the worker.
+Ordinary commit notifications wake a healthy worker but do not reset this budget
+or resume a paused worker. Inspect `IsFaulted` and `Fault` or subscribe to
+`IReadModelBuilderFaulted`, fix the cause, and call `Trigger()` to explicitly retry.
+`NotifyWorkAvailable()` is a passive wakeup. Unknown aggregate registrations fault
+instead of silently losing work or spinning. One faulty item pauses that worker, so monitor its fault
 state. Run one worker per read-model database. External I/O from projection handlers
 is not covered by the checkpoint transaction.
 
 Request a durable rebuild with `context.RebuildReadModels<MyAggregate>(id)`. It
 transactionally deletes that aggregate's derived rows, replays its history and
-replaces its checkpoint. Every delayed builder in a registration forms **one
+replaces its checkpoint. A request for the wrong stored aggregate type is rejected
+without replacing pending work. Every delayed builder in a registration forms **one
 projection group** with one checkpoint per aggregate. Adding/removing builders or
 changing their schema/logic requires rebuilding the affected aggregates. Register
 the final builder set before starting the worker; recreate the context to change
@@ -117,7 +120,10 @@ Custom adapters must implement `IReadModelWorkItem.DeliveryId` and provide an
 `IReadModelCheckpointStore` in the projection scope with the same commit boundary
 as their output. The worker's `queueFactory` now receives an **event** scope for
 both reading and acknowledgement, while `scopeFactory` creates projection scopes.
-Direct queue enqueue/acknowledgement requires an active transaction.
+Direct queue enqueue/acknowledgement requires an active transaction. Stores that
+atomically enqueue their own work opt into `IEventStore.EnqueuesReadModels`; this
+avoids a second enqueue by generic command execution and preserves post-commit
+aggregate notifications. The default is false for other adapters.
 
 Recovery tests cover failed command commits, partial projection writes, group
 rollback, stale acknowledgements, appends during processing, lost notifications,

@@ -413,12 +413,14 @@ public class ProjectionRecoveryTests
         {
             await third.Task.WaitAsync(TimeSpan.FromSeconds(10));
             Assert.AreNotEqual(fourth.Task, await Task.WhenAny(fourth.Task, Task.Delay(1200)));
+            Append(context, Guid.NewGuid(), 1); // passive command notifications must not resume poison work
+            Assert.AreNotEqual(fourth.Task, await Task.WhenAny(fourth.Task, Task.Delay(1200)));
             agent.Trigger();
             await fourth.Task.WaitAsync(TimeSpan.FromSeconds(10));
         }
         finally { await agent.StopAsync(); }
         Assert.AreEqual(4, failures);
-        Assert.AreEqual(1, OutboxCount());
+        Assert.AreEqual(2, OutboxCount());
     }
 
 
@@ -432,6 +434,114 @@ public class ProjectionRecoveryTests
         using var reader = new SQLiteConnection(eventsPath);
         Assert.AreEqual(0, reader.ExecuteScalar<int>("select count(*) from AggregateEvent"));
         Assert.AreEqual(0, OutboxCount());
+    }
+
+
+    [Test]
+    public async Task EachDeliveryGetsItsOwnConsecutiveRetryBudget()
+    {
+        var attempts = new Dictionary<Guid, int>();
+        var context = Context(evt => {
+            attempts.TryGetValue(evt.AggregateId, out var count);
+            attempts[evt.AggregateId] = count + 1;
+            if (count == 0) throw new InvalidOperationException("first attempt fails");
+        });
+        foreach (var id in new[] { Guid.Parse("00000000-0000-0000-0000-000000000001"),
+            Guid.Parse("00000000-0000-0000-0000-000000000002"), Guid.Parse("00000000-0000-0000-0000-000000000003") })
+            Append(context, id, 2);
+        await Run(context, acknowledgements: 3);
+        Assert.AreEqual(3, ModelCount());
+        Assert.IsTrue(attempts.Values.All(x => x == 2));
+        Assert.AreEqual(0, OutboxCount());
+    }
+
+    [Test]
+    public async Task SupersededIntentCannotProjectReplacementHistoryIncrementally()
+    {
+        var id = Guid.NewGuid();
+        var context = Context();
+        Append(context, id, 2);
+        await Run(context);
+        Append(context, id, 3);
+        var source = new InterceptingContext(context, () => {
+            using var scope = context.BeginUnitOfWork();
+            ((IMergableEventStore)scope.GetRegisteredObject<IEventStore>()).MergeEvents(id,
+                new IAggregateEvent[] {
+                    new TestEvent1 { AggregateId = id, AggregateType = AggregateRootBase.GetAggregateTypeDescriptor<TestAggregateRoot>(), Version = 1, Value2 = 20 },
+                    new TestEvent1 { AggregateId = id, AggregateType = AggregateRootBase.GetAggregateTypeDescriptor<TestAggregateRoot>(), Version = 2, Value2 = 30 },
+                }, 2, 0);
+            scope.Commit();
+        });
+        var totals = new List<int>();
+        using var notifications = context.EventBus.Subscribe(evt => {
+            if (evt.Event is IModelChangeEvent) totals.Add(Row(id).Total);
+        });
+        var ack = Signal();
+        var agent = new ReadModelBuilderAgent(source, context.Registrations.ToList(), context.BeginReadModelUnitOfWork,
+            scope => new ObservedQueue(new ReadModelBuilderQueue(scope), _ => ack.TrySetResult(true), null));
+        agent.Start();
+        try { await ack.Task.WaitAsync(TimeSpan.FromSeconds(10)); }
+        finally { await agent.StopAsync(); }
+        Assert.IsFalse(agent.IsFaulted, agent.Fault?.ToString());
+        Assert.AreEqual(50, Row(id).Total);
+        Assert.IsTrue(totals.All(x => x == 50), "No mixed-history projection may be committed or published.");
+    }
+
+    [Test]
+    public async Task WrongRebuildTypeCannotReplaceLegitimatePendingWork()
+    {
+        var context = Context();
+        context.Register(AggregateRegistration.ForType<OtherAggregate>());
+        var id = Guid.NewGuid();
+        Append(context, id, 2);
+        await Run(context);
+        Append(context, id, 3);
+        Guid delivery;
+        using (var scope = context.BeginUnitOfWork()) delivery = new ReadModelBuilderQueue(scope).Peek(1).Single().DeliveryId;
+        Assert.Throws<InvalidOperationException>(() => context.RebuildReadModels<OtherAggregate>(id));
+        using (var scope = context.BeginUnitOfWork())
+            Assert.AreEqual(delivery, new ReadModelBuilderQueue(scope).Peek(1).Single().DeliveryId);
+        await Run(context);
+        Assert.AreEqual(5, Row(id).Total);
+    }
+
+    private sealed class OtherAggregate : TestAggregateRoot { }
+
+    private sealed class InterceptingContext : DomainContextBase
+    {
+        private readonly EventSourcedDomainContext inner;
+        private readonly Action beforeHistory;
+        private int scopes;
+        public InterceptingContext(EventSourcedDomainContext inner, Action beforeHistory) : base(inner.EventBus)
+            { this.inner = inner; this.beforeHistory = beforeHistory; }
+        public override IUnitOfWorkScope BeginUnitOfWork()
+        {
+            if (++scopes == 2) beforeHistory();
+            return inner.BeginUnitOfWork();
+        }
+    }
+
+
+    [Test]
+    public void SqlCommandEnqueuesOnceAndPublishesItsWakeupAfterCommit()
+    {
+        var context = Context();
+        using (var setup = context.BeginUnitOfWork()) setup.Commit();
+        using (var connection = new SQLiteConnection(eventsPath))
+        {
+            connection.Execute("create table IntentUpdates (N integer)");
+            connection.Execute("create trigger TrackIntentUpdates after update on ReadModelWorkItem begin insert into IntentUpdates values (1); end");
+        }
+        var notified = false;
+        using var subscription = context.EventBus.Subscribe(notification => {
+            if (notification.Event is not IAggregateEvent) return;
+            Assert.AreEqual(1, OutboxCount());
+            notified = true;
+        });
+        Append(context, Guid.NewGuid(), 2);
+        using var reader = new SQLiteConnection(eventsPath);
+        Assert.AreEqual(0, reader.ExecuteScalar<int>("select count(*) from IntentUpdates"));
+        Assert.IsTrue(notified);
     }
 
     private EventSourcedDomainContext Context(Action<TestEvent1> onApply = null)
