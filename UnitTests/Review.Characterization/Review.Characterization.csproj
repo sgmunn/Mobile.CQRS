@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../Core/Mobile.CQRS.Portable/**/*.cs" Exclude="../../Core/Mobile.CQRS.Portable/**/obj/**;../../Core/Mobile.CQRS.Portable/**/bin/**;../../Core/Mobile.CQRS.Portable/Properties/AssemblyInfo.cs" />
+    <Compile Include="../../Platform/Mobile.CQRS.iOS/SQLite/SqlUnitOfWorkScope.cs" />
+    <Compile Include="Program.cs" />
+  </ItemGroup>
+</Project>
