@@ -18,122 +18,88 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace Mobile.CQRS.Domain
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text.Json;
+using Mobile.CQRS.Serialization;
+
+namespace Mobile.CQRS.Domain;
+
+public sealed class InMemoryEventStore : IMergableEventStore
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Linq;
-    
-    public sealed class InMemoryEventStore : IEventStore
+    private sealed record StoredEvent(Guid Identity, Guid AggregateId, string AggregateType, int Version, Type RuntimeType, string Data);
+    private readonly Dictionary<Guid, List<StoredEvent>> storage = new();
+    private readonly ISerializer<IAggregateEvent> serializer;
+    private static readonly JsonSerializerOptions JsonOptions = new() { IncludeFields = true };
+
+    // Default JSON supports public properties/fields of concrete event types.
+    // Supply the same serializer as SQLite for custom or polymorphic payloads.
+    public InMemoryEventStore(ISerializer<IAggregateEvent> serializer = null) { this.serializer = serializer; }
+    public void Dispose() { }
+
+    public void SaveEvents(Guid aggregateId, IList<IAggregateEvent> events, int expectedVersion)
     {
-        private readonly Dictionary<Guid, List<IAggregateEvent>> storage;
-
-        public InMemoryEventStore()
+        lock (storage)
         {
-            this.storage = new Dictionary<Guid, List<IAggregateEvent>>();    
+            var existing = Rows(aggregateId);
+            var type = existing.FirstOrDefault()?.AggregateType ?? events?.FirstOrDefault()?.AggregateType;
+            CheckVersion(aggregateId, expectedVersion, existing.Count);
+            EventIntegrity.ValidateBatch(aggregateId, type, events, expectedVersion);
+            var frozen = events.Select(Freeze).ToList();
+            RejectDuplicateIds(frozen, storage.Values.SelectMany(x => x));
+            storage[aggregateId] = existing.Concat(frozen).ToList();
         }
+    }
 
-        public void Dispose()
+    public void MergeEvents(Guid aggregateId, IList<IAggregateEvent> events, int expectedVersion, int afterVersion)
+    {
+        lock (storage)
         {
+            var existing = Rows(aggregateId);
+            CheckVersion(aggregateId, expectedVersion, existing.Count);
+            if (afterVersion < 0 || afterVersion > existing.Count) throw new ArgumentOutOfRangeException(nameof(afterVersion));
+            var type = existing.FirstOrDefault()?.AggregateType ?? events?.FirstOrDefault()?.AggregateType;
+            EventIntegrity.ValidateBatch(aggregateId, type, events, afterVersion);
+            var frozen = events.Select(Freeze).ToList();
+            var retained = storage.Where(x => x.Key != aggregateId).SelectMany(x => x.Value).Concat(existing.Take(afterVersion));
+            RejectDuplicateIds(frozen, retained);
+            storage[aggregateId] = existing.Take(afterVersion).Concat(frozen).ToList();
         }
+    }
 
-        public void SaveEvents(Guid aggregateId, IList<IAggregateEvent> events, int expectedVersion)
-        {
-            lock(this.storage)
-            {
-                var currentVersion = this.GetCurrentVersion(aggregateId);
-                if (currentVersion != expectedVersion)
-                {
-                    throw new ConcurrencyException(aggregateId, expectedVersion, currentVersion);
-                }
+    public int GetCurrentVersion(Guid id) { lock (storage) return Rows(id).Count; }
+    public IList<IAggregateEvent> GetAllEvents(Guid id) { lock (storage) return Rows(id).Select(Read).ToList(); }
+    public IList<IAggregateEvent> GetEventsAfterVersion(Guid id, int version)
+        => GetAllEvents(id).Where(x => x.Version > version).ToList();
+    public IList<IAggregateEvent> GetEventsUpToVersion(Guid id, int version)
+        => GetAllEvents(id).Where(x => x.Version <= version).ToList();
 
-                var savedEvents = this.GetEvents(aggregateId);
-                savedEvents.AddRange(events);
-                this.storage[aggregateId] = savedEvents;
-            }
-        }
-
-        public void MergeEvents(Guid aggregateId, IList<IAggregateEvent> events, int expectedVersion, int afterVersion)
-        {
-            lock(this.storage)
-            {
-                var currentVersion = this.GetCurrentVersion(aggregateId);
-                if (currentVersion != expectedVersion)
-                {
-                    throw new ConcurrencyException(aggregateId, expectedVersion, currentVersion);
-                }
-
-                var savedEvents = this.GetEvents(aggregateId);
-                // TODO: Test this
-                // list is zero based
-                // 0 1 2 3 4 5 6 7 8
-                // 1 2 3 4 5 6 7 8 9
-                savedEvents.RemoveRange(afterVersion, currentVersion - afterVersion);
-
-                savedEvents.AddRange(events);
-                this.storage[aggregateId] = savedEvents;
-            }
-        }
-        
-        public int GetCurrentVersion(Guid rootId)
-        {
-            List<IAggregateEvent> savedEvents;
-            lock(this.storage)
-            {
-                savedEvents = this.GetEvents(rootId);
-            }
-
-            if (savedEvents.Count == 0)
-            {
-                return 0;
-            }
-
-            return savedEvents[savedEvents.Count - 1].Version;
-        }
-
-        public IList<IAggregateEvent> GetAllEvents(Guid rootId)
-        {
-            List<IAggregateEvent> savedEvents;
-            lock(this.storage)
-            {
-                savedEvents = this.GetEvents(rootId);
-            }
-
-            return savedEvents;
-        }
-
-        public IList<IAggregateEvent> GetEventsAfterVersion(Guid rootId, int version)
-        {
-            List<IAggregateEvent> savedEvents;
-            lock(this.storage)
-            {
-                savedEvents = this.GetEvents(rootId);
-            }
-
-            return savedEvents.Where(x => x.Version > version).ToList();
-        }
-        
-        public IList<IAggregateEvent> GetEventsUpToVersion(Guid rootId, int version)
-        {
-            List<IAggregateEvent> savedEvents;
-            lock(this.storage)
-            {
-                savedEvents = this.GetEvents(rootId);
-            }
-
-            return savedEvents.Where(x => x.Version <= version).ToList();
-        }
-
-        private List<IAggregateEvent> GetEvents(Guid rootId)
-        {
-            List<IAggregateEvent> result;
-            if (this.storage.TryGetValue(rootId, out result))
-            {
-                // return a new copy
-                return result.ToList();
-            }
-
-            return new List<IAggregateEvent>();
-        }
+    private List<StoredEvent> Rows(Guid id) => storage.TryGetValue(id, out var rows) ? rows : new List<StoredEvent>();
+    private StoredEvent Freeze(IAggregateEvent evt)
+    {
+        var row = new StoredEvent(evt.Identity, evt.AggregateId, evt.AggregateType, evt.Version, evt.GetType(),
+            serializer == null ? JsonSerializer.Serialize(evt, evt.GetType(), JsonOptions) : serializer.SerializeToString(evt));
+        Read(row); // reject serializers that discard envelope metadata before storing anything
+        return row;
+    }
+    private IAggregateEvent Read(StoredEvent row)
+    {
+        var evt = serializer == null ? (IAggregateEvent)JsonSerializer.Deserialize(row.Data, row.RuntimeType, JsonOptions)
+            : serializer.DeserializeFromString(row.Data);
+        if (evt == null || evt.Identity != row.Identity || evt.AggregateId != row.AggregateId
+            || evt.AggregateType != row.AggregateType || evt.Version != row.Version)
+            throw new InvalidOperationException("Serialized event metadata does not match its envelope.");
+        return evt;
+    }
+    private static void CheckVersion(Guid id, int expected, int actual)
+    {
+        if (expected < 0) throw new ArgumentOutOfRangeException(nameof(expected));
+        if (expected != actual) throw new ConcurrencyException(id, expected, actual);
+    }
+    private static void RejectDuplicateIds(IEnumerable<StoredEvent> incoming, IEnumerable<StoredEvent> retained)
+    {
+        var ids = retained.Select(x => x.Identity).ToHashSet();
+        if (incoming.Any(x => !ids.Add(x.Identity))) throw new InvalidOperationException("Event identity already exists.");
     }
 }

@@ -3,9 +3,8 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
-    <IsPackable>false</IsPackable>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="../../Core/Mobile.CQRS.Portable/Mobile.CQRS.Portable.csproj" />
+    <ProjectReference Include="../../Platform/Mobile.CQRS.iOS/Mobile.CQRS.iOS.csproj" />
   </ItemGroup>
 </Project>

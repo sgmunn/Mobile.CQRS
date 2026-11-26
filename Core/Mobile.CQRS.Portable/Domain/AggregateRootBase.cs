@@ -28,6 +28,7 @@ namespace Mobile.CQRS.Domain
     public abstract class AggregateRootBase : IAggregateRoot, IEventSourced
     {
         private readonly List<IAggregateEvent> uncommittedEvents;
+        private readonly HashSet<Guid> appliedEventIds = new HashSet<Guid>();
 
         public static string GetAggregateTypeDescriptor<T>() 
         {
@@ -58,7 +59,7 @@ namespace Mobile.CQRS.Domain
         {
             get
             {
-                return this.uncommittedEvents;
+                return this.uncommittedEvents.AsReadOnly();
             }
         }
 
@@ -74,10 +75,16 @@ namespace Mobile.CQRS.Domain
 
         protected void ApplyEvents(IList<IAggregateEvent> events)
         {
+            if (this.uncommittedEvents.Count != 0)
+                throw new InvalidOperationException("Cannot replay history over uncommitted events.");
+            EventIntegrity.ValidateBatch(this.Identity, GetAggregateTypeDescriptor(this.GetType()), events, this.Version);
+            if (events.Any(evt => this.appliedEventIds.Contains(evt.Identity)))
+                throw new InvalidOperationException("An event identity has already been applied.");
             foreach (var evt in events)
             {
                 this.ApplyEvent(evt);
                 this.Version = evt.Version;
+                this.appliedEventIds.Add(evt.Identity);
             }
         }
 
@@ -88,16 +95,20 @@ namespace Mobile.CQRS.Domain
                 throw new ArgumentNullException("commandId", "Cannot raise an event without specifying the command id");
             }
 
-            this.Version++;
+            if (this.Identity == Guid.Empty) throw new InvalidOperationException("Set the aggregate identity before raising events.");
+            ArgumentNullException.ThrowIfNull(evt);
+            var nextVersion = checked(this.Version + 1);
 
             evt.Identity = Guid.NewGuid();
             evt.AggregateId = this.Identity;
             evt.AggregateType = GetAggregateTypeDescriptor(this.GetType());
-            evt.Version = this.Version;
+            evt.Version = nextVersion;
             evt.Timestamp = DateTime.UtcNow;
             evt.CommandId = commandId;
 
             this.ApplyEvent(evt);
+            this.Version = nextVersion;
+            this.appliedEventIds.Add(evt.Identity);
             this.uncommittedEvents.Add(evt);
         }
 

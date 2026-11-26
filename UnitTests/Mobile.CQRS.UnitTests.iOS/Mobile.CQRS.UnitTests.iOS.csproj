@@ -10,5 +10,7 @@
     <PackageReference Include="NUnit3TestAdapter" Version="5.2.0" PrivateAssets="all" />
     <ProjectReference Include="../../Core/Mobile.CQRS.Portable/Mobile.CQRS.Portable.csproj" />
     <ProjectReference Include="../../Platform/Mobile.CQRS.iOS/Mobile.CQRS.iOS.csproj" />
+    <ProjectReference Include="../../Samples/OfflineSync/OfflineSync.csproj" />
+    <None Include="../../Contracts/v1/*.json" Link="Contracts/v1/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

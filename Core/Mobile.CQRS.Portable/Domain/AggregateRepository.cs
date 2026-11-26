@@ -88,6 +88,12 @@ namespace Mobile.CQRS.Domain
         public IAggregateRoot GetById(Guid id)
         {
             var snapshot = this.GetSnapshot(id);
+            if (snapshot != null && (snapshot.Identity != id || snapshot.Version < 0
+                || (this.eventStore != null && snapshot.Version > this.eventStore.GetCurrentVersion(id))))
+            {
+                if (this.eventStore == null) throw new UnsupportedSnapshotException("Invalid authoritative snapshot metadata.");
+                snapshot = null;
+            }
             var version = snapshot != null ? snapshot.Version : 0;
             var eventsAfterSnapshot = this.GetEventsAfterVersion(id, version);
 
@@ -130,8 +136,8 @@ namespace Mobile.CQRS.Domain
             ////this.EnsureConcurrency(instance.Identity, expectedVersion);
             var newVersion = instance.UncommittedEvents.Last().Version;
 
-            var snapshotChange = this.SaveSnapshot(instance, expectedVersion);
             this.SaveEvents(instance, expectedVersion);
+            var snapshotChange = this.SaveSnapshot(instance, expectedVersion);
 
             this.PublishEvents(instance, snapshotChange);
             instance.Commit();

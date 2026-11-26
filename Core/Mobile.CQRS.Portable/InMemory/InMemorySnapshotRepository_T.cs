@@ -27,9 +27,19 @@ namespace Mobile.CQRS.Domain
     public class InMemorySnapshotRepository<T> : DictionaryRepositoryBase<T>, ISnapshotRepository
         where T : class, ISnapshot, new() 
     {
-        public InMemorySnapshotRepository()
+        private readonly Mobile.CQRS.Serialization.ISerializer<T> serializer;
+        private static readonly System.Text.Json.JsonSerializerOptions JsonOptions = new() { IncludeFields = true };
+
+        public InMemorySnapshotRepository(Mobile.CQRS.Serialization.ISerializer<T> serializer = null)
         {
+            this.serializer = serializer;
         }
+
+        protected override T CopyForRead(T value) => this.Clone(value);
+
+        private T Clone(T value) => this.serializer == null
+            ? System.Text.Json.JsonSerializer.Deserialize<T>(System.Text.Json.JsonSerializer.Serialize(value, JsonOptions), JsonOptions)
+            : this.serializer.DeserializeFromString(this.serializer.SerializeToString(value));
 
         public void Invalidate(Guid id)
         {
@@ -42,9 +52,9 @@ namespace Mobile.CQRS.Domain
             {
                 // get the current version 
                 var current = this.GetById(instance.Identity);
-                if (current != null && current.Version != expectedVersion)
+                if ((current?.Version ?? 0) != expectedVersion)
                 {
-                    throw new ConcurrencyException(instance.Identity, expectedVersion, current.Version);
+                    throw new ConcurrencyException(instance.Identity, expectedVersion, current?.Version ?? 0);
                 }
 
                 return this.Save(instance);
@@ -62,11 +72,11 @@ namespace Mobile.CQRS.Domain
             {
                 if (this.Storage.ContainsKey(snapshot.Identity))
                 {
-                    this.Storage[snapshot.Identity] = snapshot;
+                    this.Storage[snapshot.Identity] = this.Clone(snapshot);
                     return SaveResult.Updated;
                 }
 
-                this.Storage[snapshot.Identity] = snapshot;
+                this.Storage[snapshot.Identity] = this.Clone(snapshot);
                 return SaveResult.Added;
             }
         }
