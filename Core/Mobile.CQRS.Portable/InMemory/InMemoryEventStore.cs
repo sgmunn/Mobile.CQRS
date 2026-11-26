@@ -35,7 +35,8 @@ public sealed class InMemoryEventStore : IMergableEventStore
 
     // Default JSON supports public properties/fields of concrete event types.
     // Supply the same serializer as SQLite for custom or polymorphic payloads.
-    public InMemoryEventStore(ISerializer<IAggregateEvent> serializer = null) { this.serializer = serializer; }
+    public InMemoryEventStore() : this(null) { }
+    public InMemoryEventStore(ISerializer<IAggregateEvent> serializer) { this.serializer = serializer; }
     public void Dispose() { }
 
     public void SaveEvents(Guid aggregateId, IList<IAggregateEvent> events, int expectedVersion)

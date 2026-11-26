@@ -38,8 +38,11 @@ namespace Mobile.CQRS.SQLite.Domain
         public EventStore(SQLiteConnection connection, ISerializer<IAggregateEvent> serializer)
             : this(connection, serializer, null) { }
 
+        public EventStore(SQLiteConnection connection, ISerializer<IAggregateEvent> serializer, IReadModelQueueProducer outbox)
+            : this(connection, serializer, outbox, false) { }
+
         public EventStore(SQLiteConnection connection, ISerializer<IAggregateEvent> serializer, IReadModelQueueProducer outbox,
-            bool requiresTransaction = false) : base(connection)
+            bool requiresTransaction) : base(connection)
         {
             if (serializer == null)
                 throw new ArgumentNullException("serializer");

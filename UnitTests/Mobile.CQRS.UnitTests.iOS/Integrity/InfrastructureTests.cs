@@ -10,6 +10,18 @@ namespace Mobile.CQRS.UnitTests.Integrity;
 public class InfrastructureTests
 {
     [Test]
+    public void OriginalStoreConstructorSignaturesRemainAvailableToExistingBinaries()
+    {
+        Assert.IsNotNull(typeof(InMemoryEventStore).GetConstructor(Type.EmptyTypes));
+        Assert.IsNotNull(typeof(InMemorySnapshotRepository<Mobile.CQRS.Domain.UnitTests.TestSnapshot>).GetConstructor(Type.EmptyTypes));
+        Assert.IsNotNull(typeof(Mobile.CQRS.SQLite.Domain.EventStore).GetConstructor(new[] {
+            typeof(Mobile.CQRS.SQLite.SQLiteConnection),
+            typeof(Mobile.CQRS.Serialization.ISerializer<IAggregateEvent>),
+            typeof(IReadModelQueueProducer),
+        }));
+    }
+
+    [Test]
     public void RemovingOneCacheEntryPreservesUnrelatedEntries()
     {
         var cache = new ConcurrentCache<int, string>();

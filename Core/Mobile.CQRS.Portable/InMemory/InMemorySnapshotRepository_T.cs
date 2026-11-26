@@ -30,7 +30,9 @@ namespace Mobile.CQRS.Domain
         private readonly Mobile.CQRS.Serialization.ISerializer<T> serializer;
         private static readonly System.Text.Json.JsonSerializerOptions JsonOptions = new() { IncludeFields = true };
 
-        public InMemorySnapshotRepository(Mobile.CQRS.Serialization.ISerializer<T> serializer = null)
+        public InMemorySnapshotRepository() : this(null) { }
+
+        public InMemorySnapshotRepository(Mobile.CQRS.Serialization.ISerializer<T> serializer)
         {
             this.serializer = serializer;
         }
