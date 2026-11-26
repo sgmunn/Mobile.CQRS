@@ -57,10 +57,16 @@ namespace Mobile.CQRS.SQLite.Domain
         {
              var commands = this.Connection.Table<PendingCommand>()
                     .Where(x => x.AggregateId == id)
-                        .OrderByDescending(x => x.Key)
+                        .OrderBy(x => x.Key)
                         .ToList();
 
             return commands.Select(cmd => this.serializer.DeserializeFromString(cmd.CommandData)).ToList();
+        }
+
+        public void RemovePendingCommands(Guid id, IList<Guid> commandIds)
+        {
+            foreach (var commandId in commandIds)
+                this.Connection.Execute("delete from PendingCommand where AggregateId = ? and CommandId = ?", id, commandId);
         }
 
         public void RemovePendingCommands(Guid id)

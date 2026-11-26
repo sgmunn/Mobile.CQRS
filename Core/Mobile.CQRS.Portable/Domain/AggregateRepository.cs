@@ -104,7 +104,11 @@ namespace Mobile.CQRS.Domain
                 // we failed to load
                 if (snapshot != null)
                 {
-                    // a little bit inefficient, but we have to go back and get all the events
+                    if (this.eventStore == null)
+                        throw new UnsupportedSnapshotException("Cannot recover an unsupported authoritative snapshot without event history.");
+                    // A rejecting loader may have partially mutated its instance.
+                    result = this.New();
+                    result.Identity = id;
                     eventsAfterSnapshot = this.eventStore.GetAllEvents(id);
                 }
             }

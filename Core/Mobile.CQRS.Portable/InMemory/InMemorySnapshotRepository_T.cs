@@ -31,6 +31,11 @@ namespace Mobile.CQRS.Domain
         {
         }
 
+        public void Invalidate(Guid id)
+        {
+            lock (this.Storage) this.Storage.Remove(id);
+        }
+
         public SaveResult Save(ISnapshot instance, int expectedVersion)
         {
             lock (this.Storage)

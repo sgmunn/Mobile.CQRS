@@ -40,6 +40,8 @@ namespace Mobile.CQRS.SQLite.Domain
             connection.CreateTable<AggregateSnapshot>();
         }
         
+        public void Invalidate(Guid id) => this.DeleteId(id);
+
         public SaveResult Save(ISnapshot instance)
         {
             var snapshot = new AggregateSnapshot {

@@ -47,6 +47,7 @@ namespace Mobile.CQRS.SQLite.Domain
             this.index = new AggregateIndexRepository(connection);
 
             connection.CreateTable<AggregateEvent>();
+            connection.CreateTable<AggregateSnapshot>();
         }
         
         public bool EnqueuesReadModels => this.outbox != null;
@@ -79,25 +80,29 @@ namespace Mobile.CQRS.SQLite.Domain
 
         public void MergeEvents(Guid aggregateId, IList<IAggregateEvent> events, int expectedVersion, int fromVersion)
         {
-            this.RequireOutboxTransaction();
-            var serializedEvents = events.Select(evt => new AggregateEvent{
-                AggregateId = aggregateId, 
-                Identity = evt.Identity,
-                Version = evt.Version,
-                AggregateType = evt.AggregateType,
-                EventData = this.serializer.SerializeToString(evt),
-            }).ToList();
-
-            var newVersion = events[events.Count - 1].Version;
-            this.index.UpdateIndex(aggregateId, expectedVersion, newVersion);
-
-            this.Connection.Execute(string.Format("delete from AggregateEvent where AggregateId = ? and Version > {0}", fromVersion), aggregateId);
-
-            foreach (var evt in serializedEvents)
-            {
-                this.Connection.Insert(evt);
-            }
-            this.outbox?.Enqueue(aggregateId, events[0].AggregateType, 0);
+            if (!this.Connection.IsInTransaction)
+                throw new InvalidOperationException("History replacement and snapshot invalidation require a transaction.");
+            var current = this.GetCurrentVersion(aggregateId);
+            if (current != expectedVersion) throw new ConcurrencyException(aggregateId, expectedVersion, current);
+            if (fromVersion < 0 || fromVersion > current) throw new ArgumentOutOfRangeException(nameof(fromVersion));
+            var type = events.FirstOrDefault()?.AggregateType
+                ?? this.Connection.Table<AggregateEvent>().Where(x => x.AggregateId == aggregateId).Take(1).ToList().FirstOrDefault()?.AggregateType;
+            // Validate before changing the index or deleting history.
+            var envelopes = SyncProtocol.Encode(events, this.serializer);
+            if (events.Count > 0) SyncProtocol.Decode(aggregateId, type, envelopes, fromVersion, this.serializer);
+            var newVersion = fromVersion + events.Count;
+            if (newVersion == 0)
+                this.Connection.Execute("delete from AggregateIndex where Identity = ?", aggregateId);
+            else this.index.UpdateIndex(aggregateId, expectedVersion, newVersion);
+            this.Connection.Execute("delete from AggregateEvent where AggregateId = ? and Version > ?", aggregateId, fromVersion);
+            foreach (var evt in events)
+                this.Connection.Insert(new AggregateEvent {
+                    AggregateId = aggregateId, Identity = evt.Identity, Version = evt.Version,
+                    AggregateType = evt.AggregateType, EventData = this.serializer.SerializeToString(evt),
+                });
+            // A same-version snapshot can still belong to the discarded branch.
+            this.Connection.Execute("delete from AggregateSnapshot where Identity = ?", aggregateId);
+            if (type != null) this.outbox?.Enqueue(aggregateId, type, 0);
         }
 
         private void RequireOutboxTransaction()

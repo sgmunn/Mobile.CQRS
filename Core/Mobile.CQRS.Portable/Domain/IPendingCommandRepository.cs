@@ -28,5 +28,6 @@ namespace Mobile.CQRS.Domain
         void StorePendingCommand(IAggregateCommand command);
         IList<IAggregateCommand> PendingCommandsForAggregate(Guid id);
         void RemovePendingCommands(Guid id);
+        void RemovePendingCommands(Guid id, IList<Guid> commandIds);
     }
 }

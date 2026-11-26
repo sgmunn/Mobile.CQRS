@@ -31,6 +31,8 @@ namespace Mobile.CQRS.SQLite.Domain
         [Indexed]
         public string AggregateType { get; set; }
 
+        public string RemoteId { get; set; }
+
         public int LastSyncedVersion { get; set; }
     }
 }
