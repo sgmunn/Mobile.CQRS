@@ -95,6 +95,8 @@ public sealed class EventStoreSyncRemote : ISyncRemote
         if (batch.OperationId == Guid.Empty) throw new InvalidOperationException("A sync operation ID is required.");
         var events = SyncProtocol.Decode(batch.AggregateId, batch.AggregateType, batch.Events, batch.ExpectedVersion, serializer);
         var remote = await ReadAsync(batch.AggregateId, cancellationToken).ConfigureAwait(false);
+        if (remote.Events.Length > 0 && remote.AggregateType != batch.AggregateType)
+            throw new ConflictException("The aggregate ID belongs to a different aggregate type.");
         // Frozen event IDs/payloads are a durable deduplication key for legacy
         // append-only stores, including a response lost after the original append.
         if (remote.Events.Length >= batch.ExpectedVersion + events.Length

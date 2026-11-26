@@ -52,6 +52,10 @@ public sealed class SQLiteSyncRemote : ISyncRemote
         var version = store.GetCurrentVersion(batch.AggregateId);
         if (version != batch.ExpectedVersion)
             throw new ConcurrencyException(batch.AggregateId, batch.ExpectedVersion, version);
+        var stream = connection.Table<AggregateEvent>().Where(x => x.AggregateId == batch.AggregateId)
+            .OrderBy(x => x.Version).Take(1).ToList().FirstOrDefault();
+        if (stream != null && stream.AggregateType != batch.AggregateType)
+            throw new ConflictException("The aggregate ID belongs to a different aggregate type.");
         store.SaveEvents(batch.AggregateId, events, version);
         connection.Insert(new SyncReceipt { Identity = batch.OperationId, Fingerprint = fingerprint });
         cancellationToken.ThrowIfCancellationRequested();

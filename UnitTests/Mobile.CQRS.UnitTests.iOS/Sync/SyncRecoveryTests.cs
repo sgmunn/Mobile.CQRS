@@ -547,6 +547,37 @@ public class SyncRecoveryTests
         public Task AppendAsync(SyncBatch batch, CancellationToken cancellationToken = default) => throw new Exception("Invalid history must not be appended.");
     }
 
+
+    [TestCase(false)]
+    [TestCase(true)]
+    public async Task RemoteCannotChangeTheTypeOfAnExistingStream(bool legacy)
+    {
+        var server = Context(remotePath);
+        var endpoint = server.AsSyncRemote();
+        var id = Guid.NewGuid();
+        var first = Event(id, 1, 1);
+        var seed = new SyncBatch(Guid.NewGuid(), id, first.AggregateType, 0,
+            SyncProtocol.Encode(new[] { first }, TestEventSerializer.Instance));
+        await endpoint.AppendAsync(seed);
+        var before = History(server, id);
+        var receiptCount = Receipts();
+        var other = Event(id, 2, 99);
+        other.AggregateType = "another-aggregate-type";
+        var batch = new SyncBatch(Guid.NewGuid(), id, other.AggregateType, 1,
+            SyncProtocol.Encode(new[] { other }, TestEventSerializer.Instance));
+        if (legacy)
+        {
+            var store = new InMemoryEventStore();
+            store.SaveEvents(id, new[] { first }, 0);
+            var adapter = new EventStoreSyncRemote(store, TestEventSerializer.Instance, "legacy-type-check");
+            Assert.ThrowsAsync<ConflictException>(() => adapter.AppendAsync(batch));
+            CollectionAssert.AreEqual(before, SyncProtocol.Encode(store.GetAllEvents(id), TestEventSerializer.Instance));
+        }
+        else Assert.ThrowsAsync<ConflictException>(() => endpoint.AppendAsync(batch));
+        CollectionAssert.AreEqual(before, History(server, id));
+        Assert.AreEqual(receiptCount, Receipts());
+    }
+
     private static SyncEvent[] History(EventSourcedDomainContext context, Guid id)
     {
         using var scope = context.BeginUnitOfWork();
