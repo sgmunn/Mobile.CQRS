@@ -110,6 +110,26 @@ public class StoreIntegrityTests
     }
 
     [Test]
+    public void ScopedStoreCannotAutoCommitAfterItsTransactionHasFailed()
+    {
+        if (!sqlite) return;
+        var context = new EventSourcedDomainContext(path, TestEventSerializer.Instance);
+        using var scope = context.BeginUnitOfWork();
+        var scopedStore = scope.GetRegisteredObject<IEventStore>();
+        var id = Guid.NewGuid();
+        scopedStore.SaveEvents(id, new[] { EventIntegrityTests.Event(id, 1) }, 0);
+        Assert.Throws<ConcurrencyException>(() => scopedStore.SaveEvents(id, Array.Empty<IAggregateEvent>(), 0));
+        Assert.IsFalse(scope.GetRegisteredObject<SQLiteConnection>().IsInTransaction);
+        var secondId = Guid.NewGuid();
+        Assert.Throws<InvalidOperationException>(() => scopedStore.SaveEvents(secondId,
+            new[] { EventIntegrityTests.Event(secondId, 1) }, 0));
+        Assert.Throws<InvalidOperationException>(() => scope.Commit());
+        using var observer = new SQLiteConnection(path);
+        Assert.AreEqual(0, observer.ExecuteScalar<int>("select count(*) from AggregateEvent"));
+        Assert.AreEqual(0, observer.ExecuteScalar<int>("select count(*) from AggregateIndex"));
+    }
+
+    [Test]
     public void CorruptEnvelopeAndPayloadCannotBeReadEvenThroughAnEmptyRange()
     {
         if (!sqlite) return;

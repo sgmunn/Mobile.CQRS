@@ -88,8 +88,70 @@ public class EventIntegrityTests
     private sealed class FailingAggregate : AggregateRootBase
     {
         public bool Fail = true;
+        public int VersionObservedByHandler;
         public void Emit() => RaiseEvent(Guid.NewGuid(), new TestEvent1());
-        private void Apply(TestEvent1 evt) { if (Fail) throw new InvalidOperationException(); }
+        private void Apply(TestEvent1 evt)
+        {
+            VersionObservedByHandler = Version;
+            if (Fail) throw new InvalidOperationException();
+        }
+    }
+
+    [Test]
+    public void LiveHandlerSeesRaisedVersionAndFailureRestoresThePreviousVersion()
+    {
+        var root = new FailingAggregate { Identity = Guid.NewGuid(), Fail = false };
+        root.Emit();
+        Assert.AreEqual(1, root.VersionObservedByHandler);
+        root.Fail = true;
+        Assert.Throws<System.Reflection.TargetInvocationException>(() => root.Emit());
+        Assert.AreEqual(2, root.VersionObservedByHandler);
+        Assert.AreEqual(1, root.Version);
+        Assert.AreEqual(1, root.UncommittedEvents.Count());
+    }
+
+    [TestCase(false), TestCase(true)]
+    public void SnapshotSerializationFailureDoesNotFailAnAlreadyAppendedEventSave(bool sqlite)
+    {
+        var path = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "snapshot-failure-" + Guid.NewGuid() + ".db");
+        using var connection = sqlite ? new Mobile.CQRS.SQLite.SQLiteConnection(path) : null;
+        IEventStore events = sqlite ? new Mobile.CQRS.SQLite.Domain.EventStore(connection, TestEventSerializer.Instance) : new InMemoryEventStore();
+        var snapshots = new InMemorySnapshotRepository<TestSnapshot>(new ThrowingSnapshotSerializer());
+        var aggregate = new TestAggregateRoot { Identity = Guid.NewGuid() };
+        aggregate.Execute(new TestCommand1 { AggregateId = aggregate.Identity, Value2 = 42 });
+        var repository = new AggregateRepository(() => new TestAggregateRoot(), events, snapshots);
+        try
+        {
+            Assert.AreEqual(SaveResult.Added, repository.Save(aggregate));
+            Assert.IsEmpty(aggregate.UncommittedEvents);
+            Assert.AreEqual(1, events.GetCurrentVersion(aggregate.Identity));
+            Assert.AreEqual(SaveResult.None, repository.Save(aggregate));
+            Assert.AreEqual(42, ((TestAggregateRoot)repository.GetById(aggregate.Identity)).Value2);
+            if (sqlite)
+            {
+                using var observer = new Mobile.CQRS.SQLite.SQLiteConnection(path);
+                Assert.AreEqual(1, observer.ExecuteScalar<int>("select count(*) from AggregateEvent"));
+            }
+        }
+        finally { connection?.Dispose(); System.IO.File.Delete(path); }
+    }
+
+    [Test]
+    public void AuthoritativeSnapshotSerializationFailureStillFailsTheSave()
+    {
+        var snapshots = new InMemorySnapshotRepository<TestSnapshot>(new ThrowingSnapshotSerializer());
+        var aggregate = new TestAggregateRoot { Identity = Guid.NewGuid() };
+        aggregate.Execute(new TestCommand1 { AggregateId = aggregate.Identity, Value2 = 42 });
+        var repository = new AggregateRepository(() => new TestAggregateRoot(), snapshots);
+        Assert.Throws<FormatException>(() => repository.Save(aggregate));
+        Assert.AreEqual(1, aggregate.UncommittedEvents.Count());
+        Assert.IsNull(snapshots.GetById(aggregate.Identity));
+    }
+
+    private sealed class ThrowingSnapshotSerializer : Mobile.CQRS.Serialization.ISerializer<TestSnapshot>
+    {
+        public string SerializeToString(object value) => throw new FormatException("Injected snapshot encoding failure.");
+        public TestSnapshot DeserializeFromString(string data) => throw new NotSupportedException();
     }
 
 

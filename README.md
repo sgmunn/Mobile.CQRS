@@ -68,6 +68,8 @@ Replay validates the whole batch's identity, type, versions and duplicate IDs
 before applying any handlers, and rejects replay over uncommitted changes.
 An apply failure does not advance that event's version or enqueue it; handlers
 can still have mutated aggregate state, so discard the aggregate after a failure.
+During live dispatch, handlers see the raised event's version; a failure restores
+the previous aggregate version.
 
 Appends check the exact current version: expected version 0 means an absent
 stream. This differs from the legacy command executor's optional expected version
@@ -84,6 +86,10 @@ custom/polymorphic payloads. Custom codecs must preserve metadata and return fre
 object graphs. SQLite verifies each deserialized event against its stored envelope.
 A snapshot with invalid metadata or a version ahead of history falls back to
 full replay; invalid authoritative state-only snapshots raise an error.
+Once an event append succeeds, snapshot creation/serialization failures are treated
+as cache failures: the save completes and clears its pending events. Authoritative
+state-only snapshot failures still propagate. An enclosing SQLite transaction
+must still commit; a storage error that aborts it fails that commit.
 
 SQLite adds a unique `(AggregateId, Version)` index. Existing duplicate positions
 cause initialization to fail without repairing or deleting history; back up and
@@ -118,9 +124,14 @@ sharing of an outer transaction is no longer supported.
 
 Event, index, snapshot and configured projection-outbox writes using one
 connection and scope roll back together. A standalone SQLite event append owns
-its own transaction; within a scope it uses a savepoint. A native SQLite write
-failure can roll back the entire enclosing transaction in the vendored adapter.
-A later scope commit detects this and fails; discard that scope after an error. In-memory participants are not reversible
+its own transaction; within a scope it uses a savepoint. An append failure rolls
+back the entire enclosing transaction in the vendored adapter.
+A later scope commit detects this and fails; discard that scope after an error.
+Domain-context stores require an active transaction and cannot fall back to an
+independent commit after a failure. Stores constructed inside an active transaction
+also retain this requirement. When constructing a store before a custom scope,
+pass `requiresTransaction: true` to the constructor with the outbox argument if
+it is intended solely as a scope participant. In-memory participants are not reversible
 transactions. See the sync contract below for canonical versus speculative history.
 
 ## Durable delayed projections

@@ -137,7 +137,14 @@ namespace Mobile.CQRS.Domain
             var newVersion = instance.UncommittedEvents.Last().Version;
 
             this.SaveEvents(instance, expectedVersion);
-            var snapshotChange = this.SaveSnapshot(instance, expectedVersion);
+            IDomainNotification snapshotChange = null;
+            try { snapshotChange = this.SaveSnapshot(instance, expectedVersion); }
+            catch when (this.eventStore != null)
+            {
+                // Events are authoritative and may already be durable. A failed
+                // derived snapshot must not leave this successful append retryable.
+                // An enclosing database transaction still has to commit normally.
+            }
 
             this.PublishEvents(instance, snapshotChange);
             instance.Commit();

@@ -33,17 +33,22 @@ namespace Mobile.CQRS.SQLite.Domain
         private readonly IAggregateIndexRepository index;
 
         private readonly IReadModelQueueProducer outbox;
+        private readonly bool requiresTransaction;
 
         public EventStore(SQLiteConnection connection, ISerializer<IAggregateEvent> serializer)
             : this(connection, serializer, null) { }
 
-        public EventStore(SQLiteConnection connection, ISerializer<IAggregateEvent> serializer, IReadModelQueueProducer outbox) : base(connection)
+        public EventStore(SQLiteConnection connection, ISerializer<IAggregateEvent> serializer, IReadModelQueueProducer outbox,
+            bool requiresTransaction = false) : base(connection)
         {
             if (serializer == null)
                 throw new ArgumentNullException("serializer");
 
             this.serializer = serializer;
             this.outbox = outbox;
+            // A scope-bound store must never become an independently committing
+            // store after a failed append rolls back its owner's transaction.
+            this.requiresTransaction = requiresTransaction || outbox != null || connection.IsInTransaction;
             this.index = new AggregateIndexRepository(connection);
 
             connection.CreateTable<AggregateEvent>();
@@ -55,9 +60,9 @@ namespace Mobile.CQRS.SQLite.Domain
 
         public void SaveEvents(Guid aggregateId, IList<IAggregateEvent> events, int expectedVersion)
         {
-            this.RequireOutboxTransaction();
             lock (this.Connection)
             {
+                this.RequireTransaction();
                 using var owned = this.Connection.IsInTransaction ? null : new SqlUnitOfWorkScope(this.Connection);
                 this.Connection.RunInTransaction(() => {
                     var existing = this.GetAllEvents(aggregateId);
@@ -123,10 +128,10 @@ namespace Mobile.CQRS.SQLite.Domain
             return evt;
         }
 
-        private void RequireOutboxTransaction()
+        private void RequireTransaction()
         {
-            if (this.outbox != null && !this.Connection.IsInTransaction)
-                throw new InvalidOperationException("Events and projection work require a shared transaction.");
+            if (this.requiresTransaction && !this.Connection.IsInTransaction)
+                throw new InvalidOperationException("This event store requires its owner's active transaction; discard a failed scope.");
         }
 
         public IList<IAggregateEvent> GetAllEvents(Guid id)

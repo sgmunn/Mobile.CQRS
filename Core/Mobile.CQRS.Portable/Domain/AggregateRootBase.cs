@@ -106,8 +106,14 @@ namespace Mobile.CQRS.Domain
             evt.Timestamp = DateTime.UtcNow;
             evt.CommandId = commandId;
 
-            this.ApplyEvent(evt);
+            var previousVersion = this.Version;
             this.Version = nextVersion;
+            try { this.ApplyEvent(evt); }
+            catch
+            {
+                this.Version = previousVersion;
+                throw;
+            }
             this.appliedEventIds.Add(evt.Identity);
             this.uncommittedEvents.Add(evt);
         }

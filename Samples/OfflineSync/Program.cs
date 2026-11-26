@@ -72,7 +72,12 @@ public static class Demo
         catch (TimeoutException) { await output.WriteLineAsync("Remote accepted the replay, but its response was lost."); }
         Guid operation;
         using (var scope = client.BeginUnitOfWork())
+        {
             operation = scope.GetRegisteredObject<ISyncOperationRepository>().Get(id).Batch.OperationId;
+            var branch = (StockSnapshot)scope.GetRegisteredObject<ISnapshotRepository>().GetById(id);
+            Require(branch != null && branch.Quantity == scenario.InitialDelta + scenario.LocalDelta && branch.Version == 2,
+                "Expected the speculative branch snapshot before recovery.");
+        }
 
         await using var reopened = Context(clientPath, modelsPath);
         var recovered = await reopened.SyncWithRemoteAsync<StockAggregate>(endpoint, id);
