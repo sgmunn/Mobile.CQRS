@@ -50,7 +50,7 @@ namespace Mobile.CQRS
         {
             if (this.storage.ContainsKey(id))
             {
-                return this.Storage[id];
+                return this.CopyForRead(this.Storage[id]);
             }
 
             return default(T);
@@ -58,7 +58,7 @@ namespace Mobile.CQRS
 
         public IList<T> GetAll()
         {
-            return this.Storage.Values.ToList();
+            return this.Storage.Values.Select(this.CopyForRead).ToList();
         }
 
         public SaveResult Save(T instance)
@@ -82,6 +82,8 @@ namespace Mobile.CQRS
         public void Dispose()
         {
         }
+
+        protected virtual T CopyForRead(T value) => value;
 
         protected abstract T InternalNew();
 

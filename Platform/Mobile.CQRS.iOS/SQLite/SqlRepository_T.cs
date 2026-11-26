@@ -66,14 +66,7 @@ namespace Mobile.CQRS.SQLite
 
         public virtual T GetById(Guid id)
         {
-            try
-            {
-                return this.Connection.Get<T>(id);
-            }
-            catch
-            {
-                return default(T);
-            }
+            return this.Connection.Find<T>(id);
         }
 
         public virtual IList<T> GetAll()

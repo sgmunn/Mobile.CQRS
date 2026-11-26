@@ -17,7 +17,6 @@
 //   IN THE SOFTWARE.
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
-using System.Reflection;
 
 namespace Mobile.CQRS.Domain
 {
@@ -55,13 +54,15 @@ namespace Mobile.CQRS.Domain
                 return (T)instance;
             }
 
-            foreach (var t in this.registeredObjects.Keys)
+            object match = null;
+            foreach (var candidate in this.registeredObjects.Values)
             {
-                if (t.GetTypeInfo().IsAssignableFrom(typeof(T).GetTypeInfo()))
-                {
-                    return (T)this.registeredObjects[t];
-                }
+                if (candidate is not T) continue;
+                if (match != null && !ReferenceEquals(match, candidate))
+                    throw new InvalidOperationException($"Multiple registered instances implement {typeof(T)}.");
+                match = candidate;
             }
+            if (match != null) return (T)match;
 
             return default(T);
         }

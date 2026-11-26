@@ -25,5 +25,5 @@ jobs:
       - run: dotnet restore Mobile.CQRS.sln
       - run: dotnet build Mobile.CQRS.sln -c Release --no-restore
       - run: dotnet test Mobile.CQRS.sln -c Release --no-build --no-restore
-      - name: Confirm remaining review findings
-        run: dotnet run --project UnitTests/Review.Characterization -c Release --no-build --no-restore
+      - name: Verify offline sync recovery sample
+        run: dotnet run --project Samples/OfflineSync -c Release --no-build --no-restore

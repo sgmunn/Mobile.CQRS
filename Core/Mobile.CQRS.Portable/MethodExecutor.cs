@@ -18,119 +18,38 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace Mobile.CQRS
+using System;
+using System.Collections.Concurrent;
+using System.Linq;
+using System.Reflection;
+
+namespace Mobile.CQRS;
+
+/// <summary>Dispatches one exact-parameter void instance handler, preferring the nearest declaring type.</summary>
+public static class MethodExecutor
 {
-    using System;
-    using System.Reflection;
-    using System.Linq;
+    private static readonly ConcurrentDictionary<(Type Target, Type Parameter), MethodInfo> Methods = new();
 
-    /// <summary>
-    /// Provides a way to execute an unnamed method that accepts a single parameter of a specific type
-    /// This is used primarily to support executing commands against an aggregate and applying events
-    /// </summary>
-    public static class MethodExecutor
+    public static bool ExecuteMethod(object instance, object param)
     {
-        private readonly static ConcurrentCache<Type, ConcurrentCache<Type, MethodInfo>> methodCache = new ConcurrentCache<Type, ConcurrentCache<Type, MethodInfo>>();
+        ArgumentNullException.ThrowIfNull(instance);
+        ArgumentNullException.ThrowIfNull(param);
+        var method = Methods.GetOrAdd((instance.GetType(), param.GetType()), key => Find(key.Target, key.Parameter));
+        if (method == null) return false;
+        method.Invoke(instance, new[] { param });
+        return true;
+    }
 
-        public static bool ExecuteMethod(object instance, object param)
+    private static MethodInfo Find(Type target, Type parameter)
+    {
+        for (var type = target; type != null; type = type.BaseType)
         {
-            if (instance == null)
-            {
-                throw new ArgumentNullException("instance");
-            }
-
-            if (param == null)
-            {
-                throw new ArgumentNullException("param");
-            }
-
-            var methodInfo = GetFromCache(instance, param);
-            if (methodInfo == null)
-            {
-                methodInfo = GetMethodForParams(instance, param);
-                AddToCache(instance, param, methodInfo);
-            }
-
-            if (methodInfo != null)
-            {
-                methodInfo.Invoke(instance, new[] { param });
-                return true;
-            }
-
-            return false;
+            var candidates = type.GetTypeInfo().DeclaredMethods.Where(method =>
+                !method.IsStatic && !method.ContainsGenericParameters && method.ReturnType == typeof(void)
+                && method.GetParameters().Length == 1 && method.GetParameters()[0].ParameterType == parameter).ToArray();
+            if (candidates.Length > 1) throw new AmbiguousMatchException($"Multiple handlers for {parameter} on {type}.");
+            if (candidates.Length == 1) return candidates[0];
         }
-
-        private static bool ExecuteMethodForParams(object instance, params object[] args)
-        {
-            var method = GetMethodForParams(instance, args);
-
-            if (method != null)
-            {
-                method.Invoke(instance, args);
-                return true;
-            }
-            
-            return false;
-        }
-
-        private static MethodInfo GetFromCache(object instance, object param)
-        {
-            ConcurrentCache<Type, MethodInfo> instanceCache;
-
-            if (methodCache.TryGetValue(instance.GetType(), out instanceCache))
-            {
-                MethodInfo methodInfo;
-                if (instanceCache.TryGetValue(param.GetType(), out methodInfo))
-                {
-                    return methodInfo;
-                }
-            }
-
-            return null;
-        }
-
-        private static void AddToCache(object instance, object param, MethodInfo methodInfo)
-        {
-            ConcurrentCache<Type, MethodInfo> instanceCache;
-            
-            if (methodCache.TryGetValue(instance.GetType(), out instanceCache))
-            {
-                instanceCache.TryAdd(param.GetType(), methodInfo);
-            }
-            else
-            {
-                instanceCache = new ConcurrentCache<Type, MethodInfo>();
-                instanceCache.TryAdd(param.GetType(), methodInfo);
-                methodCache.TryAdd(instance.GetType(), instanceCache);
-            }
-        }
-
-        private static MethodInfo GetMethodForParams(object instance, params object[] args)
-        {
-            foreach (var method in instance.GetType().GetTypeInfo().DeclaredMethods.Where(x => x.IsPublic || !x.IsStatic))
-            {
-                var methodParams = method.GetParameters();
-                if (methodParams.Length == args.Length)
-                {
-                    bool matches = true;
-                    for (int i = 0; i < args.Length; i++)
-                    {
-                        var p1 = methodParams [i];
-
-                        if (p1 == null || p1.ParameterType != args [i].GetType())
-                        {
-                            matches = false;
-                        }
-                    }
-
-                    if (matches)
-                    {
-                        return method;
-                    }
-                }
-            }
-            
-            return null;
-        }
+        return null;
     }
 }

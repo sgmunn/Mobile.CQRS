@@ -1,0 +1,9 @@
+{
+  "formatVersion": 1,
+  "aggregateId": "11111111-1111-1111-1111-111111111111",
+  "initialDelta": 10,
+  "localDelta": 2,
+  "otherDelta": 3,
+  "expectedQuantity": 15,
+  "expectedVersion": 3
+}

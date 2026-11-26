@@ -1,7 +1,7 @@
 # Mobile.CQRS review and renewal proposal
 
-Reviewed 2026-11-26 against commit `b6ae827`. This is a review and proposed design;
-production library behavior has not been changed.
+Historical review, performed 2026-11-26 against commit `b6ae827`. The findings
+below describe that revision, before the subsequent fixes.
 
 Update: the subsequent .NET 10 baseline replaces the legacy solution build and
 addresses finding 1 (scope lifecycle, ownership, failed BEGIN/COMMIT tracking).
@@ -21,9 +21,17 @@ The sync update subsequently addresses findings 3-5 with durable frozen operatio
 atomic remote receipts, conservative conflicts and explicit ordered command rebase.
 History replacement invalidates snapshots transactionally, including same-version
 branches and disabled snapshot serializers; unsupported snapshot loaders fall back
-to fresh replay when event history exists. Four unrelated defect reproductions
-remain. The root README describes the current protocol, upgrade constraints and
+to fresh replay when event history exists. The final integrity update replaces the remaining four defect reproductions
+with correctness regressions. The root README describes the current protocol, upgrade constraints and
 remaining transport/serializer responsibilities.
+
+The integrity update freezes in-memory events/snapshots, validates complete batches
+and replay, protects SQLite stream positions and append transactions, and fixes
+cache eviction, keyed locking, scope lookup and handler dispatch. SQLite reads now
+surface storage errors. The characterization executable is retired. A runnable
+offline recovery sample and language-neutral fixtures establish the reference
+behavior for the [Rust port](RUST_PORT.md). Performance paging, production network
+transport, modern mobile bindings and a Rust implementation remain future work.
 
 The architecture is worth preserving: aggregates generate events, persistence is
 abstracted, snapshots are optional, and immediate and delayed projections are

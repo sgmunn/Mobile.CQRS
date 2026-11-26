@@ -18,40 +18,28 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace Mobile.CQRS
+using System;
+using System.Linq;
+using System.Threading;
+
+namespace Mobile.CQRS;
+
+/// <summary>Bounded striped monitors. Same ID always shares a gate; collisions serialize unrelated IDs.</summary>
+public sealed class IdLock : IDisposable
 {
-    using System;
-    using System.Threading;
+    private static readonly object[] Gates = Enumerable.Range(0, 128).Select(_ => new object()).ToArray();
+    private readonly object gate;
+    private bool disposed;
 
-    public sealed class IdLock : IDisposable
+    public IdLock(Guid id)
     {
-        private static readonly ConcurrentCache<Guid, object> Locks = new ConcurrentCache<Guid, object>();
-
-        private readonly Guid id;
-        
-        private readonly object lockObject;
-
-        private bool isDisposed;
-
-        public IdLock(Guid id)
-        {
-            this.id = id;
-            this.lockObject = Locks.GetOrAdd(id, x => new object());
-            Monitor.Enter(this.lockObject);
-        }
-
-        public void Dispose()
-        {
-            if (this.isDisposed)
-            {
-                return;
-            }
-
-            this.isDisposed = true;
-
-            object o;
-            Locks.TryRemove(this.id, out o);
-            Monitor.Exit(this.lockObject);
-        }
+        gate = Gates[(uint)id.GetHashCode() % (uint)Gates.Length];
+        Monitor.Enter(gate);
+    }
+    public void Dispose()
+    {
+        if (disposed) return;
+        Monitor.Exit(gate); // ownership must be released by the creating thread
+        disposed = true;
     }
 }

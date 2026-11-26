@@ -81,7 +81,7 @@ namespace Mobile.CQRS.SQLite.Domain
             {
                 var queue = string.IsNullOrWhiteSpace(this.ReadModelConnectionString)
                     ? null : new ReadModelBuilderQueue(connection);
-                scope.RegisterObject<IEventStore>(new EventStore(connection, this.EventSerializer, queue));
+                scope.RegisterObject<IEventStore>(new EventStore(connection, this.EventSerializer, queue, requiresTransaction: true));
                 if (queue != null) scope.RegisterObject<IReadModelQueueProducer>(queue);
 
                 if (this.CommandSerializer != null)

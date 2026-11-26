@@ -83,6 +83,7 @@ namespace Mobile.CQRS.Domain.UnitTests
     {
         public EventBase()
         {
+            this.AggregateType = AggregateRootBase.GetAggregateTypeDescriptor<TestAggregateRoot>();
             this.Identity = Guid.NewGuid();
         }
         

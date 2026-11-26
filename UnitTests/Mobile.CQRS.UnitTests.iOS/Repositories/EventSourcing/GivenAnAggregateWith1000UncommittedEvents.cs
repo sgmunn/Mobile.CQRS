@@ -14,7 +14,7 @@ namespace Mobile.CQRS.Domain.UnitTests.Repositories.EventSourcing
             base.SetUp();
             
             var id = Guid.NewGuid();
-            this.Aggregate = new TestAggregateRoot();
+            this.Aggregate = new TestAggregateRoot { Identity = id };
             
             for (int i = 0; i < 1000; i++)
             {

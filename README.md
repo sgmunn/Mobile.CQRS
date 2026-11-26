@@ -1,7 +1,9 @@
 Mobile.CQRS
 ===========
 
-A CQRS / Event Sourcing framework for MonoTouch and (hopefully) other mobile platforms.
+A CQRS / event-sourcing library with offline synchronization, snapshots and
+recoverable SQLite projections. The maintained baseline targets .NET 10; the
+original MonoTouch and other mobile integrations are historical source.
 
 See the [2026 review and renewal proposal](docs/REVIEW.md) for correctness
 findings, a modernization roadmap, and an assessment of a Rust implementation.
@@ -25,20 +27,85 @@ provided by macOS). No mobile workloads or simulator are needed for this baselin
 dotnet restore Mobile.CQRS.sln
 dotnet build Mobile.CQRS.sln -c Release --no-restore
 dotnet test Mobile.CQRS.sln -c Release --no-build --no-restore
-dotnet run --project UnitTests/Review.Characterization -c Release --no-build
+dotnet run --project Samples/OfflineSync -c Release --no-build --no-restore
 ```
 
-The solution includes the core, SQLite adapter, desktop NUnit tests and review
-checks. Historical `Portable` and `iOS` project/assembly names are retained, but
+The solution includes the core, SQLite adapter, desktop NUnit tests and runnable
+offline sync example. Historical `Portable` and `iOS` project/assembly names are retained, but
 these projects now target `net10.0`. The old iPhone sample, device test runner,
 Android project and HTTP extension remain historical source outside the solution;
 they have not been ported to modern mobile frameworks. CI covers macOS and Linux.
 Windows requires a compatible native `sqlite3` library and is not yet verified.
 
 NUnit 3 is retained to migrate the existing assertions with minimal churn. The
-review executable confirms four **remaining defects** outside this update's scope;
-its successful exit is not a correctness claim. See its
-[README](UnitTests/Review.Characterization/README.md).
+original defect reproductions have all been replaced by desired-behavior tests.
+The [Rust port plan](docs/RUST_PORT.md) and [shared fixtures](Contracts/README.md)
+define the starting point for a separate implementation.
+
+## Offline recovery example
+
+[Samples/OfflineSync](Samples/OfflineSync) runs a stock aggregate through two-client
+offline edits, a conservative conflict, explicit additive replay, remote acceptance
+with a lost response, reopening the client, snapshot invalidation and projection
+rebuild. It checks that both clients and the read model converge to quantity 15 at
+version 3, then deletes its temporary databases. To inspect the files afterward:
+
+```sh
+dotnet run --project Samples/OfflineSync -c Release -- --directory ./demo-data
+```
+
+The directory must be absent or empty; supplied directories are retained. The
+sample uses public APIs, real SQLite files and an in-process `ISyncRemote` failure
+wrapper. It is also exercised by the NUnit contract tests and macOS/Linux CI.
+
+## Event and replay integrity
+
+Set a nonempty aggregate `Identity` before raising or replaying events. A stream
+has one stable aggregate type and contiguous versions starting at 1. Event IDs
+must be nonempty and unique across retained histories. Both stores validate the
+whole batch before changing storage, including an empty append's expected version.
+Replay validates the whole batch's identity, type, versions and duplicate IDs
+before applying any handlers, and rejects replay over uncommitted changes.
+An apply failure does not advance that event's version or enqueue it; handlers
+can still have mutated aggregate state, so discard the aggregate after a failure.
+During live dispatch, handlers see the raised event's version; a failure restores
+the previous aggregate version.
+
+Appends check the exact current version: expected version 0 means an absent
+stream. This differs from the legacy command executor's optional expected version
+0, which skips the caller-level check; its repository still appends against the
+version it loaded. `MergeEvents` replaces only the tail after the supplied version
+and keeps the aggregate type. It is for speculative local reconciliation, not
+rewriting acknowledged history.
+
+`InMemoryEventStore` freezes serialized events on write and returns fresh instances
+on reads. `InMemorySnapshotRepository<T>` similarly copies snapshot inputs and
+outputs, so mutations cannot change persisted state through a reference. Their
+default JSON codec supports public properties/fields; supply `ISerializer<T>` for
+custom/polymorphic payloads. Custom codecs must preserve metadata and return fresh
+object graphs. SQLite verifies each deserialized event against its stored envelope.
+A snapshot with invalid metadata or a version ahead of history falls back to
+full replay; invalid authoritative state-only snapshots raise an error.
+Once an event append succeeds, snapshot creation/serialization failures are treated
+as cache failures: the save completes and clears its pending events. Authoritative
+state-only snapshot failures still propagate. An enclosing SQLite transaction
+must still commit; a storage error that aborts it fails that commit.
+
+SQLite adds a unique `(AggregateId, Version)` index. Existing duplicate positions
+cause initialization to fail without repairing or deleting history; back up and
+investigate corrupt files before retrying. Full stream validation currently loads
+and deserializes the aggregate's history even for version/range queries. This
+favors correctness for the reference implementation; paging and validated head
+metadata can be added with equivalent contract tests later.
+
+Cache removal preserves other keys. `IdLock` uses 128 fixed monitor stripes to
+avoid replacing a gate while a caller still owns it; collisions can serialize
+unrelated IDs. It is synchronous, reentrant and thread-affine. Scope lookup prefers
+an exact registration, otherwise matches actual instances, deduplicates aliases
+and rejects ambiguous instances. Reflection dispatch selects a single exact-argument
+`void` instance handler on the nearest declaring type, including inherited private
+handlers; ambiguous handlers fail explicitly. SQLite repository reads return null
+for an absent row and propagate database errors.
 
 ## Transaction contract
 
@@ -56,7 +123,15 @@ is held until disposal. Nested scopes on one connection are rejected; implicit
 sharing of an outer transaction is no longer supported.
 
 Event, index, snapshot and configured projection-outbox writes using one
-connection and scope roll back together. In-memory participants are not reversible
+connection and scope roll back together. A standalone SQLite event append owns
+its own transaction; within a scope it uses a savepoint. An append failure rolls
+back the entire enclosing transaction in the vendored adapter.
+A later scope commit detects this and fails; discard that scope after an error.
+Domain-context stores require an active transaction and cannot fall back to an
+independent commit after a failure. Stores constructed inside an active transaction
+also retain this requirement. When constructing a store before a custom scope,
+pass `requiresTransaction: true` to the constructor with the outbox argument if
+it is intended solely as a scope participant. In-memory participants are not reversible
 transactions. See the sync contract below for canonical versus speculative history.
 
 ## Durable delayed projections

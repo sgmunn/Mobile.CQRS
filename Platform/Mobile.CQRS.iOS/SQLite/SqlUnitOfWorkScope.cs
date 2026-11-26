@@ -65,6 +65,8 @@ namespace Mobile.CQRS.SQLite
 
         protected override void AfterCommit()
         {
+            if (!this.connection.IsInTransaction)
+                throw new InvalidOperationException("The transaction ended before scope commit; discard this scope.");
             this.connection.Commit();
             this.inTransaction = false;
         }

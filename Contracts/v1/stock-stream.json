@@ -1,0 +1,254 @@
+{
+  "formatVersion": 1,
+  "aggregateId": "11111111-1111-1111-1111-111111111111",
+  "aggregateType": "inventory.v1",
+  "steps": [
+    {
+      "operation": "append",
+      "expectedVersion": 0,
+      "events": [
+        {
+          "eventId": "00000000-0000-0000-0000-000000000001",
+          "aggregateId": "11111111-1111-1111-1111-111111111111",
+          "aggregateType": "inventory.v1",
+          "version": 1,
+          "commandId": "10000000-0000-0000-0000-000000000001",
+          "timestamp": "2026-01-01T00:00:00.0000000Z",
+          "eventType": "stock.adjusted.v1",
+          "schemaVersion": 1,
+          "payload": {
+            "delta": 10
+          }
+        }
+      ],
+      "result": "ok",
+      "quantity": 10,
+      "version": 1
+    },
+    {
+      "operation": "append",
+      "expectedVersion": 0,
+      "events": [
+        {
+          "eventId": "00000000-0000-0000-0000-000000000002",
+          "aggregateId": "11111111-1111-1111-1111-111111111111",
+          "aggregateType": "inventory.v1",
+          "version": 2,
+          "commandId": "10000000-0000-0000-0000-000000000002",
+          "timestamp": "2026-01-01T00:00:00.0000000Z",
+          "eventType": "stock.adjusted.v1",
+          "schemaVersion": 1,
+          "payload": {
+            "delta": 3
+          }
+        }
+      ],
+      "result": "concurrency",
+      "quantity": 10,
+      "version": 1
+    },
+    {
+      "operation": "append",
+      "expectedVersion": 1,
+      "events": [
+        {
+          "eventId": "00000000-0000-0000-0000-000000000003",
+          "aggregateId": "11111111-1111-1111-1111-111111111111",
+          "aggregateType": "inventory.v1",
+          "version": 3,
+          "commandId": "10000000-0000-0000-0000-000000000003",
+          "timestamp": "2026-01-01T00:00:00.0000000Z",
+          "eventType": "stock.adjusted.v1",
+          "schemaVersion": 1,
+          "payload": {
+            "delta": 4
+          }
+        }
+      ],
+      "result": "invalid",
+      "quantity": 10,
+      "version": 1
+    },
+    {
+      "operation": "append",
+      "expectedVersion": 1,
+      "events": [
+        {
+          "eventId": "00000000-0000-0000-0000-000000000002",
+          "aggregateId": "22222222-2222-2222-2222-222222222222",
+          "aggregateType": "inventory.v1",
+          "version": 2,
+          "commandId": "10000000-0000-0000-0000-000000000002",
+          "timestamp": "2026-01-01T00:00:00.0000000Z",
+          "eventType": "stock.adjusted.v1",
+          "schemaVersion": 1,
+          "payload": {
+            "delta": 3
+          }
+        }
+      ],
+      "result": "invalid",
+      "quantity": 10,
+      "version": 1
+    },
+    {
+      "operation": "append",
+      "expectedVersion": 1,
+      "events": [
+        {
+          "eventId": "00000000-0000-0000-0000-000000000002",
+          "aggregateId": "11111111-1111-1111-1111-111111111111",
+          "aggregateType": "inventory.v1",
+          "version": 2,
+          "commandId": "10000000-0000-0000-0000-000000000002",
+          "timestamp": "2026-01-01T00:00:00.0000000Z",
+          "eventType": "stock.adjusted.v1",
+          "schemaVersion": 1,
+          "payload": {
+            "delta": 3
+          }
+        },
+        {
+          "eventId": "00000000-0000-0000-0000-000000000003",
+          "aggregateId": "11111111-1111-1111-1111-111111111111",
+          "aggregateType": "other.v1",
+          "version": 3,
+          "commandId": "10000000-0000-0000-0000-000000000003",
+          "timestamp": "2026-01-01T00:00:00.0000000Z",
+          "eventType": "stock.adjusted.v1",
+          "schemaVersion": 1,
+          "payload": {
+            "delta": 2
+          }
+        }
+      ],
+      "result": "invalid",
+      "quantity": 10,
+      "version": 1
+    },
+    {
+      "operation": "append",
+      "expectedVersion": 1,
+      "events": [
+        {
+          "eventId": "00000000-0000-0000-0000-000000000002",
+          "aggregateId": "11111111-1111-1111-1111-111111111111",
+          "aggregateType": "inventory.v1",
+          "version": 2,
+          "commandId": "10000000-0000-0000-0000-000000000002",
+          "timestamp": "2026-01-01T00:00:00.0000000Z",
+          "eventType": "stock.adjusted.v1",
+          "schemaVersion": 1,
+          "payload": {
+            "delta": 3
+          }
+        }
+      ],
+      "result": "ok",
+      "quantity": 13,
+      "version": 2
+    },
+    {
+      "operation": "append",
+      "expectedVersion": 2,
+      "events": [
+        {
+          "eventId": "00000000-0000-0000-0000-000000000001",
+          "aggregateId": "11111111-1111-1111-1111-111111111111",
+          "aggregateType": "inventory.v1",
+          "version": 3,
+          "commandId": "10000000-0000-0000-0000-000000000001",
+          "timestamp": "2026-01-01T00:00:00.0000000Z",
+          "eventType": "stock.adjusted.v1",
+          "schemaVersion": 1,
+          "payload": {
+            "delta": 2
+          }
+        }
+      ],
+      "result": "invalid",
+      "quantity": 13,
+      "version": 2
+    },
+    {
+      "operation": "append",
+      "expectedVersion": 1,
+      "events": [],
+      "result": "concurrency",
+      "quantity": 13,
+      "version": 2
+    },
+    {
+      "operation": "append",
+      "expectedVersion": 2,
+      "events": [],
+      "result": "ok",
+      "quantity": 13,
+      "version": 2
+    },
+    {
+      "operation": "merge",
+      "expectedVersion": 2,
+      "events": [
+        {
+          "eventId": "00000000-0000-0000-0000-000000000004",
+          "aggregateId": "11111111-1111-1111-1111-111111111111",
+          "aggregateType": "inventory.v1",
+          "version": 2,
+          "commandId": "10000000-0000-0000-0000-000000000004",
+          "timestamp": "2026-01-01T00:00:00.0000000Z",
+          "eventType": "stock.adjusted.v1",
+          "schemaVersion": 1,
+          "payload": {
+            "delta": 2
+          }
+        }
+      ],
+      "result": "ok",
+      "quantity": 12,
+      "version": 2,
+      "afterVersion": 1
+    },
+    {
+      "operation": "merge",
+      "expectedVersion": 2,
+      "events": [
+        {
+          "eventId": "00000000-0000-0000-0000-000000000005",
+          "aggregateId": "11111111-1111-1111-1111-111111111111",
+          "aggregateType": "other.v1",
+          "version": 2,
+          "commandId": "10000000-0000-0000-0000-000000000005",
+          "timestamp": "2026-01-01T00:00:00.0000000Z",
+          "eventType": "stock.adjusted.v1",
+          "schemaVersion": 1,
+          "payload": {
+            "delta": 2
+          }
+        }
+      ],
+      "result": "invalid",
+      "quantity": 12,
+      "version": 2,
+      "afterVersion": 1
+    },
+    {
+      "operation": "read-after",
+      "afterVersion": 1,
+      "versions": [
+        2
+      ],
+      "quantity": 12,
+      "version": 2
+    },
+    {
+      "operation": "read-up-to",
+      "upToVersion": 1,
+      "versions": [
+        1
+      ],
+      "quantity": 12,
+      "version": 2
+    }
+  ]
+}

@@ -15,7 +15,7 @@ namespace Mobile.CQRS.Domain.UnitTests.Repositories.SnapshotSourced
             base.SetUp();
 
             var id = Guid.NewGuid();
-            this.Aggregate = new TestAggregateRoot();
+            this.Aggregate = new TestAggregateRoot { Identity = id };
             this.Aggregate.Execute(new TestCommand1{ AggregateId = id, Value1 = "1", Value2 = 1, });
         }
 
