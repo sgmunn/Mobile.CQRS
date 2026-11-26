@@ -26,81 +26,50 @@ namespace Mobile.CQRS.SQLite.Domain
     using System.Threading;
     using Mobile.CQRS.Domain;
     
-    public sealed class ReadModelBuilderQueue : IReadModelQueue, IReadModelQueueProducer 
+    /// <summary>Transactional outbox; use the event-store connection and scope.</summary>
+    public sealed class ReadModelBuilderQueue : IReadModelQueue, IReadModelQueueProducer
     {
-        private readonly SqlRepository<ReadModelWorkItem> repository;
-
-        private readonly object locker = new object();
+        private readonly SQLiteConnection connection;
 
         public ReadModelBuilderQueue(SQLiteConnection connection)
         {
-            this.repository = new SqlRepository<ReadModelWorkItem>(connection);
+            this.connection = connection;
             connection.CreateTable<ReadModelWorkItem>();
         }
-        
+
         public ReadModelBuilderQueue(IUnitOfWorkScope scope)
-        {
-            var connection = scope.GetRegisteredObject<SQLiteConnection>();
-            this.repository = new SqlRepository<ReadModelWorkItem>(connection);
-            this.repository.Connection.CreateTable<ReadModelWorkItem>();
-        }
+            : this(scope.GetRegisteredObject<SQLiteConnection>()) { }
 
         public IReadModelWorkItem Enqueue(Guid aggregateId, string aggregateType, int fromVersion)
         {
-            var workItem = new ReadModelWorkItem {
-                AggregateType = aggregateType,
+            if (!this.connection.IsInTransaction)
+                throw new InvalidOperationException("Enqueue requires the event-store transaction.");
+            if (fromVersion < 0) throw new ArgumentOutOfRangeException(nameof(fromVersion));
+            var existing = this.connection.Find<ReadModelWorkItem>(aggregateId);
+            var item = new ReadModelWorkItem {
                 Identity = aggregateId,
-                FromVersion = fromVersion
+                AggregateType = aggregateType,
+                FromVersion = existing == null ? fromVersion : Math.Min(existing.FromVersion, fromVersion),
+                DeliveryId = Guid.NewGuid(),
             };
-
-            Monitor.Enter(this.locker);
-            try
-            {
-                var existingItem = this.repository.GetById(workItem.Identity);
-                if (existingItem != null && existingItem.FromVersion < workItem.FromVersion)
-                {
-                    return null;
-                }
-
-                this.repository.Save((ReadModelWorkItem)workItem);
-            }
-            finally
-            {
-                Monitor.Exit(this.locker);
-            }
-
-            return workItem;
+            if (existing == null) this.connection.Insert(item);
+            else this.connection.Update(item);
+            return item;
         }
 
         public void Dequeue(IReadModelWorkItem workItem)
         {
-            Monitor.Enter(this.locker);
-            try
-            {
-                const string deleteCmd = "delete from ReadModelWorkItem where Identity = ? and FromVersion = {0}";
-                this.repository.Connection.Execute(string.Format(deleteCmd, workItem.FromVersion), workItem.Identity);
-            }
-            finally
-            {
-                Monitor.Exit(this.locker);
-            }
+            if (!this.connection.IsInTransaction)
+                throw new InvalidOperationException("Acknowledgement requires a transaction.");
+            // Never acknowledge a newer append or rebuild that replaced this delivery.
+            this.connection.Execute("delete from ReadModelWorkItem where Identity = ? and DeliveryId = ?",
+                workItem.Identity, workItem.DeliveryId);
         }
 
         public IList<IReadModelWorkItem> Peek(int batchSize)
         {
-            if (Monitor.TryEnter(this.locker))
-            {
-                try
-                {
-                    return this.repository.Connection.Table<ReadModelWorkItem>().Take(batchSize).Cast<IReadModelWorkItem>().ToList();
-                }
-                finally
-                {
-                    Monitor.Exit(this.locker);
-                }
-            }
-
-            return new List<IReadModelWorkItem>();
+            return this.connection.Table<ReadModelWorkItem>().OrderBy(x => x.Identity)
+                .Take(batchSize).Cast<IReadModelWorkItem>().ToList();
         }
     }
 }

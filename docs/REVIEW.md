@@ -10,6 +10,13 @@ six other defect reproductions remain. The findings and build results below are
 historical review evidence. See the root README for the current build commands
 and supported transaction contract.
 
+The projection update subsequently moves configured work into the event-store
+transaction and adds transactional projection checkpoints/receipts, bounded worker
+retry, joined shutdown and explicit rebuilds (findings 2 and 9). SQLite merge paths
+also queue first imports regardless of SyncAgent's legacy boolean (part of finding
+4). Sync conflict/retry semantics and snapshot invalidation remain open. The
+original findings below describe the reviewed historical implementation.
+
 The architecture is worth preserving: aggregates generate events, persistence is
 abstracted, snapshots are optional, and immediate and delayed projections are
 separate concerns. Offline operation is the most distinctive direction to develop.

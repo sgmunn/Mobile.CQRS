@@ -32,17 +32,25 @@ namespace Mobile.CQRS.SQLite.Domain
 
         private readonly IAggregateIndexRepository index;
 
-        public EventStore(SQLiteConnection connection, ISerializer<IAggregateEvent> serializer) : base(connection)
+        private readonly IReadModelQueueProducer outbox;
+
+        public EventStore(SQLiteConnection connection, ISerializer<IAggregateEvent> serializer)
+            : this(connection, serializer, null) { }
+
+        public EventStore(SQLiteConnection connection, ISerializer<IAggregateEvent> serializer, IReadModelQueueProducer outbox) : base(connection)
         {
             if (serializer == null)
                 throw new ArgumentNullException("serializer");
 
             this.serializer = serializer;
+            this.outbox = outbox;
             this.index = new AggregateIndexRepository(connection);
 
             connection.CreateTable<AggregateEvent>();
         }
         
+        public bool EnqueuesReadModels => this.outbox != null;
+
         public void SaveEvents(Guid aggregateId, IList<IAggregateEvent> events, int expectedVersion)
         {
             if (events.Count == 0)
@@ -50,6 +58,7 @@ namespace Mobile.CQRS.SQLite.Domain
                 return;
             }
 
+            this.RequireOutboxTransaction();
             var serializedEvents = events.Select(evt => new AggregateEvent{
                 AggregateId = aggregateId, 
                 Identity = evt.Identity,
@@ -65,10 +74,12 @@ namespace Mobile.CQRS.SQLite.Domain
             {
                 this.Connection.Insert(evt);
             }
+            this.outbox?.Enqueue(aggregateId, events[0].AggregateType, events[0].Version);
         }
 
         public void MergeEvents(Guid aggregateId, IList<IAggregateEvent> events, int expectedVersion, int fromVersion)
         {
+            this.RequireOutboxTransaction();
             var serializedEvents = events.Select(evt => new AggregateEvent{
                 AggregateId = aggregateId, 
                 Identity = evt.Identity,
@@ -86,6 +97,13 @@ namespace Mobile.CQRS.SQLite.Domain
             {
                 this.Connection.Insert(evt);
             }
+            this.outbox?.Enqueue(aggregateId, events[0].AggregateType, 0);
+        }
+
+        private void RequireOutboxTransaction()
+        {
+            if (this.outbox != null && !this.Connection.IsInTransaction)
+                throw new InvalidOperationException("Events and projection work require a shared transaction.");
         }
 
         public IList<IAggregateEvent> GetAllEvents(Guid rootId)

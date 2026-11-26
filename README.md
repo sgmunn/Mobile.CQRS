@@ -55,8 +55,79 @@ create, commit and dispose on the same thread, with no `await` inside. The monit
 is held until disposal. Nested scopes on one connection are rejected; implicit
 sharing of an outer transaction is no longer supported.
 
-Event, index and snapshot writes using one connection and scope roll back
-together. In-memory participants are not reversible transactions. This update
-does not make the separate projection database atomic with event persistence,
-redesign sync, or fix the remaining review findings. An outbox and recoverable
-sync protocol remain follow-up work.
+Event, index, snapshot and configured projection-outbox writes using one
+connection and scope roll back together. In-memory participants are not reversible
+transactions. Sync conflict resolution remains follow-up work.
+
+## Durable delayed projections
+
+Configure `EventSourcedDomainContext(eventsPath, readModelsPath, eventSerializer)`
+and register delayed builders before calling `StartDelayedReadModels()`. Each
+builder must use repositories from the supplied read-model scope and implement
+`DeleteForAggregate` for rebuilding. Use `await context.DisposeAsync()` (or
+`await using`) to stop and join its worker. `Stop()` requests cancellation;
+`await context.BuilderAgent.StopAsync()` waits for the active transaction to finish
+or roll back. Await shutdown before restarting the same agent.
+
+The `ReadModelWorkItem` table now lives in the **event database**. The context wires
+its queue into SQLite event appends and merges, including direct scoped store
+writes and first remote imports. Work becomes visible only after the event
+transaction commits. Each new intent rotates a delivery ID; acknowledgement of an
+older delivery cannot remove a concurrent append or rebuild. The standalone
+`EventStore(connection, serializer)` overload remains without an outbox; use the
+context for the configured pipeline, or supply a queue on the same transaction.
+
+The worker reads committed history, then commits all delayed builders for an
+aggregate together with a `ReadModelCheckpointRecord` in the read-model database.
+It acknowledges the source outbox in a subsequent transaction. If it stops between
+these commits, a receipt prevents reapplying the delivery. Incremental processing
+starts after the checkpoint; a missing checkpoint performs a full rebuild. The
+worker never holds a database transaction across an `await` or across both
+source and target processing. These are at-least-once deliveries with transactional
+projection output, not distributed exactly-once side effects. Notification delivery
+is best effort and happens after both commits.
+
+Startup scans durable work, and a one-second poll recovers missed in-process
+notifications. Failed work stays queued. Each delivery gets up to three consecutive
+attempts, at least one second apart; a persistent fault then pauses the worker.
+Ordinary commit notifications wake a healthy worker but do not reset this budget
+or resume a paused worker. Inspect `IsFaulted` and `Fault` or subscribe to
+`IReadModelBuilderFaulted`, fix the cause, and call `Trigger()` to explicitly retry.
+`NotifyWorkAvailable()` is a passive wakeup. Unknown aggregate registrations fault
+instead of silently losing work or spinning. One faulty item pauses that worker, so monitor its fault
+state. Run one worker per read-model database. External I/O from projection handlers
+is not covered by the checkpoint transaction.
+
+Request a durable rebuild with `context.RebuildReadModels<MyAggregate>(id)`. It
+transactionally deletes that aggregate's derived rows, replays its history and
+replaces its checkpoint. A request for the wrong stored aggregate type is rejected
+without replacing pending work. Every delayed builder in a registration forms **one
+projection group** with one checkpoint per aggregate. Adding/removing builders or
+changing their schema/logic requires rebuilding the affected aggregates. Register
+the final builder set before starting the worker; recreate the context to change
+registrations. Histories are currently loaded per aggregate in memory; paging and
+independent per-projector checkpoints remain future work.
+
+**Upgrading an existing database:** the former queue in the read-model database
+is not the authoritative outbox and is not automatically moved. Back up both files,
+then enqueue `RebuildReadModels<T>(id)` for all existing event-sourced aggregate IDs
+before enabling the worker. This reconstructs rows and checkpoints from committed
+history, including work formerly stranded in the old queue. If a read-model file
+is lost or intentionally replaced, request rebuilds again; an empty outbox alone
+cannot discover aggregates to restore. The rebuild API only changes derived data.
+
+Custom adapters must implement `IReadModelWorkItem.DeliveryId` and provide an
+`IReadModelCheckpointStore` in the projection scope with the same commit boundary
+as their output. The worker's `queueFactory` now receives an **event** scope for
+both reading and acknowledgement, while `scopeFactory` creates projection scopes.
+Direct queue enqueue/acknowledgement requires an active transaction. Stores that
+atomically enqueue their own work opt into `IEventStore.EnqueuesReadModels`; this
+avoids a second enqueue by generic command execution and preserves post-commit
+aggregate notifications. The default is false for other adapters.
+
+Recovery tests cover failed command commits, partial projection writes, group
+rollback, stale acknowledgements, appends during processing, lost notifications,
+bounded retries, cancellation/restart and explicit rebuilds. They also terminate a
+separate .NET test host during an uncommitted projection and after projection
+commit/before acknowledgement, then reopen the files and recover. The explicit
+crash probe is invoked only by those parent tests, not as a standalone normal test.

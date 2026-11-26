@@ -31,11 +31,9 @@ namespace Mobile.CQRS.SQLite.Domain
     /// In order to support sync with a remote event store you will need a command serializer.
     /// In order to support snapshots / momento's you'll need a snapshot serializer.
     /// </summary>
-    public sealed class EventSourcedDomainContext : DomainContextBase
+    public sealed class EventSourcedDomainContext : DomainContextBase, IAsyncDisposable
     {
-        private readonly SQLiteConnection readModelConnection;
-
-        private ReadModelBuilderQueue readModelQueue;
+        private readonly object builderLifecycle = new object();
 
         public EventSourcedDomainContext(string connectionString, ISerializer<IAggregateEvent> eventSerializer)
         {
@@ -60,11 +58,6 @@ namespace Mobile.CQRS.SQLite.Domain
             this.ConnectionString = connectionString;
             this.EventSerializer = eventSerializer;
             this.ReadModelConnectionString = readModelConnectionString;
-
-            // we need a single read model connection because SQLite gives Busy exceptions is we try to write from 2 connections
-            // at the same time - which we do (1 thread enqueues read models and the other updates the read models)
-            // if our queue were a different connection then we should not need to do this
-            this.readModelConnection = new SQLiteConnection(ReadModelConnectionString, true);
         }
 
         public string ConnectionString { get; private set; }
@@ -86,7 +79,10 @@ namespace Mobile.CQRS.SQLite.Domain
 
             try
             {
-                scope.RegisterObject<IEventStore>(new EventStore(connection, this.EventSerializer));
+                var queue = string.IsNullOrWhiteSpace(this.ReadModelConnectionString)
+                    ? null : new ReadModelBuilderQueue(connection);
+                scope.RegisterObject<IEventStore>(new EventStore(connection, this.EventSerializer, queue));
+                if (queue != null) scope.RegisterObject<IReadModelQueueProducer>(queue);
 
                 if (this.CommandSerializer != null)
                 {
@@ -99,16 +95,6 @@ namespace Mobile.CQRS.SQLite.Domain
                     scope.RegisterObject<ISnapshotRepository>(new SnapshotRepository(connection, this.SnapshotSerializer));
                 }
 
-                if (!string.IsNullOrWhiteSpace(this.ReadModelConnectionString))
-                {
-                    if (this.readModelQueue == null)
-                    {
-                        this.readModelQueue = new ReadModelBuilderQueue(this.readModelConnection);
-                    }
-
-                    scope.RegisterObject<IReadModelQueueProducer>(this.readModelQueue);
-                }
-
                 return scope;
             }
             catch
@@ -118,23 +104,54 @@ namespace Mobile.CQRS.SQLite.Domain
             }
         }
 
+        public IUnitOfWorkScope BeginReadModelUnitOfWork()
+        {
+            if (string.IsNullOrWhiteSpace(this.ReadModelConnectionString))
+                throw new InvalidOperationException("A read-model database is required.");
+            var connection = new SQLiteConnection(this.ReadModelConnectionString, true);
+            var scope = new SqlUnitOfWorkScope(connection, ownsConnection: true);
+            try
+            {
+                scope.RegisterObject<IReadModelCheckpointStore>(new ReadModelCheckpointStore(connection));
+                return scope;
+            }
+            catch { scope.Dispose(); throw; }
+        }
+
         public void StartDelayedReadModels()
         {
-            if (!string.IsNullOrWhiteSpace(this.ReadModelConnectionString) && this.BuilderAgent == null)
+            if (string.IsNullOrWhiteSpace(this.ReadModelConnectionString))
+                throw new InvalidOperationException("A read-model database is required.");
+            lock (this.builderLifecycle)
             {
-                if (this.readModelQueue == null)
-                {
-                    this.readModelQueue = new ReadModelBuilderQueue(this.readModelConnection);
-                }
-
-                this.BuilderAgent = new ReadModelBuilderAgent(
-                    this,
-                    this.Registrations.ToList(),
-                    () => new SqlUnitOfWorkScope(this.readModelConnection),
-                    (scope) => this.readModelQueue);
-
+                this.BuilderAgent ??= new ReadModelBuilderAgent(this, this.Registrations.ToList(),
+                    this.BeginReadModelUnitOfWork, scope => new ReadModelBuilderQueue(scope));
                 this.BuilderAgent.Start();
             }
+        }
+
+        public void RebuildReadModels<T>(Guid aggregateId) where T : IAggregateRoot
+        {
+            if (!this.Registrations.Any(x => x.AggregateType == typeof(T)))
+                throw new InvalidOperationException("Register the aggregate before requesting a rebuild.");
+            using (var scope = this.BeginUnitOfWork())
+            {
+                var queue = scope.GetRegisteredObject<IReadModelQueueProducer>()
+                    ?? throw new InvalidOperationException("A read-model database is required.");
+                var type = AggregateRootBase.GetAggregateTypeDescriptor<T>();
+                var stream = scope.GetRegisteredObject<SQLiteConnection>().Table<AggregateEvent>()
+                    .Where(x => x.AggregateId == aggregateId).Take(1).ToList().FirstOrDefault();
+                if (stream != null && stream.AggregateType != type)
+                    throw new InvalidOperationException("The aggregate ID belongs to a different aggregate type.");
+                queue.Enqueue(aggregateId, type, 0);
+                scope.Commit();
+            }
+            this.BuilderAgent?.Trigger();
+        }
+
+        public async System.Threading.Tasks.ValueTask DisposeAsync()
+        {
+            if (this.BuilderAgent != null) await this.BuilderAgent.StopAsync().ConfigureAwait(false);
         }
 
         public void SyncSomething<T>(IEventStore remoteEventStore, Guid aggregateId) where T : class, IAggregateRoot, new()
@@ -149,18 +166,11 @@ namespace Mobile.CQRS.SQLite.Domain
                     scope.GetRegisteredObject<IPendingCommandRepository>(),
                     scope.GetRegisteredObject<ISnapshotRepository>());
 
-                if (syncAgent.SyncWithRemote<T>(aggregateId))
-                {
-                    scope.GetRegisteredObject<IReadModelQueueProducer>().Enqueue(aggregateId, AggregateRootBase.GetAggregateTypeDescriptor<T>(), 0);
-
-                    if (this.BuilderAgent != null && this.BuilderAgent.IsStarted)
-                    {
-                        this.BuilderAgent.Trigger();
-                    }
-                }
+                syncAgent.SyncWithRemote<T>(aggregateId);
 
                 scope.Commit();
             }
+            this.BuilderAgent?.NotifyWorkAvailable();
         }
     }
 }
