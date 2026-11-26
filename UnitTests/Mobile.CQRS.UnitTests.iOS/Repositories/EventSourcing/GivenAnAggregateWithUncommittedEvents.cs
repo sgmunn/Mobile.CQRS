@@ -49,14 +49,13 @@ namespace Mobile.CQRS.Domain.UnitTests.Repositories.EventSourcing
         }
 
         [Test]
-        [ExpectedException(typeof(ConcurrencyException))]
         public void WhenSavingTheAggregateAndAnotherProcessHasSavedOtherEvents_ThenAConcurrencyExceptionIsThrown()
         {
             // other process
-            this.EventStore.SaveEvents(Aggregate.Identity, new[] { new TestEvent1() {AggregateId = this.Aggregate.Identity, Version = 4, }, }, 3);
+            this.EventStore.SaveEvents(Aggregate.Identity, this.Aggregate.UncommittedEvents.ToList(), 0);
 
             // this process
-            this.Repository.Save(this.Aggregate);
+            Assert.Throws<ConcurrencyException>(() => this.Repository.Save(this.Aggregate));
         }
 
 // events are not published anymore

@@ -52,14 +52,13 @@ namespace Mobile.CQRS.Domain.UnitTests.Repositories.SnapshotSourced
         }
 
         [Test]
-        [ExpectedException(typeof(ConcurrencyException))]
         public void WhenSavingTheAggregateAndAnotherProcessHasSavedOtherEvents_ThenAConcurrencyExceptionIsThrown()
         {
             // other process
             this.SnapshotStore.Save(new TestSnapshot() {Identity = this.Aggregate.Identity, Version = 4, });
 
             // this process
-            this.Repository.Save(this.Aggregate);
+            Assert.Throws<ConcurrencyException>(() => this.Repository.Save(this.Aggregate));
         }
 
 // events are not published any more

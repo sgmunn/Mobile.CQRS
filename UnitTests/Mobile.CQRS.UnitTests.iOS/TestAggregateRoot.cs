@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Json;
+using System.Text.Json;
 using Mobile.CQRS.Serialization;
 
 namespace Mobile.CQRS.Domain.UnitTests
@@ -17,10 +17,12 @@ namespace Mobile.CQRS.Domain.UnitTests
 
         public override ISnapshot GetSnapshot()
         {
-            var snapshot = this.InternalState;
-            snapshot.Identity = this.Identity;
-            snapshot.Version = this.Version;
-            return snapshot;
+            return new TestSnapshot {
+                Identity = this.Identity,
+                Version = this.Version,
+                Value1 = this.Value1,
+                Value2 = this.Value2,
+            };
         }
         
         public override void LoadFromSnapshot(ISnapshot snapshot)
@@ -118,36 +120,12 @@ namespace Mobile.CQRS.Domain.UnitTests
 
         public string SerializeToString(object instance)
         {
-            // brain-dead serializer
-            JsonValue json = new JsonObject(this.GetEventData((TestEvent1)instance));
-            return json.ToString();
-        } 
+            return JsonSerializer.Serialize((TestEvent1)instance);
+        }
 
         public IAggregateEvent DeserializeFromString(string data)
         {
-            var json = JsonValue.Parse(data);
-
-            return new TestEvent1()
-            {
-                AggregateId = new Guid((string)json["AggregateId"]),
-                Identity = new Guid((string)json["Identity"]),
-                // not supported Timestamp = json["Timestamp"],
-                Version = json["Version"],
-                Value1 = json["Value1"],
-                Value2 = json["Value2"],
-            };
-        } 
-
-        private IEnumerable<KeyValuePair<string, JsonValue>> GetEventData(TestEvent1 domainEvent)
-        {
-            yield return new KeyValuePair<string, JsonValue>("AggregateId", domainEvent.AggregateId.ToString());
-            yield return new KeyValuePair<string, JsonValue>("Identity", domainEvent.Identity.ToString());
-            // not supported yield return new KeyValuePair<string, JsonValue>("Timestamp", domainEvent.Timestamp);
-            yield return new KeyValuePair<string, JsonValue>("Version", domainEvent.Version);
-            yield return new KeyValuePair<string, JsonValue>("Value1", domainEvent.Value1);
-            yield return new KeyValuePair<string, JsonValue>("Value2", domainEvent.Value2);
-
+            return JsonSerializer.Deserialize<TestEvent1>(data);
         }
     }
 }
-

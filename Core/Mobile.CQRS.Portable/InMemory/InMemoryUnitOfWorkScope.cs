@@ -30,9 +30,9 @@ namespace Mobile.CQRS.Domain
 
         private readonly Dictionary<Type, object> registeredObjects;
         
-        private bool committed;
+        private enum ScopeState { Active, Committing, Committed, Failed, Disposed }
 
-        private bool disposed;
+        private ScopeState state;
  
         public InMemoryUnitOfWorkScope()
         {
@@ -42,11 +42,13 @@ namespace Mobile.CQRS.Domain
 
         public void RegisterObject<T>(T instance)
         {
+            this.EnsureActive();
             this.registeredObjects[typeof(T)] = instance;
         }
 
         public T GetRegisteredObject<T>()
         {
+            this.ThrowIfDisposed();
             object instance;
             if (this.registeredObjects.TryGetValue(typeof(T), out instance))
             {
@@ -66,74 +68,69 @@ namespace Mobile.CQRS.Domain
 
         public void Add(IUnitOfWork uow)
         {
+            this.EnsureActive();
+            if (uow == null) throw new ArgumentNullException(nameof(uow));
             this.scopedWork.Add(uow);
         }
 
         public void Commit()
         {
-            if (this.committed)
-            {
-                return;
-            }
-
+            this.ThrowIfDisposed();
+            if (this.state == ScopeState.Committed) return;
+            this.EnsureActive();
+            this.state = ScopeState.Committing;
             try
             {
-                this.committed = true;
-
-                foreach (var uow in this.scopedWork)
-                {
-                    uow.Commit();
-                }
-
+                foreach (var uow in this.scopedWork) uow.Commit();
                 this.AfterCommit();
+                this.state = ScopeState.Committed;
             }
-            catch (Exception ex)
+            catch
             {
-                // TODO: Console.WriteLine("UnitOfWorkScope Exception \n{0}", ex); -- need logging
+                this.state = ScopeState.Failed;
                 throw;
             }
         }
 
         public void Dispose()
         {
-            if (this.disposed)
-            {
-                throw new ObjectDisposedException("UnitOfWorkScope");
-            }
+            if (this.state == ScopeState.Disposed) return;
+            if (this.state == ScopeState.Committing)
+                throw new InvalidOperationException("Cannot dispose a scope during commit.");
 
-            if (!this.committed)
-            {
-                this.disposed = true;
-                this.DisposeScopedWork();
-            }
+            this.state = ScopeState.Disposed;
+            var errors = new List<Exception>();
             foreach (var uow in this.scopedWork)
             {
-                uow.Dispose();
+                try { uow.Dispose(); }
+                catch (Exception ex) { errors.Add(ex); }
             }
+            try { this.FinallyDispose(); }
+            catch (Exception ex) { errors.Add(ex); }
+            this.scopedWork.Clear();
+            this.registeredObjects.Clear();
+            if (errors.Count != 0) throw new AggregateException("Unit of work cleanup failed.", errors);
         }
 
         protected virtual void AfterCommit()
         {
         }
-        
+
+        // Called exactly once on disposal, after either success or failure.
         protected virtual void FinallyDispose()
         {
         }
 
-        private void DisposeScopedWork()
+        private void ThrowIfDisposed()
         {
-            try
-            {
-                foreach (var uow in this.scopedWork)
-                {
-                    uow.Dispose();
-                }
-            }
-            finally
-            {
-                this.FinallyDispose();
-            }
+            if (this.state == ScopeState.Disposed) throw new ObjectDisposedException(nameof(InMemoryUnitOfWorkScope));
         }
 
+        private void EnsureActive()
+        {
+            this.ThrowIfDisposed();
+            if (this.state != ScopeState.Active)
+                throw new InvalidOperationException("The unit of work is no longer active.");
+        }
     }
 }

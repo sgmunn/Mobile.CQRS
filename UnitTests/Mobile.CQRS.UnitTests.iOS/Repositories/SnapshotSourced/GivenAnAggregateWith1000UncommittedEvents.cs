@@ -24,11 +24,12 @@ namespace Mobile.CQRS.Domain.UnitTests.Repositories.SnapshotSourced
         }
         
         [Test]
-        public void WhenSavingTheAggregate_ThenThePerformanceIsOK()
+        public void WhenSavingTheAggregate_ThenAllEventsAreApplied()
         {
-            // we actually have to test this manually by seeing how long it takes for real
             this.Repository.Save(this.Aggregate);
-            Assert.True(true);
+            var restored = (TestAggregateRoot)this.Repository.GetById(this.Aggregate.Identity);
+            Assert.AreEqual(1000, restored.Version);
+            Assert.AreEqual(999, restored.Value2);
         }
     }
 }

@@ -802,29 +802,12 @@ namespace Mobile.CQRS.SQLite
 			if (Interlocked.CompareExchange (ref _transactionDepth, 1, 0) == 0) {
 				try {
 					Execute ("begin transaction");
-				} catch (Exception ex) {
-					var sqlExp = ex as SQLiteException;
-					if (sqlExp != null) {
-						// It is recommended that applications respond to the errors listed below 
-						//    by explicitly issuing a ROLLBACK command.
-						// TODO: This rollback failsafe should be localized to all throw sites.
-						switch (sqlExp.Result) {
-						case SQLite3.Result.IOError:
-						case SQLite3.Result.Full:
-						case SQLite3.Result.Busy:
-						case SQLite3.Result.NoMem:
-						case SQLite3.Result.Interrupt:
-							RollbackTo (null, true);
-							break;
-						}
-					} else {
-						// Call decrement and not VolatileWrite in case we've already 
-						//    created a transaction point in SaveTransactionPoint since the catch.
-						Interlocked.Decrement (ref _transactionDepth);
-					}
-
-					throw;
-				}
+                } catch {
+                    // A failed BEGIN did not acquire a transaction. Do not leave
+                    // wrapper state claiming ownership of a native transaction.
+                    Interlocked.Exchange(ref _transactionDepth, 0);
+                    throw;
+                }
 			} else { 
 				// Calling BeginTransaction on an already open transaction is invalid
 				throw new InvalidOperationException ("Cannot begin a transaction while already in a transaction.");
@@ -940,7 +923,7 @@ namespace Mobile.CQRS.SQLite
 #elif SILVERLIGHT
 						_transactionDepth = depth;
 #else
-                        Thread.VolatileWrite (ref _transactionDepth, depth);
+                        Volatile.Write (ref _transactionDepth, depth);
 #endif
                         Execute (cmd + savepoint);
 						return;
@@ -956,9 +939,12 @@ namespace Mobile.CQRS.SQLite
 		/// </summary>
 		public void Commit ()
 		{
-			if (Interlocked.Exchange (ref _transactionDepth, 0) != 0) {
-				Execute ("commit");
-			}
+			if (_transactionDepth != 0) {
+                Execute ("commit");
+                // Failed COMMITs (e.g. deferred constraints or busy readers) still
+                // require rollback. Clear ownership only after native success.
+                Interlocked.Exchange(ref _transactionDepth, 0);
+            }
 			// Do nothing on a commit with no open transaction
 		}
 
