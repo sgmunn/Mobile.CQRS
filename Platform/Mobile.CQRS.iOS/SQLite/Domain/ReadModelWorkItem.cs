@@ -28,6 +28,8 @@ namespace Mobile.CQRS.SQLite.Domain
         [PrimaryKey]
         public Guid Identity { get; set; }
 
+        public Guid DeliveryId { get; set; }
+
         [Indexed]
         public string AggregateType { get; set; }
 

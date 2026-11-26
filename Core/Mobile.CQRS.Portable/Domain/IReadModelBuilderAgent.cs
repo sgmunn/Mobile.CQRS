@@ -33,6 +33,8 @@ namespace Mobile.CQRS.Domain
         void Start();
 
         void Stop();
+
+        System.Threading.Tasks.Task StopAsync();
          
         void Trigger();
     }
