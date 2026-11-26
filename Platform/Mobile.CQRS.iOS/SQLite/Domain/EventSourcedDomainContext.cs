@@ -1,19 +1,19 @@
 // --------------------------------------------------------------------------------------------------------------------
 // <copyright file="EventSourcedDomainContext.cs" company="sgmunn">
-//   (c) sgmunn 2013  
+//   (c) sgmunn 2013
 //
-//   Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
-//   documentation files (the "Software"), to deal in the Software without restriction, including without limitation 
-//   the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and 
+//   Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+//   documentation files (the "Software"), to deal in the Software without restriction, including without limitation
+//   the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and
 //   to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 //
-//   The above copyright notice and this permission notice shall be included in all copies or substantial portions of 
+//   The above copyright notice and this permission notice shall be included in all copies or substantial portions of
 //   the Software.
 //
-//   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO 
-//   THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
-//   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
-//   CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS 
+//   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO
+//   THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
+//   CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 //   IN THE SOFTWARE.
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
@@ -37,7 +37,7 @@ namespace Mobile.CQRS.SQLite.Domain
 
         private ReadModelBuilderQueue readModelQueue;
 
-        public EventSourcedDomainContext(string connectionString, ISerializer<IAggregateEvent> eventSerializer) 
+        public EventSourcedDomainContext(string connectionString, ISerializer<IAggregateEvent> eventSerializer)
         {
             if (connectionString == null)
                 throw new ArgumentNullException("connectionString");
@@ -48,7 +48,7 @@ namespace Mobile.CQRS.SQLite.Domain
             this.EventSerializer = eventSerializer;
         }
 
-        public EventSourcedDomainContext(string connectionString, string readModelConnectionString, ISerializer<IAggregateEvent> eventSerializer) 
+        public EventSourcedDomainContext(string connectionString, string readModelConnectionString, ISerializer<IAggregateEvent> eventSerializer)
         {
             if (connectionString == null)
                 throw new ArgumentNullException("connectionString");
@@ -68,13 +68,13 @@ namespace Mobile.CQRS.SQLite.Domain
         }
 
         public string ConnectionString { get; private set; }
-        
+
         public string ReadModelConnectionString { get; private set; }
 
         public ISerializer<IAggregateEvent> EventSerializer { get; private set; }
 
         public ISerializer<IAggregateCommand> CommandSerializer { get; set; }
-        
+
         public ISerializer<ISnapshot> SnapshotSerializer { get; set; }
 
         public IReadModelBuilderAgent BuilderAgent { get; private set; }
@@ -84,30 +84,38 @@ namespace Mobile.CQRS.SQLite.Domain
             var connection = new SQLiteConnection(this.ConnectionString, true);
             var scope = new SqlUnitOfWorkScope(connection, ownsConnection: true);
 
-            scope.RegisterObject<IEventStore>(new EventStore(connection, this.EventSerializer));
+            try
+            {
+                scope.RegisterObject<IEventStore>(new EventStore(connection, this.EventSerializer));
 
-            if (this.CommandSerializer != null)
-            {
-                scope.RegisterObject<IPendingCommandRepository>(new PendingCommandRepository(connection, this.CommandSerializer));
-                scope.RegisterObject<IRepository<ISyncState>>(new SyncStateRepository(connection));
-            }
-            
-            if (this.SnapshotSerializer != null)
-            {
-                scope.RegisterObject<ISnapshotRepository>(new SnapshotRepository(connection, this.SnapshotSerializer));
-            }
-
-            if (!string.IsNullOrWhiteSpace(this.ReadModelConnectionString))
-            {
-                if (this.readModelQueue == null)
+                if (this.CommandSerializer != null)
                 {
-                    this.readModelQueue = new ReadModelBuilderQueue(this.readModelConnection);
+                    scope.RegisterObject<IPendingCommandRepository>(new PendingCommandRepository(connection, this.CommandSerializer));
+                    scope.RegisterObject<IRepository<ISyncState>>(new SyncStateRepository(connection));
                 }
 
-                scope.RegisterObject<IReadModelQueueProducer>(this.readModelQueue);
-            }
+                if (this.SnapshotSerializer != null)
+                {
+                    scope.RegisterObject<ISnapshotRepository>(new SnapshotRepository(connection, this.SnapshotSerializer));
+                }
 
-            return scope;
+                if (!string.IsNullOrWhiteSpace(this.ReadModelConnectionString))
+                {
+                    if (this.readModelQueue == null)
+                    {
+                        this.readModelQueue = new ReadModelBuilderQueue(this.readModelConnection);
+                    }
+
+                    scope.RegisterObject<IReadModelQueueProducer>(this.readModelQueue);
+                }
+
+                return scope;
+            }
+            catch
+            {
+                scope.Dispose();
+                throw;
+            }
         }
 
         public void StartDelayedReadModels()
@@ -120,25 +128,25 @@ namespace Mobile.CQRS.SQLite.Domain
                 }
 
                 this.BuilderAgent = new ReadModelBuilderAgent(
-                    this, 
-                    this.Registrations.ToList(), 
-                    () => new SqlUnitOfWorkScope(this.readModelConnection), 
+                    this,
+                    this.Registrations.ToList(),
+                    () => new SqlUnitOfWorkScope(this.readModelConnection),
                     (scope) => this.readModelQueue);
 
                 this.BuilderAgent.Start();
             }
         }
-        
+
         public void SyncSomething<T>(IEventStore remoteEventStore, Guid aggregateId) where T : class, IAggregateRoot, new()
         {
             var scope = this.BeginUnitOfWork();
             using (scope)
             {
                 var syncAgent = new SyncAgent(
-                    scope.GetRegisteredObject<IMergableEventStore>(), 
-                    remoteEventStore, 
-                    scope.GetRegisteredObject<IRepository<ISyncState>>(), 
-                    scope.GetRegisteredObject<IPendingCommandRepository>(), 
+                    scope.GetRegisteredObject<IMergableEventStore>(),
+                    remoteEventStore,
+                    scope.GetRegisteredObject<IRepository<ISyncState>>(),
+                    scope.GetRegisteredObject<IPendingCommandRepository>(),
                     scope.GetRegisteredObject<ISnapshotRepository>());
 
                 if (syncAgent.SyncWithRemote<T>(aggregateId))

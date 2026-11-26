@@ -157,6 +157,32 @@ public class SqlUnitOfWorkScopeTests
         Assert.IsFalse(Monitor.IsEntered(owned));
     }
 
+    [TestCase(false)]
+    [TestCase(true)]
+    public void ContextSetupFailureReleasesItsDatabaseLocks(bool eventSourced)
+    {
+        IDomainContext context = eventSourced
+            ? new EventSourcedDomainContext(path, TestEventSerializer.Instance)
+            : new StateSourcedDomainContext(path, new SnapshotSerializer());
+
+        connection.CreateTable<AggregateIndex>();
+        connection.BusyTimeout = TimeSpan.Zero;
+        connection.BeginTransaction();
+        connection.Execute("insert into Probe values (1)");
+        try
+        {
+            // The other connection can BEGIN, but cannot create its repositories
+            // while this writer holds a reserved lock. Its schema reads acquire
+            // a shared lock which must be released when setup fails.
+            Assert.Throws<SQLiteException>(() => context.BeginUnitOfWork());
+            Assert.DoesNotThrow(() => connection.Commit());
+        }
+        finally { connection.Rollback(); }
+        using var reopened = new SQLiteConnection(path);
+        reopened.Execute("insert into Probe values (2)");
+        Assert.AreEqual(2, reopened.ExecuteScalar<int>("select count(*) from Probe"));
+    }
+
     private sealed class SnapshotSerializer : ISerializer<ISnapshot>
     {
         public string SerializeToString(object value) => JsonSerializer.Serialize((TestSnapshot)value);

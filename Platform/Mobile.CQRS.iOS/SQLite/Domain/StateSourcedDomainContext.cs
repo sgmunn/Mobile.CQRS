@@ -50,10 +50,18 @@ namespace Mobile.CQRS.SQLite.Domain
             var connection = new SQLiteConnection(this.ConnectionString, true);
             var scope = new SqlUnitOfWorkScope(connection, ownsConnection: true);
 
-            scope.RegisterObject<SQLiteConnection>(connection);
-            scope.RegisterObject<ISnapshotRepository>(new SnapshotRepository(connection, this.SnapshotSerializer));
+            try
+            {
+                scope.RegisterObject<SQLiteConnection>(connection);
+                scope.RegisterObject<ISnapshotRepository>(new SnapshotRepository(connection, this.SnapshotSerializer));
 
-            return scope;
+                return scope;
+            }
+            catch
+            {
+                scope.Dispose();
+                throw;
+            }
         }
     }
 }
