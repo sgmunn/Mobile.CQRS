@@ -8,7 +8,7 @@ namespace Mobile.CQRS.Runtime.UnitTests.Bindings
     public class MethodExecutionPerformance
     {
         [Test]
-        public void WhenExecutingAMethod1000Times_ThenTheSpeedIsOK()
+        public void WhenExecutingAMethod1000Times_ThenTheLastValueIsApplied()
         {
             var obj = new ExecutableObject();
             
@@ -17,7 +17,7 @@ namespace Mobile.CQRS.Runtime.UnitTests.Bindings
                 MethodExecutor.ExecuteMethod(obj, i);
             }
             
-            Assert.True(true);
+            Assert.AreEqual(999, obj.TheValue);
         }
     }
 
